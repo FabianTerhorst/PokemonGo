@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <raw name="configurator_config">res/raw/configurator_config.json</raw>
+    <raw name="dispatcher_config">res/raw/dispatcher_config.json</raw>
+    <raw name="uxm_schema">res/raw/uxm_schema.json</raw>
+</resources>

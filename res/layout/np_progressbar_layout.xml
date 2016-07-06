@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:id="@+id/np_progressbar_root" android:layout_width="match_parent" android:layout_height="match_parent" style="@color/np_semi_transparent">
+    <View android:id="@+id/np_toolbar_top_spacer" android:background="@color/np_transparent" android:layout_width="match_parent" android:layout_height="UNKNOWN_DATA_0x1" android:layout_weight="0.5" />
+    <ProgressBar android:id="@+id/np_progressbar_spinner" android:layout_width="match_parent" android:layout_height="wrap_content" android:minWidth="30dp" android:minHeight="30dp" android:layout_weight="0.01" style="?unknown_attr_ref: 101007a" />
+    <View android:id="@+id/np_progressbar_bottom_spacer" android:background="@color/np_transparent" android:layout_width="match_parent" android:layout_height="UNKNOWN_DATA_0x1" android:layout_weight="0.5" />
+</LinearLayout>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="imageAspectRatioAdjust">
+        <item>65536</item>
+        <item>2</item>
+        <item>1</item>
+        <item>0</item>
+    </attr>
+    <attr name="imageAspectRatio">
+        <item>32</item>
+    </attr>
+    <attr name="circleCrop">
+        <item>8</item>
+    </attr>
+    <attr name="adSize">
+        <item>2</item>
+    </attr>
+    <attr name="adSizes">
+        <item>2</item>
+    </attr>
+    <attr name="adUnitId">
+        <item>2</item>
+    </attr>
+</resources>

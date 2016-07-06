@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <xml name="nativeplugins_file_paths">res/xml/nativeplugins_file_paths.xml</xml>
+</resources>
