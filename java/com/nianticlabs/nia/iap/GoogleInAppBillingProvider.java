@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender.SendIntentException;
 import android.content.ServiceConnection;
+import android.content.pm.ResolveInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -21,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public class GoogleInAppBillingProvider implements InAppBillingProvider {
@@ -164,6 +166,9 @@ public class GoogleInAppBillingProvider implements InAppBillingProvider {
         }
 
         protected Bundle doInBackground(Void... params) {
+            if (this.billingService == null) {
+                return null;
+            }
             ArrayList<String> accumulatedPurchaseDataList = null;
             ArrayList<String> accumulatedSignatureList = null;
             String continuationToken = null;
@@ -173,18 +178,22 @@ public class GoogleInAppBillingProvider implements InAppBillingProvider {
                     int responseCode = GoogleInAppBillingProvider.getResponseCodeFromBundle(ownedItems);
                     ArrayList<String> purchaseDataList = ownedItems.getStringArrayList(GoogleInAppBillingProvider.RESPONSE_INAPP_PURCHASE_DATA_LIST);
                     ArrayList<String> signatureList = ownedItems.getStringArrayList(GoogleInAppBillingProvider.RESPONSE_INAPP_SIGNATURE_LIST);
-                    if (responseCode == GoogleInAppBillingProvider.BILLING_RESPONSE_RESULT_DEVELOPER_ERROR || responseCode != 0 || !ownedItems.containsKey(GoogleInAppBillingProvider.RESPONSE_INAPP_PURCHASE_DATA_LIST) || !ownedItems.containsKey(GoogleInAppBillingProvider.RESPONSE_INAPP_SIGNATURE_LIST) || purchaseDataList.size() != signatureList.size()) {
-                        break;
-                    }
-                    if (accumulatedPurchaseDataList == null) {
-                        accumulatedPurchaseDataList = purchaseDataList;
-                        accumulatedSignatureList = signatureList;
+                    if (responseCode != GoogleInAppBillingProvider.BILLING_RESPONSE_RESULT_DEVELOPER_ERROR && responseCode == 0) {
+                        if (!ownedItems.containsKey(GoogleInAppBillingProvider.RESPONSE_INAPP_PURCHASE_DATA_LIST) || !ownedItems.containsKey(GoogleInAppBillingProvider.RESPONSE_INAPP_SIGNATURE_LIST) || purchaseDataList.size() != signatureList.size()) {
+                            break;
+                        }
+                        if (accumulatedPurchaseDataList == null) {
+                            accumulatedPurchaseDataList = purchaseDataList;
+                            accumulatedSignatureList = signatureList;
+                        } else {
+                            accumulatedPurchaseDataList.addAll(purchaseDataList);
+                            accumulatedSignatureList.addAll(signatureList);
+                        }
+                        continuationToken = ownedItems.getString(GoogleInAppBillingProvider.INAPP_CONTINUATION_TOKEN);
+                        if (continuationToken == null) {
+                            break;
+                        }
                     } else {
-                        accumulatedPurchaseDataList.addAll(purchaseDataList);
-                        accumulatedSignatureList.addAll(signatureList);
-                    }
-                    continuationToken = ownedItems.getString(GoogleInAppBillingProvider.INAPP_CONTINUATION_TOKEN);
-                    if (continuationToken == null) {
                         break;
                     }
                 } catch (RemoteException e) {
@@ -300,7 +309,8 @@ public class GoogleInAppBillingProvider implements InAppBillingProvider {
             };
             Intent serviceIntent = new Intent("com.android.vending.billing.InAppBillingService.BIND");
             serviceIntent.setPackage("com.android.vending");
-            if (this.context.getPackageManager().queryIntentServices(serviceIntent, BILLING_RESPONSE_RESULT_OK).isEmpty()) {
+            List<ResolveInfo> providerList = this.context.getPackageManager().queryIntentServices(serviceIntent, BILLING_RESPONSE_RESULT_OK);
+            if (providerList == null || providerList.isEmpty()) {
                 finalizeConnectionResult();
             }
             this.context.bindService(serviceIntent, this.serviceConnection, BILLING_RESPONSE_RESULT_USER_CANCELED);

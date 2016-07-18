@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="2016070500" android:versionName="0.29.0" android:installLocation="auto" package="com.nianticlabs.pokemongo" platformBuildVersionCode="23" platformBuildVersionName="6.0-2704002">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="2016071201" android:versionName="0.29.2" android:installLocation="auto" package="com.nianticlabs.pokemongo" platformBuildVersionCode="23" platformBuildVersionName="6.0-2438415">
     <supports-screens android:anyDensity="true" android:smallScreens="true" android:normalScreens="true" android:largeScreens="true" android:xlargeScreens="true" />
     <uses-permission android:name="com.android.vending.BILLING" />
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -43,7 +43,7 @@
         <meta-data android:name="com.upsight.sdk_plugin" android:value="4.0.7" />
         <meta-data android:name="com.upsight.app_token" android:value="a9cc12f87adc420baf964f187672ecb4" />
         <meta-data android:name="com.upsight.public_key" android:value="MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyYKX0nb1ezY2KLkAl0tuWn2AZ0PfS2NF2BSM0T2OLCJM/H8Siyz1+OTvDWo1w+psbz6ugjTOaBGtkTRI1uikGcu32mhW2I4c9XUUkx1AYlC3wwiqnWZMvMKthp1yaKzrTsqhZzwJ6DvgZHUf1IPIkoxXoGmfyYNRI3QcpW5Uwa1dsZr5YeG8fwC53hyukOutt6PRqwDXQCsyCd/PawjUJZT6oxDFYYZ8a/11OIstlS4jXnQQ+k/f5HV5b8+ITiKhqXuNVsByPZqSIwi5T8pwJan7Rk8OCVImSkgUmWLcmlPcoL1UaF+vMZXZYhk1hM765IUw++7Dw2qvKVi4yl+giwIDAQAB" />
-        <meta-data android:name="com.upsight.gcm" android:value="com.nianticlabs.pokemongo.GCM_SENDER_ID" />
+        <meta-data android:name="com.upsight.gcm" android:value="com.nianticlabs.pokemongo.848232511240" />
         <meta-data android:name="com.upsight.user_attribute.player_level" android:value="0" />
         <meta-data android:name="com.upsight.user_attribute.player_xp" android:value="0" />
         <meta-data android:name="com.upsight.user_attribute.player_avatar" android:value="0" />

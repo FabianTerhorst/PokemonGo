@@ -45,9 +45,7 @@
 			<method name="PlaySound"/>
 			<method name="PlaySound"/>
 			<method name="PlaySound"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Storefront.StorefrontCoinFloater">
-			<method name="OnScrollUpdate"/>
+			<method name="PlaySound"/>
 		</type>
 		<type fullname="Niantic.Holoholo.UI.SettingsGuiController">
 			<method name="ToggleMusic"/>
@@ -58,20 +56,47 @@
 			<method name="ToggleEmailMarketing"/>
 			<method name="ClickModelViewer"/>
 			<method name="ClickClearAssetCache"/>
-			<method name="ClickLogout"/>
-			<method name="ClickReportIssues"/>
-			<method name="ClickSupport"/>
-			<method name="ClickAbout"/>
 			<method name="ClickQuickStart"/>
+			<method name="ClickAbout"/>
+			<method name="ClickReportIssues"/>
+			<method name="ClickLogout"/>
 			<method name="ClickExit"/>
+			<method name="ClickSupport"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Storefront.StorefrontCoinFloater">
+			<method name="OnScrollUpdate"/>
+		</type>
+		<type fullname="Niantic.Holoholo.UI.Pokemon.PokemonInventoryGuiController">
+			<method name="OpenIncubatorSelector"/>
+			<method name="SortPokemon"/>
+			<method name="SortPokemon"/>
+			<method name="SortPokemon"/>
+			<method name="SortPokemon"/>
+			<method name="SortPokemon"/>
+			<method name="SortPokemon"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Orientation.AvatarSelectionGuiController">
+			<method name="ContinuePressed"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Storefront.StorefrontGuiController">
+			<method name="CloseGift"/>
+			<method name="BackPressed"/>
+			<method name="CloseGift"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Orientation.PlayerNameEntryGuiController">
+			<method name="UserInputChanged"/>
+			<method name="NextPressed"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Login.LoginAgeGateGuiController">
+			<method name="ClickSubmit"/>
+		</type>
+		<type fullname="Niantic.Holoholo.UI.IncubatorEntry">
+			<method name="OnClick"/>
 		</type>
 		<type fullname="Niantic.Holoholo.Orientation.EulaGuiController">
 			<method name="ToggleEmailsOptedIn"/>
 			<method name="PressDecline"/>
 			<method name="PressAccept"/>
-		</type>
-		<type fullname="Niantic.Holoholo.UI.IncubatorEntry">
-			<method name="OnClick"/>
 		</type>
 		<type fullname="Niantic.Holoholo.UI.EggHatchGuiController">
 			<method name="Click"/>
@@ -110,47 +135,15 @@
 			<method name="SpawnReaction"/>
 			<method name="SpawnReaction"/>
 		</type>
-		<type fullname="Niantic.Holoholo.UI.Pokemon.PokemonInventoryGuiController">
-			<method name="OpenIncubatorSelector"/>
-			<method name="SortPokemon"/>
-			<method name="SortPokemon"/>
-			<method name="SortPokemon"/>
-			<method name="SortPokemon"/>
-			<method name="SortPokemon"/>
-			<method name="SortPokemon"/>
+		<type fullname="Niantic.Holoholo.Storefront.StorefrontButton">
+			<method name="OnClick"/>
 		</type>
-		<type fullname="Niantic.Holoholo.Login.LoginAgeGateGuiController">
-			<method name="ClickSubmit"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Orientation.PlayerNameEntryGuiController">
-			<method name="UserInputChanged"/>
-			<method name="NextPressed"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Storefront.StorefrontGuiController">
-			<method name="CloseGift"/>
-			<method name="BackPressed"/>
-			<method name="CloseGift"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Orientation.AvatarSelectionGuiController">
-			<method name="ContinuePressed"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Login.PtcLoginGuiController">
-			<method name="ClickSubmit"/>
-			<method name="ClickRegister"/>
-			<method name="ClickForgotUsername"/>
-			<method name="ClickForgotPassword"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Items.PlayerBuffSelectionGuiController">
-			<method name="UsePressed"/>
-			<method name="CancelPressed"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Storefront.BuyItemGuiController">
-			<method name="ClickBuy"/>
-			<method name="ClickBack"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Widget.TabView">
-			<method name="set_SelectedTabIndex"/>
-			<method name="set_SelectedTabIndex"/>
+		<type fullname="Niantic.Holoholo.UI.PoiInspectionGuiController">
+			<method name="GoToFullscreen"/>
+			<method name="DismissDialog"/>
+			<method name="GoToFullscreen"/>
+			<method name="GoToPreviousMode"/>
+			<method name="DismissDialog"/>
 		</type>
 		<type fullname="Niantic.Holoholo.UI.GuiController">
 			<method name="Dismiss"/>
@@ -174,21 +167,13 @@
 			<method name="Dismiss"/>
 			<method name="Dismiss"/>
 		</type>
-		<type fullname="Niantic.Holoholo.UI.NumericalPickerDialog">
-			<method name="PointerDown"/>
-			<method name="PointerUp"/>
-			<method name="PointerDown"/>
-			<method name="PointerUp"/>
+		<type fullname="Niantic.Holoholo.Storefront.BuyItemGuiController">
+			<method name="ClickBuy"/>
+			<method name="ClickBack"/>
 		</type>
-		<type fullname="Niantic.Holoholo.UI.PoiInspectionGuiController">
-			<method name="GoToFullscreen"/>
-			<method name="DismissDialog"/>
-			<method name="GoToFullscreen"/>
-			<method name="GoToPreviousMode"/>
-			<method name="DismissDialog"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Storefront.StorefrontButton">
-			<method name="OnClick"/>
+		<type fullname="Niantic.Holoholo.Widget.TabView">
+			<method name="set_SelectedTabIndex"/>
+			<method name="set_SelectedTabIndex"/>
 		</type>
 		<type fullname="Niantic.Holoholo.UI.SetStaminaColor">
 			<method name="OnValueChanged"/>
@@ -201,55 +186,39 @@
 			<method name="OpenNicknamePopup"/>
 			<method name="OpenNicknamePopup"/>
 		</type>
-		<type fullname="Niantic.Holoholo.Gym.GymProximityController">
-			<method name="ProximityWakeUp"/>
-			<method name="ProximityGoToSleep"/>
+		<type fullname="Niantic.Holoholo.UI.NumericalPickerDialog">
+			<method name="PointerDown"/>
+			<method name="PointerUp"/>
+			<method name="PointerDown"/>
+			<method name="PointerUp"/>
 		</type>
-		<type fullname="Niantic.Holoholo.Pokestop.PokestopDiskInteractionGuiController">
-			<method name="Close"/>
-			<method name="Close"/>
+		<type fullname="Niantic.Holoholo.Items.PlayerBuffSelectionGuiController">
+			<method name="UsePressed"/>
+			<method name="CancelPressed"/>
 		</type>
-		<type fullname="Niantic.Holoholo.Pokestop.PokestopSpinnerInteractionGuiController">
+		<type fullname="Niantic.Holoholo.Login.PtcLoginGuiController">
+			<method name="ClickSubmit"/>
+			<method name="ClickRegister"/>
+			<method name="ClickForgotPassword"/>
+			<method name="ClickForgotUsername"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Widget.ListItemClickableView">
+			<method name="Click"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Map.UI.MainMenuGuiController">
 			<method name="ClickExit"/>
+			<method name="ClickStorefront"/>
+			<method name="ClickItemBag"/>
+			<method name="ClickPokemonInventory"/>
+			<method name="ClickPokedex"/>
+			<method name="ClickSettings"/>
+			<method name="ClickQuickStart"/>
 			<method name="ClickExit"/>
-			<method name="GoToFullscreen"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Orientation.AvatarCustomizationGuiController">
-			<method name="CustomizationSlotSelected"/>
-			<method name="CustomizationComplete"/>
-			<method name="BackPressed"/>
-			<method name="CustomizationSlotSelected"/>
-			<method name="CustomizationSlotSelected"/>
-			<method name="CustomizationSlotSelected"/>
-			<method name="CustomizationSlotSelected"/>
-			<method name="PreviousItem"/>
-			<method name="NextItem"/>
-			<method name="CustomizationSlotSelected"/>
-			<method name="CustomizationSlotSelected"/>
-			<method name="CustomizationSlotSelected"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Login.LoginChoiceGuiController">
-			<method name="ClickPtc"/>
-			<method name="ClickGoogle"/>
-			<method name="ClickPrivacyPolicy"/>
-		</type>
-		<type fullname="Niantic.Holoholo.UI.DefenderBonusCollector">
-			<method name="OnClick"/>
 		</type>
 		<type fullname="Niantic.Holoholo.Inventory.ItemListItemView">
 			<method name="DisabledClick"/>
 			<method name="Click"/>
 			<method name="RecycleClick"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Map.UI.MainMenuGuiController">
-			<method name="ClickExit"/>
-			<method name="ClickPokedex"/>
-			<method name="ClickItemBag"/>
-			<method name="ClickStorefront"/>
-			<method name="ClickPokemonInventory"/>
-			<method name="ClickQuickStart"/>
-			<method name="ClickExit"/>
-			<method name="ClickSettings"/>
 		</type>
 		<type fullname="Niantic.Holoholo.Gym.ApproachUIController">
 			<method name="OnBackButtonPressed"/>
@@ -266,14 +235,57 @@
 		<type fullname="Niantic.Holoholo.Map.UI.CompassGuiController">
 			<method name="OnClick"/>
 		</type>
-		<type fullname="Niantic.Holoholo.Player.BadgeListItemView">
+		<type fullname="Niantic.Holoholo.Gym.GymProximityController">
+			<method name="ProximityWakeUp"/>
+			<method name="ProximityGoToSleep"/>
+		</type>
+		<type fullname="Niantic.Holoholo.UI.DefenderBonusCollector">
 			<method name="OnClick"/>
 		</type>
-		<type fullname="Niantic.Holoholo.Widget.ListItemClickableView">
-			<method name="Click"/>
+		<type fullname="Niantic.Holoholo.Pokestop.PokestopSpinnerInteractionGuiController">
+			<method name="ClickExit"/>
+			<method name="GoToFullscreen"/>
+			<method name="ClickExit"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Login.LoginChoiceGuiController">
+			<method name="ClickPtc"/>
+			<method name="ClickGoogle"/>
+			<method name="ClickPrivacyPolicy"/>
 		</type>
 		<type fullname="Niantic.Holoholo.Sfida.SfidaGuiController">
 			<method name="Click"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Player.BadgeListItemView">
+			<method name="OnClick"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Pokestop.PokestopDiskInteractionGuiController">
+			<method name="Close"/>
+			<method name="ClickStorefront"/>
+			<method name="Close"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Orientation.AvatarCustomizationGuiController">
+			<method name="CustomizationSlotSelected"/>
+			<method name="BackPressed"/>
+			<method name="CustomizationComplete"/>
+			<method name="CustomizationSlotSelected"/>
+			<method name="CustomizationSlotSelected"/>
+			<method name="NextItem"/>
+			<method name="CustomizationSlotSelected"/>
+			<method name="CustomizationSlotSelected"/>
+			<method name="CustomizationSlotSelected"/>
+			<method name="PreviousItem"/>
+			<method name="CustomizationSlotSelected"/>
+			<method name="CustomizationSlotSelected"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Pokestop.PokestopDiskConfirmationGuiController">
+			<method name="Close"/>
+			<method name="Close"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Inventory.EggListItemView">
+			<method name="Click"/>
+		</type>
+		<type fullname="ActionButton">
+			<method name="OpenMenu"/>
 		</type>
 		<type fullname="Niantic.Holoholo.UI.Pokedex.PokedexListGuiController">
 			<method name="ClickExit"/>
@@ -285,34 +297,24 @@
 			<method name="Click"/>
 			<method name="Click"/>
 		</type>
-		<type fullname="Niantic.Holoholo.Inventory.EggListItemView">
-			<method name="Click"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Orientation.FirstTimeEncounterUI">
-			<method name="NormalPressed"/>
-			<method name="ArModePressed"/>
-			<method name="NormalPressed"/>
-		</type>
-		<type fullname="ActionButton">
-			<method name="OpenMenu"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Pokestop.PokestopDiskConfirmationGuiController">
-			<method name="Close"/>
-			<method name="Close"/>
-		</type>
 		<type fullname="Niantic.Holoholo.ForDebug.AssetBrowser.AssetBrowserView2D">
 			<method name="ToggleDataSource"/>
-			<method name="PlayAnimation"/>
-			<method name="PlayAnimation"/>
-			<method name="ToggleLOD"/>
-			<method name="PlayAnimation"/>
 			<method name="PlayAnimation"/>
 			<method name="ClickInfo"/>
 			<method name="PlayAnimation"/>
 			<method name="PlayAnimation"/>
 			<method name="PlayAnimation"/>
-			<method name="ViewNext"/>
+			<method name="PlayAnimation"/>
 			<method name="ViewPrev"/>
+			<method name="ViewNext"/>
+			<method name="ToggleLOD"/>
+			<method name="PlayAnimation"/>
+			<method name="PlayAnimation"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Orientation.FirstTimeEncounterUI">
+			<method name="NormalPressed"/>
+			<method name="NormalPressed"/>
+			<method name="ArModePressed"/>
 		</type>
 		<type fullname="Niantic.Holoholo.UI.Pokedex.PokedexInfoGuiController">
 			<method name="ClickBackButton"/>
@@ -321,12 +323,6 @@
 			<method name="ClickGps"/>
 			<method name="ClickTeamSelect"/>
 			<method name="ClickGpsBookmarks"/>
-		</type>
-		<type fullname="DebugLunar">
-			<method name="ShowConsole"/>
-		</type>
-		<type fullname="Niantic.Holoholo.UI.ToastGuiController">
-			<method name="Close"/>
 		</type>
 		<type fullname="Niantic.Holoholo.Battle.SwapButton">
 			<method name="Swap"/>
@@ -340,23 +336,48 @@
 			<method name="OnTeamButtonPressed"/>
 			<method name="OnTeamButtonPressed"/>
 		</type>
+		<type fullname="DebugLunar">
+			<method name="ShowConsole"/>
+		</type>
+		<type fullname="Niantic.Holoholo.UI.ToastGuiController">
+			<method name="Close"/>
+		</type>
 		<type fullname="Niantic.Holoholo.Map.UI.PokeNav">
 			<method name="ShowExpandedPanel"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Snapshot.SnapshotPreview">
-			<method name="ClickSave"/>
-			<method name="ClickDiscard"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Encounter.EncounterUIController">
-			<method name="OpenCamera"/>
-			<method name="OpenItemBag"/>
-			<method name="ClickRunAway"/>
 		</type>
 		<type fullname="Niantic.Holoholo.UI.Conversations.ConversationLayoutGui">
 			<method name="ConvoTap"/>
 			<method name="ConvoTap"/>
 			<method name="ConvoTap"/>
 			<method name="ConvoTap"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Login.PrivacyPolicyGuiController">
+			<method name="ClickBack"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Encounter.EncounterUIController">
+			<method name="OpenCamera"/>
+			<method name="OpenItemBag"/>
+			<method name="ClickRunAway"/>
+		</type>
+		<type fullname="HoloBootMessage">
+			<method name="OnRetryPressed"/>
+		</type>
+		<type fullname="Niantic.Holoholo.UI.PlayerProfileGuiController">
+			<method name="ClickActivityLog"/>
+			<method name="ClickExit"/>
+			<method name="ClickStorefront"/>
+			<method name="ClickStorefront"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Encounter.ItemUseConfirmationGuiController">
+			<method name="ClickCancel"/>
+			<method name="ClickConfirm"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Snapshot.SnapshotPreview">
+			<method name="ClickSave"/>
+			<method name="ClickDiscard"/>
+		</type>
+		<type fullname="Niantic.Holoholo.Pokestop.PokestopDiskSlotController">
+			<method name="Click"/>
 		</type>
 		<type fullname="Niantic.Holoholo.Gym.ToggleArButton">
 			<method name="Toggle"/>
@@ -366,57 +387,38 @@
 		<type fullname="Niantic.Holoholo.Map.UI.PokeNavIcon">
 			<method name="Click"/>
 		</type>
-		<type fullname="HoloBootMessage">
-			<method name="OnRetryPressed"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Encounter.ItemUseConfirmationGuiController">
-			<method name="ClickCancel"/>
-			<method name="ClickConfirm"/>
-		</type>
-		<type fullname="Niantic.Holoholo.UI.PlayerProfileGuiController">
-			<method name="ClickExit"/>
-			<method name="ClickActivityLog"/>
-			<method name="ClickStorefront"/>
-			<method name="ClickStorefront"/>
+		<type fullname="Niantic.Holoholo.Pokestop.MapPokestop">
+			<method name="ProximityWakeUp"/>
+			<method name="ProximityGoToSleep"/>
 		</type>
 		<type fullname="Niantic.Holoholo.Pokestop.PokestopDiskPickerButton">
 			<method name="Click"/>
 			<method name="Click"/>
 		</type>
-		<type fullname="Niantic.Holoholo.Pokestop.PokestopDiskSlotController">
-			<method name="Click"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Login.PrivacyPolicyGuiController">
-			<method name="ClickBack"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Pokestop.MapPokestop">
-			<method name="ProximityWakeUp"/>
-			<method name="ProximityGoToSleep"/>
-		</type>
 		<type fullname="Niantic.Holoholo.Map.UI.PokeNavExpandedGuiController">
 			<method name="Close"/>
 		</type>
+		<type fullname="Niantic.Holoholo.Gym.ResolveUIController">
+			<method name="LeaveButtonPressed"/>
+		</type>
 		<type fullname="Niantic.Holoholo.UI.AboutScreenGuiController">
+			<method name="LicensesButtonPressed"/>
 			<method name="TermsOfServiceButtonPressed"/>
 			<method name="PrivacyPolicyButtonPressed"/>
-			<method name="LicensesButtonPressed"/>
-		</type>
-		<type fullname="Niantic.Holoholo.Battle.SurrenderButton">
-			<method name="TrySurrender"/>
 		</type>
 		<type fullname="Niantic.Holoholo.Battle.SwapUI">
 			<method name="Close"/>
 			<method name="Open"/>
 		</type>
-		<type fullname="Niantic.Holoholo.Gym.ResolveUIController">
-			<method name="LeaveButtonPressed"/>
-		</type>
-		<type fullname="Niantic.Holoholo.UI.NicknamePopupGuiController">
-			<method name="Submit"/>
+		<type fullname="Niantic.Holoholo.Battle.SurrenderButton">
+			<method name="TrySurrender"/>
 		</type>
 		<type fullname="Niantic.Holoholo.Encounter.TakeScreenShot">
 			<method name="Dismiss"/>
 			<method name="TakeHiResShot"/>
+		</type>
+		<type fullname="Niantic.Holoholo.UI.NicknamePopupGuiController">
+			<method name="Submit"/>
 		</type>
 		<type fullname="Niantic.Holoholo.Encounter.EncounterSummaryUI">
 			<method name="Dismiss"/>
