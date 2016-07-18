@@ -45,173 +45,48 @@ public class SfidaService extends Service {
     private BluetoothGatt bluetoothGatt;
     private BluetoothManager bluetoothManager;
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-        /* JADX WARNING: inconsistent code. */
-        /* Code decompiled incorrectly, please refer to instructions dump. */
-        public void onReceive(android.content.Context r9, android.content.Intent r10) {
-            /*
-            r8 = this;
-            r5 = 1;
-            r3 = 0;
-            r4 = com.nianticproject.holoholo.sfida.service.SfidaService.TAG;
-            r6 = new java.lang.StringBuilder;
-            r6.<init>();
-            r7 = "onReceive() : ";
-            r6 = r6.append(r7);
-            r7 = r10.getAction();
-            r6 = r6.append(r7);
-            r6 = r6.toString();
-            android.util.Log.d(r4, r6);
-            r0 = r10.getAction();
-            if (r0 != 0) goto L_0x0030;
-        L_0x0026:
-            r3 = com.nianticproject.holoholo.sfida.service.SfidaService.TAG;
-            r4 = "onReceived() action was null";
-            android.util.Log.d(r3, r4);
-        L_0x002f:
-            return;
-        L_0x0030:
-            r4 = -1;
-            r6 = r0.hashCode();
-            switch(r6) {
-                case -223687943: goto L_0x007e;
-                case -141093944: goto L_0x0074;
-                case 1079267555: goto L_0x006a;
-                case 1821585647: goto L_0x0060;
-                case 2116862345: goto L_0x0057;
-                default: goto L_0x0038;
-            };
-        L_0x0038:
-            r3 = r4;
-        L_0x0039:
-            switch(r3) {
-                case 0: goto L_0x0088;
-                case 1: goto L_0x008e;
-                case 2: goto L_0x00b7;
-                case 3: goto L_0x00c7;
-                case 4: goto L_0x00d4;
-                default: goto L_0x003c;
-            };
-        L_0x003c:
-            r3 = com.nianticproject.holoholo.sfida.service.SfidaService.TAG;
-            r4 = new java.lang.StringBuilder;
-            r4.<init>();
-            r5 = "onReceive() : ";
-            r4 = r4.append(r5);
-            r4 = r4.append(r0);
-            r4 = r4.toString();
-            android.util.Log.d(r3, r4);
-            goto L_0x002f;
-        L_0x0057:
-            r5 = "android.bluetooth.device.action.BOND_STATE_CHANGED";
-            r5 = r0.equals(r5);
-            if (r5 == 0) goto L_0x0038;
-        L_0x005f:
-            goto L_0x0039;
-        L_0x0060:
-            r3 = "android.bluetooth.device.action.ACL_DISCONNECTED";
-            r3 = r0.equals(r3);
-            if (r3 == 0) goto L_0x0038;
-        L_0x0068:
-            r3 = r5;
-            goto L_0x0039;
-        L_0x006a:
-            r3 = "com.nianticproject.holoholo.sfida.dismiss";
-            r3 = r0.equals(r3);
-            if (r3 == 0) goto L_0x0038;
-        L_0x0072:
-            r3 = 2;
-            goto L_0x0039;
-        L_0x0074:
-            r3 = "com.nianticproject.holoholo.sfida.vibrate";
-            r3 = r0.equals(r3);
-            if (r3 == 0) goto L_0x0038;
-        L_0x007c:
-            r3 = 3;
-            goto L_0x0039;
-        L_0x007e:
-            r3 = "android.bluetooth.device.action.PAIRING_REQUEST";
-            r3 = r0.equals(r3);
-            if (r3 == 0) goto L_0x0038;
-        L_0x0086:
-            r3 = 4;
-            goto L_0x0039;
-        L_0x0088:
-            r3 = com.nianticproject.holoholo.sfida.service.SfidaService.this;
-            r3.onBondStateChanged(r10);
-            goto L_0x002f;
-        L_0x008e:
-            r3 = com.nianticproject.holoholo.sfida.service.SfidaService.this;
-            r3 = r3.connectionState;
-            r4 = com.nianticproject.holoholo.sfida.constants.SfidaConstants.ConnectionState.RE_BOND;
-            if (r3 != r4) goto L_0x002f;
-        L_0x0098:
-            r3 = com.nianticproject.holoholo.sfida.service.SfidaService.this;
-            r4 = com.nianticproject.holoholo.sfida.constants.SfidaConstants.ConnectionState.NO_CONNECTION;
-            r3.setConnectionState(r4);
-            r3 = com.nianticproject.holoholo.sfida.service.SfidaService.this;
-            r4 = com.nianticproject.holoholo.sfida.service.SfidaService.this;
-            r4 = r4.bluetoothDeviceAddress;
-            r3 = r3.getDevice(r4);
-            com.nianticproject.holoholo.sfida.SfidaUtils.createBond(r3);
-            r3 = com.nianticproject.holoholo.sfida.service.SfidaService.this;
-            r4 = "com.nianticproject.holoholo.sfida.ACTION_CREATE_BOND";
-            r3.sendBroadcast(r4);
-            goto L_0x002f;
-        L_0x00b7:
-            r3 = com.nianticproject.holoholo.sfida.service.SfidaService.this;
-            r3 = r3.getApplicationContext();
-            com.nianticproject.holoholo.sfida.SfidaNotification.dissmiss(r3);
-            r3 = com.nianticproject.holoholo.sfida.service.SfidaService.this;
-            r3.disconnectBluetooth();
-            goto L_0x002f;
-        L_0x00c7:
-            r3 = com.nianticproject.holoholo.sfida.service.SfidaService.this;
-            r4 = com.nianticproject.holoholo.sfida.SfidaMessage.UUID_LED_VIBRATE_CTRL_CHAR;
-            r5 = com.nianticproject.holoholo.sfida.SfidaMessage.getBlinkRed();
-            r3.sendDeviceControlMessage(r4, r5);
-            goto L_0x002f;
-        L_0x00d4:
-            r3 = "android.bluetooth.device.extra.DEVICE";
-            r1 = r10.getParcelableExtra(r3);
-            r1 = (android.bluetooth.BluetoothDevice) r1;
-            r3 = r1.getClass();	 Catch:{ IllegalAccessException -> 0x0111, InvocationTargetException -> 0x0117, NoSuchMethodException -> 0x011d }
-            r4 = "setPairingConfirmation";
-            r5 = 1;
-            r5 = new java.lang.Class[r5];	 Catch:{ IllegalAccessException -> 0x0111, InvocationTargetException -> 0x0117, NoSuchMethodException -> 0x011d }
-            r6 = 0;
-            r7 = java.lang.Boolean.TYPE;	 Catch:{ IllegalAccessException -> 0x0111, InvocationTargetException -> 0x0117, NoSuchMethodException -> 0x011d }
-            r5[r6] = r7;	 Catch:{ IllegalAccessException -> 0x0111, InvocationTargetException -> 0x0117, NoSuchMethodException -> 0x011d }
-            r3 = r3.getMethod(r4, r5);	 Catch:{ IllegalAccessException -> 0x0111, InvocationTargetException -> 0x0117, NoSuchMethodException -> 0x011d }
-            r4 = 1;
-            r4 = new java.lang.Object[r4];	 Catch:{ IllegalAccessException -> 0x0111, InvocationTargetException -> 0x0117, NoSuchMethodException -> 0x011d }
-            r5 = 0;
-            r6 = 1;
-            r6 = java.lang.Boolean.valueOf(r6);	 Catch:{ IllegalAccessException -> 0x0111, InvocationTargetException -> 0x0117, NoSuchMethodException -> 0x011d }
-            r4[r5] = r6;	 Catch:{ IllegalAccessException -> 0x0111, InvocationTargetException -> 0x0117, NoSuchMethodException -> 0x011d }
-            r3.invoke(r1, r4);	 Catch:{ IllegalAccessException -> 0x0111, InvocationTargetException -> 0x0117, NoSuchMethodException -> 0x011d }
-            r3 = r1.getClass();	 Catch:{ IllegalAccessException -> 0x0111, InvocationTargetException -> 0x0117, NoSuchMethodException -> 0x011d }
-            r4 = "cancelPairingUserInput";
-            r5 = 0;
-            r5 = new java.lang.Class[r5];	 Catch:{ IllegalAccessException -> 0x0111, InvocationTargetException -> 0x0117, NoSuchMethodException -> 0x011d }
-            r3 = r3.getMethod(r4, r5);	 Catch:{ IllegalAccessException -> 0x0111, InvocationTargetException -> 0x0117, NoSuchMethodException -> 0x011d }
-            r4 = 0;
-            r4 = new java.lang.Object[r4];	 Catch:{ IllegalAccessException -> 0x0111, InvocationTargetException -> 0x0117, NoSuchMethodException -> 0x011d }
-            r3.invoke(r1, r4);	 Catch:{ IllegalAccessException -> 0x0111, InvocationTargetException -> 0x0117, NoSuchMethodException -> 0x011d }
-            goto L_0x002f;
-        L_0x0111:
-            r2 = move-exception;
-            r2.printStackTrace();
-            goto L_0x002f;
-        L_0x0117:
-            r2 = move-exception;
-            r2.printStackTrace();
-            goto L_0x002f;
-        L_0x011d:
-            r2 = move-exception;
-            r2.printStackTrace();
-            goto L_0x002f;
-            */
-            throw new UnsupportedOperationException("Method not decompiled: com.nianticproject.holoholo.sfida.service.SfidaService.1.onReceive(android.content.Context, android.content.Intent):void");
+       public void onReceive(final Context context, final Intent intent) {
+            int n = 0;
+            Log.d(SfidaService.TAG, "onReceive() : " + intent.getAction());
+            final String action = intent.getAction();
+            if (action == null) {
+                Log.d(SfidaService.TAG, "onReceived() action was null");
+            } else {
+                switch (action) {
+                    case "android.bluetooth.device.action.BOND_STATE_CHANGED":
+                        SfidaService.this.onBondStateChanged(intent);
+                        break;
+                    case "android.bluetooth.device.action.ACL_DISCONNECTED":
+                        if (SfidaService.this.connectionState == SfidaConstants.ConnectionState.RE_BOND) {
+                            SfidaService.this.setConnectionState(SfidaConstants.ConnectionState.NO_CONNECTION);
+                            SfidaUtils.createBond(SfidaService.this.getDevice(SfidaService.this.bluetoothDeviceAddress));
+                            SfidaService.this.sendBroadcast("com.nianticproject.holoholo.sfida.ACTION_CREATE_BOND");
+                        }
+                        break;
+                    case "com.nianticproject.holoholo.sfida.dismiss":
+                        SfidaNotification.dissmiss(SfidaService.this.getApplicationContext());
+                        SfidaService.this.disconnectBluetooth();
+                        break;
+                    case "com.nianticproject.holoholo.sfida.vibrate":
+                        SfidaService.this.sendDeviceControlMessage(SfidaMessage.UUID_LED_VIBRATE_CTRL_CHAR, SfidaMessage.getBlinkRed());
+                        break;
+                    case "android.bluetooth.device.action.PAIRING_REQUEST":
+                        final BluetoothDevice bluetoothDevice = intent.getParcelableExtra("android.bluetooth.device.extra.DEVICE");
+                        try {
+                            bluetoothDevice.getClass().getMethod("setPairingConfirmation", Boolean.TYPE).invoke(bluetoothDevice, true);
+                            bluetoothDevice.getClass().getMethod("cancelPairingUserInput").invoke(bluetoothDevice);
+                        } catch (IllegalAccessException ex) {
+                            ex.printStackTrace();
+                        } catch (InvocationTargetException ex2) {
+                            ex2.printStackTrace();
+                        } catch (NoSuchMethodException ex3) {
+                            ex3.printStackTrace();
+                        }
+                        break;
+                    default:
+                        Log.d(SfidaService.TAG, "onReceive() : " + action);
+                }
+            }
         }
     };
     private Certificator certificator = new Certificator(this);
