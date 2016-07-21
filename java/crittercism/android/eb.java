@@ -18,10 +18,10 @@ public final class eb {
     }
 
     public static String b(File file) {
-        InputStreamReader inputStreamReader;
         Throwable th;
         InputStream inputStream = null;
         StringBuilder stringBuilder = new StringBuilder();
+        InputStreamReader inputStreamReader;
         try {
             InputStream fileInputStream = new FileInputStream(file);
             try {
