@@ -5,7 +5,6 @@ import android.content.ContextWrapper;
 import android.view.MotionEvent;
 import android.view.MotionEvent.PointerCoords;
 import android.view.View;
-import com.nianticproject.holoholo.sfida.SfidaMessage;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import spacemadness.com.lunarconsole.R;
@@ -37,7 +36,7 @@ public final class p implements j {
                             case R.styleable.AdsAttrs_adSize /*0*/:
                             case R.styleable.LoadingImageView_imageAspectRatio /*1*/:
                             case R.styleable.LoadingImageView_circleCrop /*2*/:
-                            case SfidaMessage.ACTIVITY_BYTE_LENGTH /*3*/:
+                            case 3:
                             case 4:
                             case 5:
                             case 6:

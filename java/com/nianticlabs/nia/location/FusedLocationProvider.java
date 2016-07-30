@@ -5,8 +5,10 @@ import android.location.Location;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationAvailability;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.nianticlabs.nia.contextservice.ContextService;
 import com.nianticlabs.nia.contextservice.GoogleApiManager;
@@ -18,11 +20,23 @@ public class FusedLocationProvider implements Provider {
     private static final boolean ENABLE_VERBOSE_LOGS = false;
     private static final String TAG = "FusedLocationProvider";
     private AppState appState = AppState.STOP;
-    private LocationListener fusedListener = new LocationListener() {
-        public void onLocationChanged(Location location) {
-            ProviderListener listener = FusedLocationProvider.this.providerListener;
-            if (listener != null) {
-                listener.onProviderLocation(location);
+    private LocationCallback fusedListener = new LocationCallback() {
+        public void onLocationResult(LocationResult result) {
+            Location location = result.getLastLocation();
+            boolean isValidLocation = LocationServices.FusedLocationApi.getLocationAvailability(FusedLocationProvider.this.googleApiManager.getClient()).isLocationAvailable();
+            if (location != null && isValidLocation) {
+                ProviderListener listener = FusedLocationProvider.this.providerListener;
+                if (listener != null) {
+                    listener.onProviderLocation(location);
+                }
+            }
+        }
+
+        public void onLocationAvailability(LocationAvailability locationAvailability) {
+            if (locationAvailability.isLocationAvailable()) {
+                FusedLocationProvider.this.updateStatus(ServiceStatus.RUNNING);
+            } else {
+                FusedLocationProvider.this.updateStatus(ServiceStatus.PERMISSION_DENIED);
             }
         }
     };

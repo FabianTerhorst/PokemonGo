@@ -1,6 +1,5 @@
 package crittercism.android;
 
-import com.nianticproject.holoholo.sfida.SfidaMessage;
 import java.io.UnsupportedEncodingException;
 import spacemadness.com.lunarconsole.R;
 
@@ -39,7 +38,7 @@ public final class cr {
                 bArr2[i3 + 2] = a[(i4 >>> 6) & 63];
                 bArr2[i3 + 3] = (byte) 61;
                 break;
-            case SfidaMessage.ACTIVITY_BYTE_LENGTH /*3*/:
+            case 3:
                 bArr2[i3] = a[i4 >>> 18];
                 bArr2[i3 + 1] = a[(i4 >>> 12) & 63];
                 bArr2[i3 + 2] = a[(i4 >>> 6) & 63];

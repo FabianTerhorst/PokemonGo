@@ -8,7 +8,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.Builder;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.nianticproject.holoholo.sfida.SfidaMessage;
 import spacemadness.com.lunarconsole.R;
 
 public class GoogleApiManager {
@@ -175,7 +174,7 @@ public class GoogleApiManager {
             switch (AnonymousClass3.$SwitchMap$com$nianticlabs$nia$contextservice$GoogleApiManager$State[this.state.ordinal()]) {
                 case R.styleable.LoadingImageView_imageAspectRatio /*1*/:
                 case R.styleable.LoadingImageView_circleCrop /*2*/:
-                case SfidaMessage.ACTIVITY_BYTE_LENGTH /*3*/:
+                case 3:
                     Log.v(TAG, "State " + this.state.name() + " -> STARTING");
                     this.state = State.STARTING;
                     this.googleApiClient.connect();

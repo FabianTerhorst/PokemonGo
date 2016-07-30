@@ -85,9 +85,9 @@ public final class UxmSchema {
     }
 
     public static UxmSchema create(String uxmSchemaString, ObjectMapper mapper, UpsightLogger logger) throws IllegalArgumentException {
-        String errMsg;
         List<BaseSchema> itemList = new ArrayList();
         Map<String, BaseSchema> itemSchemaMap = new HashMap();
+        String errMsg;
         try {
             ArrayNode uxmSchemaNode = (ArrayNode) mapper.readTree(uxmSchemaString);
             Iterator i$ = uxmSchemaNode.iterator();

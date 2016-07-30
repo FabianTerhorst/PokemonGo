@@ -11,8 +11,7 @@ import android.view.Display;
 import android.view.WindowManager;
 import com.nianticlabs.nia.contextservice.ContextService;
 import com.nianticlabs.nia.contextservice.ServiceStatus;
-import com.nianticproject.holoholo.sfida.SfidaMessage;
-import com.nianticproject.holoholo.sfida.constants.BluetoothGattSupport;
+import com.nianticlabs.pokemongoplus.ble.BluetoothGattSupport;
 import spacemadness.com.lunarconsole.R;
 
 public class NianticSensorManager extends ContextService implements SensorEventListener {
@@ -207,7 +206,7 @@ public class NianticSensorManager extends ContextService implements SensorEventL
                 xAxis = BluetoothGattSupport.GATT_INTERNAL_ERROR;
                 yAxis = 130;
                 break;
-            case SfidaMessage.ACTIVITY_BYTE_LENGTH /*3*/:
+            case 3:
                 xAxis = 130;
                 yAxis = 1;
                 break;

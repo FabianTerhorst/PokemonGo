@@ -3,8 +3,7 @@ package crittercism.android;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import com.nianticproject.holoholo.sfida.SfidaMessage;
-import com.nianticproject.holoholo.sfida.constants.BluetoothGattSupport;
+import com.nianticlabs.pokemongoplus.ble.BluetoothGattSupport;
 import com.upsight.android.internal.persistence.subscription.Subscriptions;
 import spacemadness.com.lunarconsole.R;
 
@@ -51,7 +50,7 @@ public final class d {
                 case 7:
                 case 11:
                     return "2G";
-                case SfidaMessage.ACTIVITY_BYTE_LENGTH /*3*/:
+                case 3:
                 case 5:
                 case 6:
                 case BluetoothGattSupport.GATT_INSUF_AUTHENTICATION /*8*/:

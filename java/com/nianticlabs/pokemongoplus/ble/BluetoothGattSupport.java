@@ -1,4 +1,4 @@
-package com.nianticproject.holoholo.sfida.constants;
+package com.nianticlabs.pokemongoplus.ble;
 
 public class BluetoothGattSupport {
     public static final int GATT_ERROR = 133;

@@ -2,7 +2,6 @@ package com.upsight.android.internal;
 
 import android.content.Context;
 import android.util.Log;
-import com.nianticproject.holoholo.sfida.SfidaMessage;
 import com.squareup.otto.Bus;
 import com.squareup.otto.ThreadEnforcer;
 import com.upsight.android.internal.logger.LogWriter;
@@ -90,7 +89,7 @@ public final class ContextModule {
                     case R.styleable.LoadingImageView_circleCrop /*2*/:
                         Log.d(tag, message);
                         return;
-                    case SfidaMessage.ACTIVITY_BYTE_LENGTH /*3*/:
+                    case 3:
                         Log.i(tag, message);
                         return;
                     case 4:

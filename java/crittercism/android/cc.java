@@ -54,13 +54,13 @@ public final class cc implements cb {
     }
 
     public final JSONArray a() {
+        String num;
         JSONArray jSONArray = new JSONArray();
         Process process = null;
         if (VERSION.SDK_INT < 10) {
             jSONArray.put("Logcat data is not collected for Android APIs before 10 (Gingerbread)");
             jSONArray.put("API level is " + VERSION.SDK_INT + "(" + VERSION.CODENAME + ")");
         } else {
-            String num;
             try {
                 num = Integer.toString(100);
                 process = new ProcessBuilder(new String[]{"logcat", "-t", num, "-v", "time"}).redirectErrorStream(true).start();

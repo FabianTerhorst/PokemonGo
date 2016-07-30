@@ -10,7 +10,6 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.text.TextUtils;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
-import com.nianticproject.holoholo.sfida.SfidaMessage;
 import com.upsight.android.Upsight;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.UpsightGooglePushServicesExtension;
@@ -144,7 +143,7 @@ public final class PushIntentService extends IntentService {
                 case R.styleable.LoadingImageView_circleCrop /*2*/:
                     messageIntent = getPackageManager().getLaunchIntentForPackage(getPackageName());
                     break;
-                case SfidaMessage.ACTIVITY_BYTE_LENGTH /*3*/:
+                case 3:
                     try {
                         messageIntent = new Intent(this, Class.forName(uri.getQueryParameter(ACTION_ACTIVITY)));
                         break;

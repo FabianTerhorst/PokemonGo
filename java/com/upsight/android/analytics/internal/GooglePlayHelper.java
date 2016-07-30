@@ -53,8 +53,8 @@ class GooglePlayHelper extends UpsightGooglePlayHelper {
     }
 
     public void trackPurchase(int quantity, String currency, double price, double totalPrice, String product, Intent responseData, UpsightPublisherData publisherData) throws UpsightException {
-        int responseCode = responseData.getIntExtra(UpsightGooglePlayHelper.PURCHASE_RESPONSE_CODE, Integer.MIN_VALUE);
         String msg;
+        int responseCode = responseData.getIntExtra(UpsightGooglePlayHelper.PURCHASE_RESPONSE_CODE, Integer.MIN_VALUE);
         switch (responseCode) {
             case R.styleable.AdsAttrs_adSize /*0*/:
                 String purchaseData = responseData.getStringExtra(UpsightGooglePlayHelper.PURCHASE_INAPP_PURCHASE_DATA);

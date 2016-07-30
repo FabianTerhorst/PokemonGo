@@ -24,17 +24,25 @@ class GetSkuDetailsResponseItem {
         try {
             JSONObject jObject = new JSONObject(json);
             GetSkuDetailsResponseItem getSkuDetailsResponseItem = new GetSkuDetailsResponseItem();
-            getSkuDetailsResponseItem.productId = jObject.getString(Billing.PRODUCT_IDENTIFIER);
-            getSkuDetailsResponseItem.type = jObject.getString(Keys.TYPE);
-            getSkuDetailsResponseItem.price = jObject.getString("price");
-            getSkuDetailsResponseItem.price_amount_micros = jObject.getString("price_amount_micros");
-            getSkuDetailsResponseItem.price_currency_code = jObject.getString(Billing.PRODUCT_CURRENCY_CODE);
-            getSkuDetailsResponseItem.title = jObject.getString(Keys.TITLE);
-            getSkuDetailsResponseItem.description = jObject.getString("description");
+            getSkuDetailsResponseItem.productId = stringFromJson(jObject, Billing.PRODUCT_IDENTIFIER);
+            getSkuDetailsResponseItem.type = stringFromJson(jObject, Keys.TYPE);
+            getSkuDetailsResponseItem.price = stringFromJson(jObject, "price");
+            getSkuDetailsResponseItem.price_amount_micros = stringFromJson(jObject, "price_amount_micros");
+            getSkuDetailsResponseItem.price_currency_code = stringFromJson(jObject, Billing.PRODUCT_CURRENCY_CODE);
+            getSkuDetailsResponseItem.title = stringFromJson(jObject, Keys.TITLE);
+            getSkuDetailsResponseItem.description = stringFromJson(jObject, "description");
             return getSkuDetailsResponseItem;
         } catch (JSONException e) {
             Log.e(TAG, "Failed to parse GetSkuDetailsResponseItem", e);
             return null;
+        }
+    }
+
+    private static String stringFromJson(JSONObject jObject, String key) {
+        try {
+            return jObject.getString(key);
+        } catch (JSONException e) {
+            return BuildConfig.FLAVOR;
         }
     }
 

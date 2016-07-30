@@ -43,6 +43,8 @@ public class NiaNet {
 
     private static native void nativeCallback(long j, int i, String str, ByteBuffer byteBuffer, int i2, int i3);
 
+    private static native void nativeSetupConnection(long j, HttpURLConnection httpURLConnection);
+
     public static void request(long object, int request_id, String url, int method, String headers, ByteBuffer body, int bodyOffset, int bodySize) {
         synchronized (pendingRequestIds) {
             pendingRequestIds.add(Integer.valueOf(request_id));
@@ -120,70 +122,161 @@ public class NiaNet {
         }
     }
 
-    private static void doSyncRequest(long object, int request_id, String url, int method, String headers, ByteBuffer body, int bodyOffset, int bodyCount) {
-        synchronized (pendingRequestIds) {
-            if (!pendingRequestIds.contains(request_id)) {
-                return;
-            }
-            int responseSize = 0;
-            pendingRequestIds.remove(request_id);
-            HttpURLConnection conn = null;
-            int responseCode = HTTP_BAD_REQUEST;
-            String responseHeaders = null;
-            OutputStream os = null;
-            try {
-                conn = (HttpURLConnection) new URL(url).openConnection();
-                setHeaders(conn, headers);
-                conn.setConnectTimeout(NETWORK_TIMEOUT_MS);
-                conn.setRequestProperty("Connection", "Keep-Alive");
-                HttpURLConnection.setFollowRedirects(false);
-                conn.setRequestMethod(getMethodString(method));
-                if (body != null && bodyCount > 0) {
-                    conn.setDoOutput(true);
-                    os = conn.getOutputStream();
-                    if (body.hasArray()) {
-                        os.write(body.array(), body.arrayOffset() + bodyOffset, bodyCount);
-                    } else {
-                        byte[] chunk = threadChunk.get();
-                        while (body.hasRemaining()) {
-                            int bytesToRead = Math.min(body.remaining(), chunk.length);
-                            body.get(chunk, METHOD_GET, bytesToRead);
-                            os.write(chunk, METHOD_GET, bytesToRead);
-                        }
-                    }
-                    os.close();
-                }
-                responseCode = conn.getResponseCode();
-                responseHeaders = joinHeaders(conn);
-                responseSize = readDataSteam(conn);
-                conn.disconnect();
-            } catch (IOException e) {
-                try {
-                    Log.e(TAG, "Network op failed: " + e.getMessage());
-                    responseSize = 0;
-                    if (conn != null) {
-                        conn.disconnect();
-                    }
-                } catch (Throwable th) {
-                    if (conn != null) {
-                        conn.disconnect();
-                    }
-                }
-            } catch (Throwable th2) {
-                if (os != null) {
-                    try {
-                        os.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            if (responseSize > 0) {
-                nativeCallback(object, responseCode, responseHeaders, readBuffer.get(), 0, responseSize);
-            } else {
-                nativeCallback(object, responseCode, responseHeaders, null, 0, 0);
-            }
-        }
+    /* JADX WARNING: inconsistent code. */
+    /* Code decompiled incorrectly, please refer to instructions dump. */
+    private static void doSyncRequest(long r24, int r26, java.lang.String r27, int r28, java.lang.String r29, java.nio.ByteBuffer r30, int r31, int r32) {
+        /*
+        r5 = pendingRequestIds;
+        monitor-enter(r5);
+        r4 = pendingRequestIds;	 Catch:{ all -> 0x00b0 }
+        r9 = java.lang.Integer.valueOf(r26);	 Catch:{ all -> 0x00b0 }
+        r4 = r4.contains(r9);	 Catch:{ all -> 0x00b0 }
+        if (r4 != 0) goto L_0x0015;
+    L_0x000f:
+        r22 = 1;
+    L_0x0011:
+        if (r22 == 0) goto L_0x0018;
+    L_0x0013:
+        monitor-exit(r5);	 Catch:{ all -> 0x00b0 }
+    L_0x0014:
+        return;
+    L_0x0015:
+        r22 = 0;
+        goto L_0x0011;
+    L_0x0018:
+        r4 = pendingRequestIds;	 Catch:{ all -> 0x00b0 }
+        r9 = java.lang.Integer.valueOf(r26);	 Catch:{ all -> 0x00b0 }
+        r4.remove(r9);	 Catch:{ all -> 0x00b0 }
+        monitor-exit(r5);	 Catch:{ all -> 0x00b0 }
+        r20 = 0;
+        r6 = 400; // 0x190 float:5.6E-43 double:1.976E-321;
+        r7 = 0;
+        r10 = 0;
+        r4 = new java.net.URL;	 Catch:{ IOException -> 0x00e2 }
+        r0 = r27;
+        r4.<init>(r0);	 Catch:{ IOException -> 0x00e2 }
+        r4 = r4.openConnection();	 Catch:{ IOException -> 0x00e2 }
+        r4 = (java.net.HttpURLConnection) r4;	 Catch:{ IOException -> 0x00e2 }
+        r0 = r4;
+        r0 = (java.net.HttpURLConnection) r0;	 Catch:{ IOException -> 0x00e2 }
+        r20 = r0;
+        r0 = r20;
+        r1 = r29;
+        setHeaders(r0, r1);	 Catch:{ IOException -> 0x00e2 }
+        r4 = 15000; // 0x3a98 float:2.102E-41 double:7.411E-320;
+        r0 = r20;
+        r0.setConnectTimeout(r4);	 Catch:{ IOException -> 0x00e2 }
+        r4 = "Connection";
+        r5 = "Keep-Alive";
+        r0 = r20;
+        r0.setRequestProperty(r4, r5);	 Catch:{ IOException -> 0x00e2 }
+        r4 = 0;
+        java.net.HttpURLConnection.setFollowRedirects(r4);	 Catch:{ IOException -> 0x00e2 }
+        r0 = r24;
+        r2 = r20;
+        nativeSetupConnection(r0, r2);	 Catch:{ IOException -> 0x00e2 }
+        r4 = getMethodString(r28);	 Catch:{ IOException -> 0x00e2 }
+        r0 = r20;
+        r0.setRequestMethod(r4);	 Catch:{ IOException -> 0x00e2 }
+        if (r30 == 0) goto L_0x008d;
+    L_0x0067:
+        if (r32 <= 0) goto L_0x008d;
+    L_0x0069:
+        r4 = 1;
+        r0 = r20;
+        r0.setDoOutput(r4);	 Catch:{ IOException -> 0x00e2 }
+        r23 = r20.getOutputStream();	 Catch:{ IOException -> 0x00e2 }
+        r4 = r30.hasArray();	 Catch:{ all -> 0x00dd }
+        if (r4 == 0) goto L_0x00b3;
+    L_0x0079:
+        r4 = r30.array();	 Catch:{ all -> 0x00dd }
+        r5 = r30.arrayOffset();	 Catch:{ all -> 0x00dd }
+        r5 = r5 + r31;
+        r0 = r23;
+        r1 = r32;
+        r0.write(r4, r5, r1);	 Catch:{ all -> 0x00dd }
+    L_0x008a:
+        r23.close();	 Catch:{ IOException -> 0x00e2 }
+    L_0x008d:
+        r6 = r20.getResponseCode();	 Catch:{ IOException -> 0x00e2 }
+        r7 = joinHeaders(r20);	 Catch:{ IOException -> 0x00e2 }
+        r10 = readDataSteam(r20);	 Catch:{ IOException -> 0x00e2 }
+        if (r20 == 0) goto L_0x009e;
+    L_0x009b:
+        r20.disconnect();
+    L_0x009e:
+        if (r10 <= 0) goto L_0x010d;
+    L_0x00a0:
+        r4 = readBuffer;
+        r8 = r4.get();
+        r8 = (java.nio.ByteBuffer) r8;
+        r9 = 0;
+        r4 = r24;
+        nativeCallback(r4, r6, r7, r8, r9, r10);
+        goto L_0x0014;
+    L_0x00b0:
+        r4 = move-exception;
+        monitor-exit(r5);	 Catch:{ all -> 0x00b0 }
+        throw r4;
+    L_0x00b3:
+        r4 = threadChunk;	 Catch:{ all -> 0x00dd }
+        r19 = r4.get();	 Catch:{ all -> 0x00dd }
+        r19 = (byte[]) r19;	 Catch:{ all -> 0x00dd }
+    L_0x00bb:
+        r4 = r30.hasRemaining();	 Catch:{ all -> 0x00dd }
+        if (r4 == 0) goto L_0x008a;
+    L_0x00c1:
+        r4 = r30.remaining();	 Catch:{ all -> 0x00dd }
+        r0 = r19;
+        r5 = r0.length;	 Catch:{ all -> 0x00dd }
+        r11 = java.lang.Math.min(r4, r5);	 Catch:{ all -> 0x00dd }
+        r4 = 0;
+        r0 = r30;
+        r1 = r19;
+        r0.get(r1, r4, r11);	 Catch:{ all -> 0x00dd }
+        r4 = 0;
+        r0 = r23;
+        r1 = r19;
+        r0.write(r1, r4, r11);	 Catch:{ all -> 0x00dd }
+        goto L_0x00bb;
+    L_0x00dd:
+        r4 = move-exception;
+        r23.close();	 Catch:{ IOException -> 0x00e2 }
+        throw r4;	 Catch:{ IOException -> 0x00e2 }
+    L_0x00e2:
+        r21 = move-exception;
+        r4 = "NiaNet";
+        r5 = new java.lang.StringBuilder;	 Catch:{ all -> 0x0106 }
+        r5.<init>();	 Catch:{ all -> 0x0106 }
+        r9 = "Network op failed: ";
+        r5 = r5.append(r9);	 Catch:{ all -> 0x0106 }
+        r9 = r21.getMessage();	 Catch:{ all -> 0x0106 }
+        r5 = r5.append(r9);	 Catch:{ all -> 0x0106 }
+        r5 = r5.toString();	 Catch:{ all -> 0x0106 }
+        android.util.Log.e(r4, r5);	 Catch:{ all -> 0x0106 }
+        r10 = 0;
+        if (r20 == 0) goto L_0x009e;
+    L_0x0102:
+        r20.disconnect();
+        goto L_0x009e;
+    L_0x0106:
+        r4 = move-exception;
+        if (r20 == 0) goto L_0x010c;
+    L_0x0109:
+        r20.disconnect();
+    L_0x010c:
+        throw r4;
+    L_0x010d:
+        r16 = 0;
+        r17 = 0;
+        r18 = 0;
+        r12 = r24;
+        r14 = r6;
+        r15 = r7;
+        nativeCallback(r12, r14, r15, r16, r17, r18);
+        goto L_0x0014;
+        */
+        throw new UnsupportedOperationException("Method not decompiled: com.nianticlabs.nia.network.NiaNet.doSyncRequest(long, int, java.lang.String, int, java.lang.String, java.nio.ByteBuffer, int, int):void");
     }
 
     private static String getMethodString(int method) {

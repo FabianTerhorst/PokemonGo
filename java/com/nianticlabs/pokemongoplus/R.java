@@ -1,4 +1,4 @@
-package com.nianticproject.holoholo.sfida;
+package com.nianticlabs.pokemongoplus;
 
 public final class R {
 
@@ -86,8 +86,8 @@ public final class R {
         public static final int common_signin_btn_text_normal_light = 2130837531;
         public static final int common_signin_btn_text_pressed_dark = 2130837532;
         public static final int common_signin_btn_text_pressed_light = 2130837533;
-        public static final int ic_eject_black_48dp = 2130837534;
-        public static final int ic_launcher = 2130837535;
+        public static final int ic_launcher = 2130837534;
+        public static final int ic_swap_horiz_white_24dp = 2130837535;
         public static final int lunar_console_icon_button_clear = 2130837536;
         public static final int lunar_console_icon_button_clipboard = 2130837537;
         public static final int lunar_console_icon_button_close = 2130837538;
@@ -105,6 +105,7 @@ public final class R {
         public static final int np_webview_reload_button_normal = 2130837550;
         public static final int powered_by_google_dark = 2130837551;
         public static final int powered_by_google_light = 2130837552;
+        public static final int sfida_icon = 2130837553;
     }
 
     public static final class id {

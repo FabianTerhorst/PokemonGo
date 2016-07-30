@@ -1,6 +1,5 @@
 package com.upsight.android.analytics.internal.dispatcher.routing;
 
-import com.nianticproject.holoholo.sfida.SfidaMessage;
 import com.upsight.android.analytics.dispatcher.EndpointResponse;
 import com.upsight.android.analytics.internal.DataStoreRecord;
 import com.upsight.android.analytics.internal.dispatcher.delivery.OnDeliveryListener;
@@ -81,7 +80,7 @@ public class Router implements OnDeliveryListener, OnResponseListener {
                         Router.this.mRoutingListener.onDelivery(packet.getRecord(), true, false, null);
                         Router.this.finishPacket();
                         return;
-                    case SfidaMessage.ACTIVITY_BYTE_LENGTH /*3*/:
+                    case 3:
                         Router.this.mRoutingListener.onDelivery(packet.getRecord(), false, true, packet.getDeliveryHistory());
                         Router.this.finishPacket();
                         return;

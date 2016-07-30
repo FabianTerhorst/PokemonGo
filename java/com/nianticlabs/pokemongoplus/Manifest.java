@@ -1,4 +1,4 @@
-package com.nianticproject.holoholo.sfida;
+package com.nianticlabs.pokemongoplus;
 
 public final class Manifest {
 
