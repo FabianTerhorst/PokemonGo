@@ -1,8 +1,7 @@
 package com.upsight.android.analytics.event.install;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.analytics.event.UpsightPublisherData;
 import com.upsight.android.analytics.internal.AnalyticsEvent;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
@@ -45,17 +44,17 @@ public class UpsightInstallEvent extends AnalyticsEvent<UpsightData> {
     }
 
     static class UpsightData {
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("referrer")
+        @SerializedName("referrer")
+        @Expose
         String referrer;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("source_id")
+        @SerializedName("source_id")
+        @Expose
         String sourceId;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("stream_id")
+        @SerializedName("stream_id")
+        @Expose
         String streamId;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("stream_start_ts")
+        @SerializedName("stream_start_ts")
+        @Expose
         String streamStartTs;
 
         protected UpsightData(Builder builder) {

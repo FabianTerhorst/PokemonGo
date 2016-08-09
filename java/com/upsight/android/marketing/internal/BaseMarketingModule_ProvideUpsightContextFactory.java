@@ -2,6 +2,7 @@ package com.upsight.android.marketing.internal;
 
 import com.upsight.android.UpsightContext;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 
 public final class BaseMarketingModule_ProvideUpsightContextFactory implements Factory<UpsightContext> {
     static final /* synthetic */ boolean $assertionsDisabled = (!BaseMarketingModule_ProvideUpsightContextFactory.class.desiredAssertionStatus());
@@ -16,11 +17,7 @@ public final class BaseMarketingModule_ProvideUpsightContextFactory implements F
     }
 
     public UpsightContext get() {
-        UpsightContext provided = this.module.provideUpsightContext();
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (UpsightContext) Preconditions.checkNotNull(this.module.provideUpsightContext(), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<UpsightContext> create(BaseMarketingModule module) {

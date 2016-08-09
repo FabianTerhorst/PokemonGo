@@ -2,6 +2,7 @@ package com.upsight.android.internal;
 
 import com.upsight.android.internal.persistence.storable.StorableIdFactory;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 
 public final class ContextModule_ProvideTypeIdGeneratorFactory implements Factory<StorableIdFactory> {
     static final /* synthetic */ boolean $assertionsDisabled = (!ContextModule_ProvideTypeIdGeneratorFactory.class.desiredAssertionStatus());
@@ -16,11 +17,7 @@ public final class ContextModule_ProvideTypeIdGeneratorFactory implements Factor
     }
 
     public StorableIdFactory get() {
-        StorableIdFactory provided = this.module.provideTypeIdGenerator();
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (StorableIdFactory) Preconditions.checkNotNull(this.module.provideTypeIdGenerator(), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<StorableIdFactory> create(ContextModule module) {

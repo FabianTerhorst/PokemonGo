@@ -1,7 +1,9 @@
 package com.upsight.android;
 
+import android.content.ContentProviderClient;
 import android.content.Context;
 import android.content.ContextWrapper;
+import com.upsight.android.internal.persistence.Content;
 import com.upsight.android.logger.UpsightLogger;
 import com.upsight.android.persistence.UpsightDataStore;
 import java.util.Map;
@@ -31,6 +33,11 @@ public class UpsightContext extends ContextWrapper {
 
     void onCreate(UpsightCoreComponent coreComponent, Map<String, UpsightExtension> extensions) {
         this.mCoreComponent = coreComponent;
+        ContentProviderClient client = getContentResolver().acquireContentProviderClient(Content.getAuthoritytUri(this));
+        if (client == null) {
+            throw new IllegalStateException("Verify that the Upsight content provider is configured correctly in the Android Manifest:\n        <provider\n            android:name=\"com.upsight.android.internal.persistence.ContentProvider\"\n            android:authorities=\"" + getPackageName() + ".upsight\"\n" + "            android:enabled=\"true\"\n" + "            android:exported=\"false\" />");
+        }
+        client.release();
         for (Entry<String, UpsightExtension> entry : extensions.entrySet()) {
             UpsightExtension extension = (UpsightExtension) entry.getValue();
             extension.setComponent(extension.onResolve(coreComponent.upsightContext()));

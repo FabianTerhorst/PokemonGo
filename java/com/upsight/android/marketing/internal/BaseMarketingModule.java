@@ -4,6 +4,7 @@ import com.upsight.android.UpsightContext;
 import com.upsight.android.marketing.UpsightBillboardManager;
 import com.upsight.android.marketing.UpsightMarketingApi;
 import com.upsight.android.marketing.UpsightMarketingContentStore;
+import com.upsight.android.marketing.internal.content.MarketingContentMediatorManager;
 import dagger.Module;
 import dagger.Provides;
 import javax.inject.Named;
@@ -28,8 +29,8 @@ public final class BaseMarketingModule {
 
     @Singleton
     @Provides
-    UpsightMarketingApi provideMarketingApi(UpsightBillboardManager billboardManager, UpsightMarketingContentStore marketingContentStore) {
-        return new Marketing(billboardManager, marketingContentStore);
+    UpsightMarketingApi provideMarketingApi(UpsightBillboardManager billboardManager, UpsightMarketingContentStore contentStore, MarketingContentMediatorManager contentMediatorManager) {
+        return new Marketing(billboardManager, contentStore, contentMediatorManager);
     }
 
     @Singleton

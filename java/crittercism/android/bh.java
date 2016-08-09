@@ -2,6 +2,7 @@ package crittercism.android;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import com.upsight.mediation.ads.adapters.NetworkWrapper;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -44,7 +45,7 @@ public final class bh {
     public final long a(String str) {
         JSONObject optJSONObject = this.d.optJSONObject(str);
         if (optJSONObject != null) {
-            return optJSONObject.optLong("timeout", (long) this.c);
+            return optJSONObject.optLong(NetworkWrapper.TIMEOUT, (long) this.c);
         }
         return (long) this.c;
     }

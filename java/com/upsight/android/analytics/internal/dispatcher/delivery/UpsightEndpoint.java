@@ -3,7 +3,8 @@ package com.upsight.android.analytics.internal.dispatcher.delivery;
 import android.os.Build.VERSION;
 import android.text.TextUtils;
 import android.util.Base64;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonParser;
 import com.upsight.android.Upsight;
 import com.upsight.android.internal.util.GzipHelper;
 import com.upsight.android.logger.UpsightLogger;
@@ -34,8 +35,10 @@ class UpsightEndpoint {
     private static final String USER_AGENT_ANDROID = ("Android-" + VERSION.SDK_INT);
     private static final boolean USE_GZIP = false;
     private String mEndpointAddress;
+    private Gson mGson;
+    private JsonParser mJsonParser;
     private UpsightLogger mLogger;
-    private ObjectMapper mMapper;
+    private Gson mRequestLoggingGson;
     private SignatureVerifier mSignatureVerifier;
 
     public static class Response {
@@ -52,10 +55,12 @@ class UpsightEndpoint {
         }
     }
 
-    public UpsightEndpoint(String endpointAddress, SignatureVerifier signatureVerifier, ObjectMapper mapper, UpsightLogger logger) {
+    public UpsightEndpoint(String endpointAddress, SignatureVerifier signatureVerifier, Gson gson, JsonParser jsonParser, Gson requestLoggingGson, UpsightLogger logger) {
         this.mEndpointAddress = endpointAddress;
         this.mSignatureVerifier = signatureVerifier;
-        this.mMapper = mapper;
+        this.mGson = gson;
+        this.mJsonParser = jsonParser;
+        this.mRequestLoggingGson = requestLoggingGson;
         this.mLogger = logger;
     }
 
@@ -63,8 +68,8 @@ class UpsightEndpoint {
         String refId = UUID.randomUUID().toString();
         HttpURLConnection urlConnection = null;
         try {
-            String requestBody = this.mMapper.writeValueAsString(request);
-            this.mLogger.d(Upsight.LOG_TAG, LOG_TEXT_POSTING + refId + LOG_TEXT_TO + this.mEndpointAddress + LOG_TEXT_REQUEST_BODY + requestBody, new Object[0]);
+            String requestBody = this.mGson.toJson(request);
+            this.mLogger.d(Upsight.LOG_TAG, LOG_TEXT_POSTING + refId + LOG_TEXT_TO + this.mEndpointAddress + LOG_TEXT_REQUEST_BODY + this.mRequestLoggingGson.toJson(request), new Object[0]);
             byte[] body = getRequestBodyBytes(requestBody, false);
             urlConnection = (HttpURLConnection) new URL(this.mEndpointAddress).openConnection();
             urlConnection.setRequestMethod(POST_METHOD_NAME);
@@ -82,8 +87,14 @@ class UpsightEndpoint {
             int statusCode = urlConnection.getResponseCode();
             StringBuilder sb = new StringBuilder().append(LOG_TEXT_RECEIVING).append(refId).append(LOG_TEXT_STATUS_CODE).append(statusCode);
             if (statusCode == 200) {
+                String logRespBody;
                 respBody = getVerifiedResponse(urlConnection);
-                sb.append(LOG_TEXT_RESPONSE_BODY).append(TextUtils.isEmpty(respBody) ? LOG_TEXT_RESPONSE_BODY_NONE : respBody);
+                if (TextUtils.isEmpty(respBody)) {
+                    logRespBody = LOG_TEXT_RESPONSE_BODY_NONE;
+                } else {
+                    logRespBody = this.mRequestLoggingGson.toJson(this.mJsonParser.parse(respBody));
+                }
+                sb.append(LOG_TEXT_RESPONSE_BODY).append(logRespBody);
             }
             this.mLogger.d(Upsight.LOG_TAG, sb.toString(), new Object[0]);
             Response response = new Response(statusCode, respBody);

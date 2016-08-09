@@ -23,17 +23,20 @@ public class SfidaConstant {
     public static final UUID UUID_SFIDA_TO_CENTRAL_CHAR = UUID.fromString("bbe87709-5b89-4433-ab7f-8b8eef0d8e3a");
 
     public enum BluetoothError {
-        Unknown(1),
-        InvalidParameters(2),
-        InvalidHandle(3),
-        NotConnected(4),
-        OutOfSpace(5),
-        OperationCancelled(6),
-        ConnectionTimeout(7),
-        PeripheralDisconnected(8),
-        UUIDNotAllowed(9),
-        AlreadyAdvertising(10),
-        ConnectionFailed(11);
+        Unknown(0),
+        InvalidParameters(1),
+        InvalidHandle(2),
+        NotConnected(3),
+        OutOfSpace(4),
+        OperationCancelled(5),
+        ConnectionTimeout(6),
+        PeripheralDisconnected(7),
+        UUIDNotAllowed(8),
+        AlreadyAdvertising(9),
+        ConnectionFailed(10),
+        AuthenticationFailure(11),
+        CertificationServerError(12),
+        CertificationError(13);
         
         private final int id;
 
@@ -68,7 +71,8 @@ public class SfidaConstant {
     public enum PeripheralState {
         Disconnected(0),
         Connecting(1),
-        Connected(2);
+        Connected(2),
+        Disconnecting(3);
         
         private final int id;
 

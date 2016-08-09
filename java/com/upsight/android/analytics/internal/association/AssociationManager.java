@@ -1,9 +1,9 @@
 package com.upsight.android.analytics.internal.association;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.JsonObject;
 
 public interface AssociationManager {
-    void associate(String str, ObjectNode objectNode);
+    void associate(String str, JsonObject jsonObject);
 
     void launch();
 }

@@ -6,6 +6,7 @@ import com.upsight.android.internal.persistence.storable.StorableIdFactory;
 import com.upsight.android.internal.persistence.storable.StorableInfoCache;
 import com.upsight.android.persistence.UpsightDataStore;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 import rx.Scheduler;
 
@@ -52,11 +53,7 @@ public final class PersistenceModule_ProvideDataStoreFactory implements Factory<
     }
 
     public UpsightDataStore get() {
-        UpsightDataStore provided = this.module.provideDataStore((Context) this.contextProvider.get(), (StorableInfoCache) this.infoCacheProvider.get(), (StorableIdFactory) this.idFactoryProvider.get(), (Scheduler) this.subscribeOnSchedulerProvider.get(), (Scheduler) this.observeOnSchedulerProvider.get(), (Bus) this.busProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (UpsightDataStore) Preconditions.checkNotNull(this.module.provideDataStore((Context) this.contextProvider.get(), (StorableInfoCache) this.infoCacheProvider.get(), (StorableIdFactory) this.idFactoryProvider.get(), (Scheduler) this.subscribeOnSchedulerProvider.get(), (Scheduler) this.observeOnSchedulerProvider.get(), (Bus) this.busProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<UpsightDataStore> create(PersistenceModule module, Provider<Context> contextProvider, Provider<StorableInfoCache> infoCacheProvider, Provider<StorableIdFactory> idFactoryProvider, Provider<Scheduler> subscribeOnSchedulerProvider, Provider<Scheduler> observeOnSchedulerProvider, Provider<Bus> busProvider) {

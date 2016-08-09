@@ -14,6 +14,7 @@ import spacemadness.com.lunarconsole.BuildConfig;
 
 @Module
 public final class PropertiesModule {
+    private static final int APP_TOKEN_LENGTH = 32;
     public static final String KEY_APP_TOKEN = "com.upsight.app_token";
     public static final String KEY_PUBLIC_KEY = "com.upsight.public_key";
     public static final String KEY_SDK_PLUGIN = "com.upsight.sdk_plugin";
@@ -47,10 +48,13 @@ public final class PropertiesModule {
         } catch (NameNotFoundException e) {
             logger.e(Upsight.LOG_TAG, "Unexpected error: Package name missing", e);
         }
-        if (!TextUtils.isEmpty(appToken)) {
+        if (TextUtils.isEmpty(appToken)) {
+            throw new IllegalStateException("App token must be set in the Android Manifest with <meta-data android:name=\"com.upsight.app_token\" android:value=\"UPSIGHT_APPLICATION_TOKEN\" />");
+        } else if (appToken.length() == APP_TOKEN_LENGTH) {
             return appToken;
+        } else {
+            throw new IllegalStateException("Invalid app token set in the Android Manifest with <meta-data android:name=\"com.upsight.app_token\" android:value=\"UPSIGHT_APPLICATION_TOKEN\" />");
         }
-        throw new IllegalStateException("App token must be set in the Android Manifest with <meta-data android:name=\"com.upsight.app_token\" android:value=\"UPSIGHT_APPLICATION_TOKEN\" />");
     }
 
     @Singleton

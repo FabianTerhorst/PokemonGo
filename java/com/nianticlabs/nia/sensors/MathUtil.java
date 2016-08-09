@@ -1,5 +1,7 @@
 package com.nianticlabs.nia.sensors;
 
+import com.upsight.android.googlepushservices.UpsightPushNotificationBuilderFactory.Default;
+
 public final class MathUtil {
     public static final float DEGREES_TO_RADIANS = 0.017453292f;
     public static final float HALF_PI = 1.5707964f;
@@ -85,8 +87,8 @@ public final class MathUtil {
         float[] a = new float[(N * 2)];
         for (int i = 0; i < N; i++) {
             float t = ((float) i) * (1.0f / ((float) (N - 1)));
-            a[i * 2] = ((((1.0f - t) * (1.0f - t)) * x0) + ((((1.0f - t) * 2.0f) * t) * x1)) + ((t * t) * x2);
-            a[(i * 2) + 1] = ((((1.0f - t) * (1.0f - t)) * y0) + ((((1.0f - t) * 2.0f) * t) * y1)) + ((t * t) * y2);
+            a[i * 2] = ((((1.0f - t) * (1.0f - t)) * x0) + ((((1.0f - t) * Default.HTTP_REQUEST_BACKOFF_MULT) * t) * x1)) + ((t * t) * x2);
+            a[(i * 2) + 1] = ((((1.0f - t) * (1.0f - t)) * y0) + ((((1.0f - t) * Default.HTTP_REQUEST_BACKOFF_MULT) * t) * y1)) + ((t * t) * y2);
         }
         return a;
     }

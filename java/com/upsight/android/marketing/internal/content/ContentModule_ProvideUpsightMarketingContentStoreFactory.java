@@ -2,6 +2,7 @@ package com.upsight.android.marketing.internal.content;
 
 import com.upsight.android.marketing.UpsightMarketingContentStore;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class ContentModule_ProvideUpsightMarketingContentStoreFactory implements Factory<UpsightMarketingContentStore> {
@@ -22,11 +23,7 @@ public final class ContentModule_ProvideUpsightMarketingContentStoreFactory impl
     }
 
     public UpsightMarketingContentStore get() {
-        UpsightMarketingContentStore provided = this.module.provideUpsightMarketingContentStore((MarketingContentStoreImpl) this.implProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (UpsightMarketingContentStore) Preconditions.checkNotNull(this.module.provideUpsightMarketingContentStore((MarketingContentStoreImpl) this.implProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<UpsightMarketingContentStore> create(ContentModule module, Provider<MarketingContentStoreImpl> implProvider) {

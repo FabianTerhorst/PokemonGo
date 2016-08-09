@@ -1,24 +1,33 @@
 package com.upsight.android.marketing.internal.content;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.upsight.android.analytics.internal.util.JacksonHelper.JSONObjectSerializer;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+import com.upsight.android.analytics.internal.util.GsonHelper.JSONObjectSerializer;
 import com.upsight.android.marketing.UpsightReward;
 import java.io.IOException;
 import org.json.JSONObject;
 
 public final class Reward implements UpsightReward {
-    @JsonProperty("product")
+    @SerializedName("product")
+    @Expose
     String product;
-    @JsonProperty("quantity")
+    @SerializedName("quantity")
+    @Expose
     int quantity;
-    @JsonProperty("signature_data")
-    ObjectNode signatureData;
+    @SerializedName("signature_data")
+    @Expose
+    JsonObject signatureData;
 
-    static UpsightReward from(JsonNode json, ObjectMapper mapper) throws IOException {
-        return (UpsightReward) mapper.treeToValue(json, Reward.class);
+    static UpsightReward from(JsonElement json, Gson gson) throws IOException {
+        try {
+            return (UpsightReward) gson.fromJson(json, Reward.class);
+        } catch (JsonSyntaxException e) {
+            throw new IOException(e);
+        }
     }
 
     Reward() {
@@ -33,6 +42,6 @@ public final class Reward implements UpsightReward {
     }
 
     public JSONObject getSignatureData() {
-        return JSONObjectSerializer.fromObjectNode(this.signatureData);
+        return JSONObjectSerializer.fromJsonObject(this.signatureData);
     }
 }

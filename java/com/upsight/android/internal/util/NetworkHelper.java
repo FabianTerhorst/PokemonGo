@@ -45,14 +45,19 @@ public final class NetworkHelper {
     }
 
     public static String getNetworkOperatorName(Context context) {
-        String networkOperatorName = NETWORK_OPERATOR_NONE;
+        String operator = NETWORK_OPERATOR_NONE;
         try {
             TelephonyManager tm = (TelephonyManager) context.getSystemService("phone");
-            if (tm != null) {
-                networkOperatorName = tm.getNetworkOperatorName();
+            if (tm == null) {
+                return operator;
             }
+            String operatorName = tm.getNetworkOperatorName();
+            if (TextUtils.isEmpty(operatorName)) {
+                return operator;
+            }
+            return operatorName;
         } catch (SecurityException e) {
+            return operator;
         }
-        return networkOperatorName;
     }
 }

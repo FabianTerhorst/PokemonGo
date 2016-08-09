@@ -8,6 +8,7 @@ import com.upsight.android.internal.logger.LogWriter;
 import com.upsight.android.internal.persistence.storable.StorableIdFactory;
 import com.upsight.android.logger.UpsightLogger;
 import com.upsight.android.logger.UpsightLogger.Level;
+import com.upsight.mediation.mraid.properties.MRAIDResizeProperties;
 import dagger.Module;
 import dagger.Provides;
 import java.util.UUID;
@@ -89,13 +90,13 @@ public final class ContextModule {
                     case R.styleable.LoadingImageView_circleCrop /*2*/:
                         Log.d(tag, message);
                         return;
-                    case 3:
+                    case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_CENTER /*3*/:
                         Log.i(tag, message);
                         return;
-                    case 4:
+                    case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_BOTTOM_LEFT /*4*/:
                         Log.w(tag, message);
                         return;
-                    case 5:
+                    case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_BOTTOM_CENTER /*5*/:
                         Log.e(tag, message);
                         return;
                     default:

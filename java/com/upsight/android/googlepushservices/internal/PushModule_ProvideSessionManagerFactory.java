@@ -3,6 +3,7 @@ package com.upsight.android.googlepushservices.internal;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.analytics.internal.session.SessionManager;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class PushModule_ProvideSessionManagerFactory implements Factory<SessionManager> {
@@ -23,11 +24,7 @@ public final class PushModule_ProvideSessionManagerFactory implements Factory<Se
     }
 
     public SessionManager get() {
-        SessionManager provided = this.module.provideSessionManager((UpsightContext) this.upsightProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (SessionManager) Preconditions.checkNotNull(this.module.provideSessionManager((UpsightContext) this.upsightProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<SessionManager> create(PushModule module, Provider<UpsightContext> upsightProvider) {

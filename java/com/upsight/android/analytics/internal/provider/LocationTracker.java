@@ -34,7 +34,6 @@ final class LocationTracker extends UpsightLocationTracker {
                     location = (Data) iterator.next();
                     location.setLatitude(newLocation.getLatitude());
                     location.setLongitude(newLocation.getLongitude());
-                    location.setTimeZone(newLocation.getTimeZone());
                 }
                 if (location == null) {
                     location = newLocation;

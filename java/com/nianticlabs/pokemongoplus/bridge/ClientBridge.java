@@ -47,6 +47,8 @@ public class ClientBridge {
 
     public native void sendEncounterId(long j);
 
+    public native void sendIsScanning(int i);
+
     public native void sendPluginState(int i);
 
     public native void sendPokestopId(String str);
@@ -85,7 +87,7 @@ public class ClientBridge {
 
     private static Intent createIntentWithAction(String action) {
         Intent i = new Intent(currentContext, BackgroundService.class);
-        i.setPackage("com.nianticlabs.holoholo.dev");
+        i.setPackage("com.nianticlabs.pokemongoplus.bridge");
         i.putExtra("action", action);
         return i;
     }
@@ -110,42 +112,42 @@ public class ClientBridge {
         Log.i(TAG, "sendStart PROCESS_LOCAL_VALUE = " + BackgroundService.PROCESS_LOCAL_VALUE);
         Intent i = new Intent(currentContext, BackgroundService.class);
         i.setPackage("com.nianticlabs.pokemongoplus.bridge");
-        i.putExtra("action", "start");
+        i.putExtra("action", BridgeConstants.START_ACTION);
         currentContext.startService(i);
     }
 
     public static void sendResume() {
-        Intent i = createIntentWithAction("resume");
+        Intent i = createIntentWithAction(BridgeConstants.RESUME_ACTION);
         Log.i(TAG, "send resume intent");
         currentContext.startService(i);
     }
 
     public static void sendPause() {
-        Intent i = createIntentWithAction("pause");
+        Intent i = createIntentWithAction(BridgeConstants.PAUSE_ACTION);
         Log.i(TAG, "send pause intent");
         currentContext.startService(i);
     }
 
     public static void sendStop() {
-        Intent i = createIntentWithAction("stop");
+        Intent i = createIntentWithAction(BridgeConstants.STOP_ACTION);
         Log.i(TAG, "send stop intent");
         currentContext.startService(i);
     }
 
     public static void sendStartScanning() {
-        Intent i = createIntentWithAction("startScanning");
+        Intent i = createIntentWithAction(BridgeConstants.START_SCANNING_ACTION);
         Log.i(TAG, "send startScanning intent");
         currentContext.startService(i);
     }
 
     public static void sendStopScanning() {
-        Intent i = createIntentWithAction("stopScanning");
+        Intent i = createIntentWithAction(BridgeConstants.STOP_SCANNING_ACTION);
         Log.i(TAG, "send stopScanning intent");
         currentContext.startService(i);
     }
 
     public static void sendStartSession(String hostPort, String device, byte[] authToken, long pokemonId) {
-        Intent i = createIntentWithAction("startSession");
+        Intent i = createIntentWithAction(BridgeConstants.START_SESSION_ACTION);
         i.putExtra("hostPort", hostPort);
         i.putExtra("device", device);
         i.putExtra("authToken", authToken);
@@ -155,7 +157,7 @@ public class ClientBridge {
     }
 
     public static void sendStopSession() {
-        Intent i = createIntentWithAction("stopSession");
+        Intent i = createIntentWithAction(BridgeConstants.STOP_SESSION_ACTION);
         Log.i(TAG, "send stopSession intent");
         currentContext.startService(i);
     }

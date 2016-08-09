@@ -1,12 +1,13 @@
 package com.upsight.android.analytics.internal;
 
 import android.app.Application.ActivityLifecycleCallbacks;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.upsight.android.UpsightAnalyticsExtension;
 import com.upsight.android.UpsightAnalyticsExtension_MembersInjector;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.analytics.UpsightAnalyticsApi;
 import com.upsight.android.analytics.UpsightGooglePlayHelper;
+import com.upsight.android.analytics.UpsightLifeCycleTracker;
 import com.upsight.android.analytics.internal.association.AssociationManager;
 import com.upsight.android.analytics.internal.association.AssociationModule;
 import com.upsight.android.analytics.internal.association.AssociationModule_ProvideAssociationManagerFactory;
@@ -17,7 +18,6 @@ import com.upsight.android.analytics.internal.configuration.ConfigurationRespons
 import com.upsight.android.analytics.internal.configuration.ConfigurationResponseParser_Factory;
 import com.upsight.android.analytics.internal.configuration.ManagerConfigParser;
 import com.upsight.android.analytics.internal.configuration.ManagerConfigParser_Factory;
-import com.upsight.android.analytics.internal.dispatcher.DaggerAnalyticsComponent_PackageProxy;
 import com.upsight.android.analytics.internal.dispatcher.DispatchModule;
 import com.upsight.android.analytics.internal.dispatcher.DispatchModule_ProvideDispatcherFactory;
 import com.upsight.android.analytics.internal.dispatcher.Dispatcher;
@@ -45,6 +45,7 @@ import com.upsight.android.analytics.internal.session.ActivityLifecycleTracker_F
 import com.upsight.android.analytics.internal.session.Clock;
 import com.upsight.android.analytics.internal.session.ConfigParser_Factory;
 import com.upsight.android.analytics.internal.session.LifecycleTrackerModule;
+import com.upsight.android.analytics.internal.session.LifecycleTrackerModule_ProvideManualTrackerFactory;
 import com.upsight.android.analytics.internal.session.LifecycleTrackerModule_ProvideUpsightLifeCycleCallbacksFactory;
 import com.upsight.android.analytics.internal.session.ManualTracker_Factory;
 import com.upsight.android.analytics.internal.session.SessionManager;
@@ -57,8 +58,9 @@ import com.upsight.android.analytics.provider.UpsightOptOutStatus;
 import com.upsight.android.analytics.provider.UpsightUserAttributes;
 import com.upsight.android.internal.util.Opt;
 import dagger.MembersInjector;
+import dagger.internal.DoubleCheck;
 import dagger.internal.MembersInjectors;
-import dagger.internal.ScopedProvider;
+import dagger.internal.Preconditions;
 import java.lang.Thread.UncaughtExceptionHandler;
 import javax.inject.Provider;
 import rx.Scheduler;
@@ -68,19 +70,21 @@ public final class DaggerAnalyticsComponent implements AnalyticsComponent {
     private Provider<ActivityLifecycleTracker> activityLifecycleTrackerProvider;
     private Provider<AnalyticsContext> analyticsContextProvider;
     private Provider<Analytics> analyticsProvider;
-    private final DaggerAnalyticsComponent_PackageProxy com_upsight_android_analytics_internal_dispatcher_Proxy;
-    private final com.upsight.android.analytics.internal.dispatcher.delivery.DaggerAnalyticsComponent_PackageProxy com_upsight_android_analytics_internal_dispatcher_delivery_Proxy;
-    private final com.upsight.android.analytics.internal.provider.DaggerAnalyticsComponent_PackageProxy com_upsight_android_analytics_internal_provider_Proxy;
-    private final com.upsight.android.analytics.internal.session.DaggerAnalyticsComponent_PackageProxy com_upsight_android_analytics_internal_session_Proxy;
+    private Provider configParserProvider;
+    private Provider configParserProvider2;
     private Provider<ConfigurationResponseParser> configurationResponseParserProvider;
     private MembersInjector<DispatcherService> dispatcherServiceMembersInjector;
+    private Provider locationTrackerProvider;
     private Provider<ManagerConfigParser> managerConfigParserProvider;
+    private Provider manualTrackerProvider;
+    private Provider optOutStatusProvider;
     private Provider<AssociationManager> provideAssociationManagerProvider;
     private Provider<Clock> provideClockProvider;
-    private Provider<ObjectMapper> provideConfigMapperProvider;
+    private Provider<Gson> provideConfigGsonProvider;
     private Provider<ConfigurationManager> provideConfigurationManagerProvider;
     private Provider<Dispatcher> provideDispatcherProvider;
     private Provider<UpsightGooglePlayHelper> provideGooglePlayHelperProvider;
+    private Provider<UpsightLifeCycleTracker> provideManualTrackerProvider;
     private Provider<QueueBuilder> provideQueueBuilderProvider;
     private Provider<SignatureVerifier> provideResponseVerifierProvider;
     private Provider<RouterBuilder> provideRouterBuilderProvider;
@@ -96,15 +100,16 @@ public final class DaggerAnalyticsComponent implements AnalyticsComponent {
     private Provider<SessionManager> providesSessionManagerProvider;
     private Provider<UpsightLocationTracker> providesUpsightLocationTrackerProvider;
     private Provider<UpsightUserAttributes> providesUpsightUserAttributesProvider;
+    private Provider responseParserProvider;
     private MembersInjector<UpsightAnalyticsExtension> upsightAnalyticsExtensionMembersInjector;
+    private Provider userAttributesProvider;
 
     public static final class Builder {
         private AnalyticsApiModule analyticsApiModule;
-        private AnalyticsModule analyticsModule;
         private AnalyticsSchedulersModule analyticsSchedulersModule;
         private AssociationModule associationModule;
         private BaseAnalyticsModule baseAnalyticsModule;
-        private ConfigObjectMapperModule configObjectMapperModule;
+        private ConfigGsonModule configGsonModule;
         private ConfigurationModule configurationModule;
         private DeliveryModule deliveryModule;
         private DispatchModule dispatchModule;
@@ -118,32 +123,11 @@ public final class DaggerAnalyticsComponent implements AnalyticsComponent {
         }
 
         public AnalyticsComponent build() {
-            if (this.analyticsModule == null) {
-                this.analyticsModule = new AnalyticsModule();
+            if (this.baseAnalyticsModule == null) {
+                throw new IllegalStateException(BaseAnalyticsModule.class.getCanonicalName() + " must be set");
             }
-            if (this.analyticsApiModule == null) {
-                this.analyticsApiModule = new AnalyticsApiModule();
-            }
-            if (this.analyticsSchedulersModule == null) {
-                this.analyticsSchedulersModule = new AnalyticsSchedulersModule();
-            }
-            if (this.configObjectMapperModule == null) {
-                this.configObjectMapperModule = new ConfigObjectMapperModule();
-            }
-            if (this.dispatchModule == null) {
-                this.dispatchModule = new DispatchModule();
-            }
-            if (this.deliveryModule == null) {
-                this.deliveryModule = new DeliveryModule();
-            }
-            if (this.routingModule == null) {
-                this.routingModule = new RoutingModule();
-            }
-            if (this.schemaModule == null) {
-                this.schemaModule = new SchemaModule();
-            }
-            if (this.configurationModule == null) {
-                this.configurationModule = new ConfigurationModule();
+            if (this.configGsonModule == null) {
+                this.configGsonModule = new ConfigGsonModule();
             }
             if (this.sessionModule == null) {
                 this.sessionModule = new SessionModule();
@@ -151,136 +135,109 @@ public final class DaggerAnalyticsComponent implements AnalyticsComponent {
             if (this.lifecycleTrackerModule == null) {
                 this.lifecycleTrackerModule = new LifecycleTrackerModule();
             }
-            if (this.providerModule == null) {
-                this.providerModule = new ProviderModule();
+            if (this.schemaModule == null) {
+                this.schemaModule = new SchemaModule();
             }
             if (this.associationModule == null) {
                 this.associationModule = new AssociationModule();
             }
-            if (this.baseAnalyticsModule != null) {
-                return new DaggerAnalyticsComponent();
+            if (this.providerModule == null) {
+                this.providerModule = new ProviderModule();
             }
-            throw new IllegalStateException("baseAnalyticsModule must be set");
+            if (this.analyticsApiModule == null) {
+                this.analyticsApiModule = new AnalyticsApiModule();
+            }
+            if (this.configurationModule == null) {
+                this.configurationModule = new ConfigurationModule();
+            }
+            if (this.analyticsSchedulersModule == null) {
+                this.analyticsSchedulersModule = new AnalyticsSchedulersModule();
+            }
+            if (this.deliveryModule == null) {
+                this.deliveryModule = new DeliveryModule();
+            }
+            if (this.routingModule == null) {
+                this.routingModule = new RoutingModule();
+            }
+            if (this.dispatchModule == null) {
+                this.dispatchModule = new DispatchModule();
+            }
+            return new DaggerAnalyticsComponent();
         }
 
+        @Deprecated
         public Builder analyticsModule(AnalyticsModule analyticsModule) {
-            if (analyticsModule == null) {
-                throw new NullPointerException("analyticsModule");
-            }
-            this.analyticsModule = analyticsModule;
+            Preconditions.checkNotNull(analyticsModule);
             return this;
         }
 
         public Builder analyticsApiModule(AnalyticsApiModule analyticsApiModule) {
-            if (analyticsApiModule == null) {
-                throw new NullPointerException("analyticsApiModule");
-            }
-            this.analyticsApiModule = analyticsApiModule;
+            this.analyticsApiModule = (AnalyticsApiModule) Preconditions.checkNotNull(analyticsApiModule);
             return this;
         }
 
         public Builder analyticsSchedulersModule(AnalyticsSchedulersModule analyticsSchedulersModule) {
-            if (analyticsSchedulersModule == null) {
-                throw new NullPointerException("analyticsSchedulersModule");
-            }
-            this.analyticsSchedulersModule = analyticsSchedulersModule;
+            this.analyticsSchedulersModule = (AnalyticsSchedulersModule) Preconditions.checkNotNull(analyticsSchedulersModule);
             return this;
         }
 
-        public Builder configObjectMapperModule(ConfigObjectMapperModule configObjectMapperModule) {
-            if (configObjectMapperModule == null) {
-                throw new NullPointerException("configObjectMapperModule");
-            }
-            this.configObjectMapperModule = configObjectMapperModule;
+        public Builder configGsonModule(ConfigGsonModule configGsonModule) {
+            this.configGsonModule = (ConfigGsonModule) Preconditions.checkNotNull(configGsonModule);
             return this;
         }
 
         public Builder dispatchModule(DispatchModule dispatchModule) {
-            if (dispatchModule == null) {
-                throw new NullPointerException("dispatchModule");
-            }
-            this.dispatchModule = dispatchModule;
+            this.dispatchModule = (DispatchModule) Preconditions.checkNotNull(dispatchModule);
             return this;
         }
 
         public Builder deliveryModule(DeliveryModule deliveryModule) {
-            if (deliveryModule == null) {
-                throw new NullPointerException("deliveryModule");
-            }
-            this.deliveryModule = deliveryModule;
+            this.deliveryModule = (DeliveryModule) Preconditions.checkNotNull(deliveryModule);
             return this;
         }
 
         public Builder routingModule(RoutingModule routingModule) {
-            if (routingModule == null) {
-                throw new NullPointerException("routingModule");
-            }
-            this.routingModule = routingModule;
+            this.routingModule = (RoutingModule) Preconditions.checkNotNull(routingModule);
             return this;
         }
 
         public Builder schemaModule(SchemaModule schemaModule) {
-            if (schemaModule == null) {
-                throw new NullPointerException("schemaModule");
-            }
-            this.schemaModule = schemaModule;
+            this.schemaModule = (SchemaModule) Preconditions.checkNotNull(schemaModule);
             return this;
         }
 
         public Builder configurationModule(ConfigurationModule configurationModule) {
-            if (configurationModule == null) {
-                throw new NullPointerException("configurationModule");
-            }
-            this.configurationModule = configurationModule;
+            this.configurationModule = (ConfigurationModule) Preconditions.checkNotNull(configurationModule);
             return this;
         }
 
         public Builder sessionModule(SessionModule sessionModule) {
-            if (sessionModule == null) {
-                throw new NullPointerException("sessionModule");
-            }
-            this.sessionModule = sessionModule;
+            this.sessionModule = (SessionModule) Preconditions.checkNotNull(sessionModule);
             return this;
         }
 
         public Builder lifecycleTrackerModule(LifecycleTrackerModule lifecycleTrackerModule) {
-            if (lifecycleTrackerModule == null) {
-                throw new NullPointerException("lifecycleTrackerModule");
-            }
-            this.lifecycleTrackerModule = lifecycleTrackerModule;
+            this.lifecycleTrackerModule = (LifecycleTrackerModule) Preconditions.checkNotNull(lifecycleTrackerModule);
             return this;
         }
 
         public Builder providerModule(ProviderModule providerModule) {
-            if (providerModule == null) {
-                throw new NullPointerException("providerModule");
-            }
-            this.providerModule = providerModule;
+            this.providerModule = (ProviderModule) Preconditions.checkNotNull(providerModule);
             return this;
         }
 
         public Builder associationModule(AssociationModule associationModule) {
-            if (associationModule == null) {
-                throw new NullPointerException("associationModule");
-            }
-            this.associationModule = associationModule;
+            this.associationModule = (AssociationModule) Preconditions.checkNotNull(associationModule);
             return this;
         }
 
         public Builder baseAnalyticsModule(BaseAnalyticsModule baseAnalyticsModule) {
-            if (baseAnalyticsModule == null) {
-                throw new NullPointerException("baseAnalyticsModule");
-            }
-            this.baseAnalyticsModule = baseAnalyticsModule;
+            this.baseAnalyticsModule = (BaseAnalyticsModule) Preconditions.checkNotNull(baseAnalyticsModule);
             return this;
         }
     }
 
     private DaggerAnalyticsComponent(Builder builder) {
-        this.com_upsight_android_analytics_internal_session_Proxy = new com.upsight.android.analytics.internal.session.DaggerAnalyticsComponent_PackageProxy();
-        this.com_upsight_android_analytics_internal_provider_Proxy = new com.upsight.android.analytics.internal.provider.DaggerAnalyticsComponent_PackageProxy();
-        this.com_upsight_android_analytics_internal_dispatcher_Proxy = new DaggerAnalyticsComponent_PackageProxy();
-        this.com_upsight_android_analytics_internal_dispatcher_delivery_Proxy = new com.upsight.android.analytics.internal.dispatcher.delivery.DaggerAnalyticsComponent_PackageProxy();
         if ($assertionsDisabled || builder != null) {
             initialize(builder);
             return;
@@ -293,41 +250,42 @@ public final class DaggerAnalyticsComponent implements AnalyticsComponent {
     }
 
     private void initialize(Builder builder) {
-        this.provideUncaughtExceptionHandlerProvider = ScopedProvider.create(BaseAnalyticsModule_ProvideUncaughtExceptionHandlerFactory.create(builder.baseAnalyticsModule));
-        this.provideUpsightContextProvider = ScopedProvider.create(BaseAnalyticsModule_ProvideUpsightContextFactory.create(builder.baseAnalyticsModule));
-        this.provideConfigMapperProvider = ScopedProvider.create(ConfigObjectMapperModule_ProvideConfigMapperFactory.create(builder.configObjectMapperModule, this.provideUpsightContextProvider));
-        this.com_upsight_android_analytics_internal_session_Proxy.configParserProvider = ConfigParser_Factory.create(this.provideConfigMapperProvider);
-        this.provideClockProvider = ScopedProvider.create(BaseAnalyticsModule_ProvideClockFactory.create(builder.baseAnalyticsModule));
-        this.providesSessionManagerImplProvider = ScopedProvider.create(SessionModule_ProvidesSessionManagerImplFactory.create(builder.sessionModule, this.provideUpsightContextProvider, this.com_upsight_android_analytics_internal_session_Proxy.configParserProvider, this.provideClockProvider));
-        this.providesSessionManagerProvider = ScopedProvider.create(SessionModule_ProvidesSessionManagerFactory.create(builder.sessionModule, this.providesSessionManagerImplProvider));
-        this.provideSchemaSelectorBuilderProvider = ScopedProvider.create(SchemaModule_ProvideSchemaSelectorBuilderFactory.create(builder.schemaModule, this.provideUpsightContextProvider));
-        this.provideAssociationManagerProvider = ScopedProvider.create(AssociationModule_ProvideAssociationManagerFactory.create(builder.associationModule, this.provideUpsightContextProvider, this.provideClockProvider));
-        this.com_upsight_android_analytics_internal_provider_Proxy.optOutStatusProvider = ScopedProvider.create(OptOutStatus_Factory.create(MembersInjectors.noOp(), this.provideUpsightContextProvider));
-        this.providesOptOutStatusProvider = ScopedProvider.create(ProviderModule_ProvidesOptOutStatusFactory.create(builder.providerModule, this.com_upsight_android_analytics_internal_provider_Proxy.optOutStatusProvider));
-        this.com_upsight_android_analytics_internal_provider_Proxy.locationTrackerProvider = ScopedProvider.create(LocationTracker_Factory.create(MembersInjectors.noOp(), this.provideUpsightContextProvider));
-        this.providesUpsightLocationTrackerProvider = ScopedProvider.create(ProviderModule_ProvidesUpsightLocationTrackerFactory.create(builder.providerModule, this.com_upsight_android_analytics_internal_provider_Proxy.locationTrackerProvider));
-        this.com_upsight_android_analytics_internal_provider_Proxy.userAttributesProvider = ScopedProvider.create(UserAttributes_Factory.create(MembersInjectors.noOp(), this.provideUpsightContextProvider));
-        this.providesUpsightUserAttributesProvider = ScopedProvider.create(ProviderModule_ProvidesUpsightUserAttributesFactory.create(builder.providerModule, this.com_upsight_android_analytics_internal_provider_Proxy.userAttributesProvider));
-        this.provideGooglePlayHelperProvider = ScopedProvider.create(BaseAnalyticsModule_ProvideGooglePlayHelperFactory.create(builder.baseAnalyticsModule, this.provideUpsightContextProvider));
-        this.analyticsProvider = ScopedProvider.create(Analytics_Factory.create(this.provideUpsightContextProvider, this.providesSessionManagerProvider, this.provideSchemaSelectorBuilderProvider, this.provideAssociationManagerProvider, this.providesOptOutStatusProvider, this.providesUpsightLocationTrackerProvider, this.providesUpsightUserAttributesProvider, this.provideGooglePlayHelperProvider));
-        this.provideUpsightAnalyticsApiProvider = ScopedProvider.create(AnalyticsApiModule_ProvideUpsightAnalyticsApiFactory.create(builder.analyticsApiModule, this.analyticsProvider));
-        this.com_upsight_android_analytics_internal_session_Proxy.manualTrackerProvider = ScopedProvider.create(ManualTracker_Factory.create(this.providesSessionManagerProvider, this.provideUpsightContextProvider));
-        this.activityLifecycleTrackerProvider = ActivityLifecycleTracker_Factory.create(this.com_upsight_android_analytics_internal_session_Proxy.manualTrackerProvider);
-        this.provideUpsightLifeCycleCallbacksProvider = ScopedProvider.create(LifecycleTrackerModule_ProvideUpsightLifeCycleCallbacksFactory.create(builder.lifecycleTrackerModule, this.activityLifecycleTrackerProvider));
-        this.upsightAnalyticsExtensionMembersInjector = UpsightAnalyticsExtension_MembersInjector.create(MembersInjectors.noOp(), this.provideUncaughtExceptionHandlerProvider, this.provideUpsightAnalyticsApiProvider, this.provideClockProvider, this.provideUpsightLifeCycleCallbacksProvider, this.provideAssociationManagerProvider);
-        this.configurationResponseParserProvider = ScopedProvider.create(ConfigurationResponseParser_Factory.create(this.provideConfigMapperProvider, this.providesSessionManagerProvider));
-        this.managerConfigParserProvider = ScopedProvider.create(ManagerConfigParser_Factory.create(this.provideConfigMapperProvider));
-        this.provideConfigurationManagerProvider = ScopedProvider.create(ConfigurationModule_ProvideConfigurationManagerFactory.create(builder.configurationModule, this.provideUpsightContextProvider, this.configurationResponseParserProvider, this.managerConfigParserProvider));
+        this.provideUncaughtExceptionHandlerProvider = DoubleCheck.provider(BaseAnalyticsModule_ProvideUncaughtExceptionHandlerFactory.create(builder.baseAnalyticsModule));
+        this.provideUpsightContextProvider = DoubleCheck.provider(BaseAnalyticsModule_ProvideUpsightContextFactory.create(builder.baseAnalyticsModule));
+        this.provideConfigGsonProvider = DoubleCheck.provider(ConfigGsonModule_ProvideConfigGsonFactory.create(builder.configGsonModule, this.provideUpsightContextProvider));
+        this.configParserProvider = ConfigParser_Factory.create(this.provideConfigGsonProvider);
+        this.provideClockProvider = DoubleCheck.provider(BaseAnalyticsModule_ProvideClockFactory.create(builder.baseAnalyticsModule));
+        this.providesSessionManagerImplProvider = DoubleCheck.provider(SessionModule_ProvidesSessionManagerImplFactory.create(builder.sessionModule, this.provideUpsightContextProvider, this.configParserProvider, this.provideClockProvider));
+        this.providesSessionManagerProvider = DoubleCheck.provider(SessionModule_ProvidesSessionManagerFactory.create(builder.sessionModule, this.providesSessionManagerImplProvider));
+        this.manualTrackerProvider = DoubleCheck.provider(ManualTracker_Factory.create(MembersInjectors.noOp(), this.providesSessionManagerProvider, this.provideUpsightContextProvider));
+        this.provideManualTrackerProvider = DoubleCheck.provider(LifecycleTrackerModule_ProvideManualTrackerFactory.create(builder.lifecycleTrackerModule, this.manualTrackerProvider));
+        this.provideSchemaSelectorBuilderProvider = DoubleCheck.provider(SchemaModule_ProvideSchemaSelectorBuilderFactory.create(builder.schemaModule, this.provideUpsightContextProvider));
+        this.provideAssociationManagerProvider = DoubleCheck.provider(AssociationModule_ProvideAssociationManagerFactory.create(builder.associationModule, this.provideUpsightContextProvider, this.provideClockProvider));
+        this.optOutStatusProvider = DoubleCheck.provider(OptOutStatus_Factory.create(MembersInjectors.noOp(), this.provideUpsightContextProvider));
+        this.providesOptOutStatusProvider = DoubleCheck.provider(ProviderModule_ProvidesOptOutStatusFactory.create(builder.providerModule, this.optOutStatusProvider));
+        this.locationTrackerProvider = DoubleCheck.provider(LocationTracker_Factory.create(MembersInjectors.noOp(), this.provideUpsightContextProvider));
+        this.providesUpsightLocationTrackerProvider = DoubleCheck.provider(ProviderModule_ProvidesUpsightLocationTrackerFactory.create(builder.providerModule, this.locationTrackerProvider));
+        this.userAttributesProvider = DoubleCheck.provider(UserAttributes_Factory.create(MembersInjectors.noOp(), this.provideUpsightContextProvider));
+        this.providesUpsightUserAttributesProvider = DoubleCheck.provider(ProviderModule_ProvidesUpsightUserAttributesFactory.create(builder.providerModule, this.userAttributesProvider));
+        this.provideGooglePlayHelperProvider = DoubleCheck.provider(BaseAnalyticsModule_ProvideGooglePlayHelperFactory.create(builder.baseAnalyticsModule, this.provideUpsightContextProvider));
+        this.analyticsProvider = DoubleCheck.provider(Analytics_Factory.create(this.provideUpsightContextProvider, this.provideManualTrackerProvider, this.providesSessionManagerProvider, this.provideSchemaSelectorBuilderProvider, this.provideAssociationManagerProvider, this.providesOptOutStatusProvider, this.providesUpsightLocationTrackerProvider, this.providesUpsightUserAttributesProvider, this.provideGooglePlayHelperProvider));
+        this.provideUpsightAnalyticsApiProvider = DoubleCheck.provider(AnalyticsApiModule_ProvideUpsightAnalyticsApiFactory.create(builder.analyticsApiModule, this.analyticsProvider));
+        this.activityLifecycleTrackerProvider = ActivityLifecycleTracker_Factory.create(this.manualTrackerProvider);
+        this.provideUpsightLifeCycleCallbacksProvider = DoubleCheck.provider(LifecycleTrackerModule_ProvideUpsightLifeCycleCallbacksFactory.create(builder.lifecycleTrackerModule, this.activityLifecycleTrackerProvider));
+        this.upsightAnalyticsExtensionMembersInjector = UpsightAnalyticsExtension_MembersInjector.create(this.provideUncaughtExceptionHandlerProvider, this.provideUpsightAnalyticsApiProvider, this.provideClockProvider, this.provideUpsightLifeCycleCallbacksProvider, this.provideAssociationManagerProvider);
+        this.configurationResponseParserProvider = DoubleCheck.provider(ConfigurationResponseParser_Factory.create(this.provideConfigGsonProvider, this.providesSessionManagerProvider));
+        this.managerConfigParserProvider = DoubleCheck.provider(ManagerConfigParser_Factory.create(this.provideConfigGsonProvider));
+        this.provideConfigurationManagerProvider = DoubleCheck.provider(ConfigurationModule_ProvideConfigurationManagerFactory.create(builder.configurationModule, this.provideUpsightContextProvider, this.configurationResponseParserProvider, this.managerConfigParserProvider));
         this.analyticsContextProvider = AnalyticsContext_Factory.create(MembersInjectors.noOp(), this.provideUpsightContextProvider);
-        this.com_upsight_android_analytics_internal_dispatcher_Proxy.configParserProvider = ScopedProvider.create(com.upsight.android.analytics.internal.dispatcher.ConfigParser_Factory.create(this.provideUpsightContextProvider, this.provideConfigMapperProvider));
-        this.provideSendingExecutorProvider = ScopedProvider.create(AnalyticsSchedulersModule_ProvideSendingExecutorFactory.create(builder.analyticsSchedulersModule));
-        this.provideSchedulingExecutorProvider = ScopedProvider.create(AnalyticsSchedulersModule_ProvideSchedulingExecutorFactory.create(builder.analyticsSchedulersModule));
-        this.provideResponseVerifierProvider = ScopedProvider.create(DeliveryModule_ProvideResponseVerifierFactory.create(builder.deliveryModule, this.provideUpsightContextProvider));
-        this.com_upsight_android_analytics_internal_dispatcher_delivery_Proxy.responseParserProvider = ResponseParser_Factory.create(this.provideConfigMapperProvider);
-        this.provideQueueBuilderProvider = ScopedProvider.create(DeliveryModule_ProvideQueueBuilderFactory.create(builder.deliveryModule, this.provideUpsightContextProvider, this.provideClockProvider, this.provideSendingExecutorProvider, this.provideSchedulingExecutorProvider, this.provideResponseVerifierProvider, this.com_upsight_android_analytics_internal_dispatcher_delivery_Proxy.responseParserProvider));
-        this.provideRouterBuilderProvider = ScopedProvider.create(RoutingModule_ProvideRouterBuilderFactory.create(builder.routingModule, this.provideUpsightContextProvider, this.provideQueueBuilderProvider));
-        this.provideDispatcherProvider = ScopedProvider.create(DispatchModule_ProvideDispatcherFactory.create(builder.dispatchModule, this.provideUpsightContextProvider, this.providesSessionManagerProvider, this.analyticsContextProvider, this.com_upsight_android_analytics_internal_dispatcher_Proxy.configParserProvider, this.provideRouterBuilderProvider, this.provideSchemaSelectorBuilderProvider));
-        this.dispatcherServiceMembersInjector = DispatcherService_MembersInjector.create(MembersInjectors.noOp(), this.provideConfigurationManagerProvider, this.provideDispatcherProvider);
+        this.configParserProvider2 = DoubleCheck.provider(com.upsight.android.analytics.internal.dispatcher.ConfigParser_Factory.create(this.provideUpsightContextProvider, this.provideConfigGsonProvider));
+        this.provideSendingExecutorProvider = DoubleCheck.provider(AnalyticsSchedulersModule_ProvideSendingExecutorFactory.create(builder.analyticsSchedulersModule));
+        this.provideSchedulingExecutorProvider = DoubleCheck.provider(AnalyticsSchedulersModule_ProvideSchedulingExecutorFactory.create(builder.analyticsSchedulersModule));
+        this.provideResponseVerifierProvider = DoubleCheck.provider(DeliveryModule_ProvideResponseVerifierFactory.create(builder.deliveryModule, this.provideUpsightContextProvider));
+        this.responseParserProvider = ResponseParser_Factory.create(this.provideConfigGsonProvider);
+        this.provideQueueBuilderProvider = DoubleCheck.provider(DeliveryModule_ProvideQueueBuilderFactory.create(builder.deliveryModule, this.provideUpsightContextProvider, this.provideClockProvider, this.provideSendingExecutorProvider, this.provideSchedulingExecutorProvider, this.provideResponseVerifierProvider, this.responseParserProvider));
+        this.provideRouterBuilderProvider = DoubleCheck.provider(RoutingModule_ProvideRouterBuilderFactory.create(builder.routingModule, this.provideUpsightContextProvider, this.provideQueueBuilderProvider));
+        this.provideDispatcherProvider = DoubleCheck.provider(DispatchModule_ProvideDispatcherFactory.create(builder.dispatchModule, this.provideUpsightContextProvider, this.providesSessionManagerProvider, this.analyticsContextProvider, this.configParserProvider2, this.provideRouterBuilderProvider, this.provideSchemaSelectorBuilderProvider));
+        this.dispatcherServiceMembersInjector = DispatcherService_MembersInjector.create(this.provideConfigurationManagerProvider, this.provideDispatcherProvider);
     }
 
     public void inject(UpsightAnalyticsExtension arg0) {

@@ -11,6 +11,6 @@ import com.upsight.android.analytics.internal.session.LifecycleTrackerModule;
 import com.upsight.android.analytics.internal.session.SessionModule;
 import dagger.Module;
 
-@Module(includes = {AnalyticsApiModule.class, AnalyticsSchedulersModule.class, ConfigObjectMapperModule.class, DispatchModule.class, DeliveryModule.class, RoutingModule.class, SchemaModule.class, ConfigurationModule.class, SessionModule.class, LifecycleTrackerModule.class, ProviderModule.class, AssociationModule.class, BaseAnalyticsModule.class})
+@Module(includes = {AnalyticsApiModule.class, AnalyticsSchedulersModule.class, ConfigGsonModule.class, DispatchModule.class, DeliveryModule.class, RoutingModule.class, SchemaModule.class, ConfigurationModule.class, SessionModule.class, LifecycleTrackerModule.class, ProviderModule.class, AssociationModule.class, BaseAnalyticsModule.class})
 public final class AnalyticsModule {
 }

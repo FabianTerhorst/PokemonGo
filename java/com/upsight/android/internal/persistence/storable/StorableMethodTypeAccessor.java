@@ -15,10 +15,10 @@ class StorableMethodTypeAccessor<T> implements StorableTypeAccessor<T> {
         ReflectiveOperationException e;
         try {
             return (String) this.mMethod.invoke(target, new Object[0]);
-        } catch (IllegalAccessException e2) {
+        } catch (InvocationTargetException e2) {
             e = e2;
             throw new UpsightException(e);
-        } catch (InvocationTargetException e3) {
+        } catch (IllegalAccessException e3) {
             e = e3;
             throw new UpsightException(e);
         }

@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.os.Build.VERSION;
 import android.util.Log;
-import com.upsight.android.internal.persistence.subscription.Subscriptions;
 import java.lang.reflect.Method;
 import spacemadness.com.lunarconsole.BuildConfig;
 
@@ -71,7 +70,7 @@ public class SfidaUtils {
 
     public static String getBondStateName(int state) {
         switch (state) {
-            case Subscriptions.MAX_QUEUE_LENGTH /*10*/:
+            case 10:
                 return "BOND_NONE";
             case 11:
                 return "BOND_BONDING";

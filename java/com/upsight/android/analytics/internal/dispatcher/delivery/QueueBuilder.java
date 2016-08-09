@@ -3,7 +3,8 @@ package com.upsight.android.analytics.internal.dispatcher.delivery;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonParser;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.analytics.internal.dispatcher.delivery.Batcher.Config;
 import com.upsight.android.analytics.internal.dispatcher.delivery.Batcher.Factory;
@@ -31,8 +32,10 @@ public class QueueBuilder {
     private static final String PROTOCOL_VERSION = "v1";
     private Clock mClock;
     private Map<String, String> mEndpointMacros;
+    private Gson mGson;
+    private JsonParser mJsonParser;
     private UpsightLogger mLogger;
-    private ObjectMapper mObjectMapper;
+    private Gson mResponseLoggingGson;
     private Provider<ResponseParser> mResponseParserProvider;
     private Scheduler mRetryExecutor;
     private Scheduler mSendExecutor;
@@ -51,9 +54,11 @@ public class QueueBuilder {
         }
     }
 
-    QueueBuilder(UpsightContext upsight, ObjectMapper objectMapper, Clock clock, UpsightLogger logger, Scheduler retryExecutor, Scheduler sendExecutor, SignatureVerifier signatureVerifier, Provider<ResponseParser> responseParserProvider) {
+    QueueBuilder(UpsightContext upsight, Gson gson, Gson responseLoggingGson, JsonParser jsonParser, Clock clock, UpsightLogger logger, Scheduler retryExecutor, Scheduler sendExecutor, SignatureVerifier signatureVerifier, Provider<ResponseParser> responseParserProvider) {
         this.mUpsight = upsight;
-        this.mObjectMapper = objectMapper;
+        this.mGson = gson;
+        this.mResponseLoggingGson = responseLoggingGson;
+        this.mJsonParser = jsonParser;
         this.mClock = clock;
         this.mLogger = logger;
         this.mRetryExecutor = retryExecutor;
@@ -64,7 +69,8 @@ public class QueueBuilder {
     }
 
     public Queue build(String name, QueueConfig config, Selector<Schema> schemaSelectorByName, Selector<Schema> schemaSelectorByType) {
-        return new Queue(name, schemaSelectorByName, schemaSelectorByType, new BatcherFactory(config.getBatcherConfig()), new BatchSender(this.mUpsight, config.getBatchSenderConfig(), this.mRetryExecutor, this.mSendExecutor, new UpsightEndpoint(prepareEndpoint(config.getEndpointAddress()), this.mSignatureVerifier, this.mObjectMapper, this.mLogger), (ResponseParser) this.mResponseParserProvider.get(), this.mObjectMapper, this.mClock, this.mLogger));
+        BatchSender sender = new BatchSender(this.mUpsight, config.getBatchSenderConfig(), this.mRetryExecutor, this.mSendExecutor, new UpsightEndpoint(prepareEndpoint(config.getEndpointAddress()), this.mSignatureVerifier, this.mGson, this.mJsonParser, this.mResponseLoggingGson, this.mLogger), (ResponseParser) this.mResponseParserProvider.get(), this.mJsonParser, this.mClock, this.mLogger);
+        return new Queue(name, schemaSelectorByName, schemaSelectorByType, new BatcherFactory(config.getBatcherConfig()), sender);
     }
 
     String prepareEndpoint(String baseUrl) {

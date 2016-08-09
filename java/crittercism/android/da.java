@@ -1,6 +1,7 @@
 package crittercism.android;
 
 import android.content.Context;
+import com.upsight.mediation.vast.VASTPlayer;
 import org.json.JSONObject;
 
 public class da implements cy {
@@ -19,7 +20,7 @@ public class da implements cy {
     }
 
     public void a(boolean z, int i, JSONObject jSONObject) {
-        Object obj = (z || (i >= 200 && i < 300)) ? 1 : null;
+        Object obj = (z || (i >= 200 && i < VASTPlayer.ERROR_GENERAL_WRAPPER)) ? 1 : null;
         if (obj != null) {
             this.a.a();
         } else {

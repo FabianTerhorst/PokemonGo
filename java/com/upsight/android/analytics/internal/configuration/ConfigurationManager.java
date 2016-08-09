@@ -35,6 +35,7 @@ public final class ConfigurationManager {
     private final ConfigurationResponseParser mResponseParser;
     private Action0 mSyncAction = new Action0() {
         public void call() {
+            ConfigurationManager.this.mLogger.d(ConfigurationManager.LOG_TAG, "Record config.expired", new Object[0]);
             UpsightConfigExpiredEvent.createBuilder().record(ConfigurationManager.this.mUpsight);
         }
     };
@@ -76,7 +77,7 @@ public final class ConfigurationManager {
         this.mWorker = scheduler.createWorker();
     }
 
-    public void launch() {
+    public synchronized void launch() {
         if (!this.mIsLaunched) {
             this.mIsLaunched = true;
             this.mIsOutOfSync = true;
@@ -95,6 +96,7 @@ public final class ConfigurationManager {
                     if (result.size() > 0) {
                         for (UpsightConfiguration config : result) {
                             if (config.getScope().equals(ConfigurationManager.CONFIGURATION_SUBTYPE)) {
+                                ConfigurationManager.this.mLogger.d(ConfigurationManager.LOG_TAG, "Apply local configurations", new Object[0]);
                                 hasApplied = ConfigurationManager.this.applyConfiguration(config.getConfiguration());
                             }
                         }
@@ -116,34 +118,41 @@ public final class ConfigurationManager {
 
     private void applyDefaultConfiguration() {
         try {
-            applyConfiguration(IOUtils.toString(this.mUpsight.getResources().openRawResource(R.raw.configurator_config)));
+            String config = IOUtils.toString(this.mUpsight.getResources().openRawResource(R.raw.configurator_config));
+            this.mLogger.d(LOG_TAG, "Apply default configurations", new Object[0]);
+            applyConfiguration(config);
         } catch (IOException e) {
             this.mLogger.e(LOG_TAG, "Could not read default config", e);
         }
     }
 
-    private boolean applyConfiguration(String jsonConfiguration) {
+    private synchronized boolean applyConfiguration(String jsonConfiguration) {
+        boolean z;
         try {
             Config config = this.mConfigParser.parse(jsonConfiguration);
             if (config == null || !config.isValid()) {
                 this.mLogger.w(LOG_TAG, "Incoming config is invalid", new Object[0]);
-                return false;
+                z = false;
             } else if (config.equals(this.mCurrentConfig)) {
                 this.mLogger.w(LOG_TAG, "Current config is equals to incoming config, rejecting", new Object[0]);
-                return true;
+                z = true;
             } else {
                 if (!(this.mWorkerSubscription == null || this.mWorkerSubscription.isUnsubscribed())) {
+                    this.mLogger.d(LOG_TAG, "Stop config.expired recording scheduler", new Object[0]);
                     this.mWorkerSubscription.unsubscribe();
                 }
-                this.mWorkerSubscription = this.mWorker.schedulePeriodically(this.mSyncAction, this.mIsOutOfSync ? 0 : config.requestInterval, config.requestInterval, TimeUnit.MILLISECONDS);
+                long initialDelay = this.mIsOutOfSync ? 0 : config.requestInterval;
+                this.mLogger.d(LOG_TAG, "Schedule recording of config.expired every " + config.requestInterval + " ms, mIsOutOfSync=" + this.mIsOutOfSync, new Object[0]);
+                this.mWorkerSubscription = this.mWorker.schedulePeriodically(this.mSyncAction, initialDelay, config.requestInterval, TimeUnit.MILLISECONDS);
                 this.mIsOutOfSync = false;
                 this.mCurrentConfig = config;
-                return true;
+                z = true;
             }
         } catch (IOException e) {
             this.mLogger.e(LOG_TAG, "Could not parse incoming configuration", e);
-            return false;
+            z = false;
         }
+        return z;
     }
 
     @Created
@@ -162,9 +171,12 @@ public final class ConfigurationManager {
                     }
                 });
                 for (UpsightConfiguration config : configs) {
-                    if (!config.getScope().equals(CONFIGURATION_SUBTYPE)) {
-                        this.mDataStore.store(config);
-                    } else if (applyConfiguration(config.getConfiguration())) {
+                    if (config.getScope().equals(CONFIGURATION_SUBTYPE)) {
+                        this.mLogger.d(LOG_TAG, "Apply received configurations", new Object[0]);
+                        if (applyConfiguration(config.getConfiguration())) {
+                            this.mDataStore.store(config);
+                        }
+                    } else {
                         this.mDataStore.store(config);
                     }
                 }
@@ -174,12 +186,13 @@ public final class ConfigurationManager {
         }
     }
 
-    public void terminate() {
+    public synchronized void terminate() {
         if (this.mDataStoreSubscription != null) {
             this.mDataStoreSubscription.unsubscribe();
             this.mDataStoreSubscription = null;
         }
         if (this.mWorkerSubscription != null) {
+            this.mLogger.d(LOG_TAG, "Stop config.expired recording scheduler", new Object[0]);
             this.mWorkerSubscription.unsubscribe();
             this.mWorkerSubscription = null;
         }

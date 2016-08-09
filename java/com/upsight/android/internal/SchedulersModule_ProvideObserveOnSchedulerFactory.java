@@ -1,6 +1,7 @@
 package com.upsight.android.internal;
 
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import rx.Scheduler;
 
 public final class SchedulersModule_ProvideObserveOnSchedulerFactory implements Factory<Scheduler> {
@@ -16,11 +17,7 @@ public final class SchedulersModule_ProvideObserveOnSchedulerFactory implements 
     }
 
     public Scheduler get() {
-        Scheduler provided = this.module.provideObserveOnScheduler();
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (Scheduler) Preconditions.checkNotNull(this.module.provideObserveOnScheduler(), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<Scheduler> create(SchedulersModule module) {

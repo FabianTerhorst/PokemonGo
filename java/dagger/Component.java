@@ -10,6 +10,12 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Component {
+
+    @Target({ElementType.TYPE})
+    @Documented
+    public @interface Builder {
+    }
+
     Class<?>[] dependencies() default {};
 
     Class<?>[] modules() default {};

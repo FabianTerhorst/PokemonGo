@@ -52,6 +52,10 @@ public class SfidaBluetoothDriver extends BluetoothDriver {
                 throw new RuntimeException("Must be on the worker thread");
             }
         }
+
+        public void stop() {
+            this.handlerThread.quitSafely();
+        }
     }
 
     private class SfidaScanCallback implements LeScanCallback {
@@ -114,6 +118,12 @@ public class SfidaBluetoothDriver extends BluetoothDriver {
 
     public void stop(int unusedTag) {
         Log.e(TAG, "stop()");
+        this.serialExecutor.execute(new Runnable() {
+            public void run() {
+                SfidaBluetoothDriver.this.releasePeripherals();
+            }
+        });
+        this.serialExecutor.stop();
     }
 
     public void stopDriver() {
@@ -129,9 +139,17 @@ public class SfidaBluetoothDriver extends BluetoothDriver {
         });
     }
 
+    public void releasePeripherals() {
+        for (SfidaPeripheral peripheral : this.peripheralMap.values()) {
+            peripheral.onDestroy();
+        }
+        this.peripheralMap.clear();
+    }
+
     public void startScanning(final String peripheralName, final ScanCallback callback) {
         this.serialExecutor.execute(new Runnable() {
             public void run() {
+                SfidaBluetoothDriver.this.releasePeripherals();
                 SfidaBluetoothDriver.this.scanCallback = callback;
                 if (SfidaBluetoothDriver.this.bluetoothAdapter.isEnabled()) {
                     SfidaBluetoothDriver.this.sfidaScanCallback = new SfidaScanCallback(peripheralName);
@@ -153,8 +171,11 @@ public class SfidaBluetoothDriver extends BluetoothDriver {
 
     public void stopScanning(String peripheralName) {
         Log.d(TAG, String.format("stopScanning(%s)", new Object[]{peripheralName}));
-        if (this.sfidaScanCallback != null) {
-            this.bluetoothAdapter.stopLeScan(this.sfidaScanCallback);
+        if (IsScanning()) {
+            try {
+                this.bluetoothAdapter.stopLeScan(this.sfidaScanCallback);
+            } catch (IllegalArgumentException e) {
+            }
             this.isScanning = false;
         }
     }

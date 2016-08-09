@@ -2,6 +2,7 @@ package com.upsight.android.analytics.internal;
 
 import com.upsight.android.analytics.UpsightAnalyticsApi;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class AnalyticsApiModule_ProvideUpsightAnalyticsApiFactory implements Factory<UpsightAnalyticsApi> {
@@ -22,11 +23,7 @@ public final class AnalyticsApiModule_ProvideUpsightAnalyticsApiFactory implemen
     }
 
     public UpsightAnalyticsApi get() {
-        UpsightAnalyticsApi provided = this.module.provideUpsightAnalyticsApi((Analytics) this.analyticsProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (UpsightAnalyticsApi) Preconditions.checkNotNull(this.module.provideUpsightAnalyticsApi((Analytics) this.analyticsProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<UpsightAnalyticsApi> create(AnalyticsApiModule module, Provider<Analytics> analyticsProvider) {

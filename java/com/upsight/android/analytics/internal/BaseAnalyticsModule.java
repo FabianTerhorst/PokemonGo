@@ -50,6 +50,6 @@ public final class BaseAnalyticsModule {
     @Singleton
     @Provides
     public UpsightGooglePlayHelper provideGooglePlayHelper(UpsightContext upsight) {
-        return new GooglePlayHelper(upsight, upsight.getCoreComponent().objectMapper());
+        return new GooglePlayHelper(upsight, upsight.getCoreComponent().gson());
     }
 }

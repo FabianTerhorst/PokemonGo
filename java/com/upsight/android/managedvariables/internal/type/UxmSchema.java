@@ -1,24 +1,27 @@
 package com.upsight.android.managedvariables.internal.type;
 
 import android.text.TextUtils;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.Upsight;
 import com.upsight.android.logger.UpsightLogger;
 import com.upsight.android.managedvariables.type.UpsightManagedBoolean;
 import com.upsight.android.managedvariables.type.UpsightManagedFloat;
 import com.upsight.android.managedvariables.type.UpsightManagedInt;
 import com.upsight.android.managedvariables.type.UpsightManagedString;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 public final class UxmSchema {
     private static final String ITEM_SCHEMA_KEY_DEFAULT = "default";
@@ -53,97 +56,198 @@ public final class UxmSchema {
     private UpsightLogger mLogger;
     public final String mSchemaJsonString;
 
-    public static class BaseSchema<T> {
-        @JsonProperty("default")
+    public static abstract class BaseSchema<T> {
+        private static final Set<String> BASE_KEYS = new HashSet<String>() {
+            {
+                add(UxmSchema.ITEM_SCHEMA_KEY_TAG);
+                add(UxmSchema.ITEM_SCHEMA_KEY_TYPE);
+                add("description");
+                add(UxmSchema.ITEM_SCHEMA_KEY_DEFAULT);
+            }
+        };
+        @SerializedName("default")
+        @Expose
         public T defaultValue;
-        @JsonProperty("description")
+        @SerializedName("description")
+        @Expose
         public String description;
-        @JsonProperty("tag")
+        @SerializedName("tag")
+        @Expose
         public String tag;
-        @JsonProperty("type")
+        @SerializedName("type")
+        @Expose
         public String type;
+
+        abstract Set<String> getTypeSpecificKeys();
+
+        abstract boolean isDefaultValueValid(JsonElement jsonElement);
+
+        private void validate(JsonElement element) throws IllegalArgumentException {
+            if (element == null) {
+                throw new IllegalArgumentException(getClass().getSimpleName() + " validation failed due to null JSON element");
+            } else if (element.isJsonObject()) {
+                for (Entry<String, JsonElement> entry : element.getAsJsonObject().entrySet()) {
+                    String key = (String) entry.getKey();
+                    if (!BASE_KEYS.contains(key) && !getTypeSpecificKeys().contains(key)) {
+                        throw new IllegalArgumentException(getClass().getSimpleName() + " validation failed due to unknown key");
+                    }
+                }
+                if (!isDefaultValueValid(element.getAsJsonObject().get(UxmSchema.ITEM_SCHEMA_KEY_DEFAULT))) {
+                    throw new IllegalArgumentException(getClass().getSimpleName() + " validation failed due to invalid default value");
+                }
+            } else {
+                throw new IllegalArgumentException(getClass().getSimpleName() + " validation failed due to invalid JSON element type");
+            }
+        }
     }
 
     public static class BooleanSchema extends BaseSchema<Boolean> {
+        private static final Set<String> TYPE_SPECIFIC_KEYS = new HashSet();
+
+        Set<String> getTypeSpecificKeys() {
+            return TYPE_SPECIFIC_KEYS;
+        }
+
+        boolean isDefaultValueValid(JsonElement element) {
+            return element.isJsonPrimitive() && element.getAsJsonPrimitive().isBoolean();
+        }
     }
 
     public static class FloatSchema extends BaseSchema<Float> {
-        @JsonProperty("max")
+        private static final Set<String> TYPE_SPECIFIC_KEYS = new HashSet<String>() {
+            {
+                add("min");
+                add("max");
+            }
+        };
+        @SerializedName("max")
+        @Expose
         public Float max;
-        @JsonProperty("min")
+        @SerializedName("min")
+        @Expose
         public Float min;
+
+        Set<String> getTypeSpecificKeys() {
+            return TYPE_SPECIFIC_KEYS;
+        }
+
+        boolean isDefaultValueValid(JsonElement element) {
+            return element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber();
+        }
     }
 
     public static class IntSchema extends BaseSchema<Integer> {
-        @JsonProperty("max")
+        private static final Set<String> TYPE_SPECIFIC_KEYS = new HashSet<String>() {
+            {
+                add("min");
+                add("max");
+            }
+        };
+        @SerializedName("max")
+        @Expose
         public Integer max;
-        @JsonProperty("min")
+        @SerializedName("min")
+        @Expose
         public Integer min;
+
+        Set<String> getTypeSpecificKeys() {
+            return TYPE_SPECIFIC_KEYS;
+        }
+
+        boolean isDefaultValueValid(JsonElement element) {
+            return element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber();
+        }
     }
 
     public static class StringSchema extends BaseSchema<String> {
+        private static final Set<String> TYPE_SPECIFIC_KEYS = new HashSet();
+
+        Set<String> getTypeSpecificKeys() {
+            return TYPE_SPECIFIC_KEYS;
+        }
+
+        boolean isDefaultValueValid(JsonElement element) {
+            return element.isJsonPrimitive() && element.getAsJsonPrimitive().isString();
+        }
     }
 
-    public static UxmSchema create(String uxmSchemaString, ObjectMapper mapper, UpsightLogger logger) throws IllegalArgumentException {
+    public static UxmSchema create(String uxmSchemaString, Gson gson, JsonParser parser, UpsightLogger logger) throws IllegalArgumentException {
         List<BaseSchema> itemList = new ArrayList();
         Map<String, BaseSchema> itemSchemaMap = new HashMap();
         String errMsg;
+        UpsightLogger upsightLogger;
         try {
-            ArrayNode uxmSchemaNode = (ArrayNode) mapper.readTree(uxmSchemaString);
-            Iterator i$ = uxmSchemaNode.iterator();
-            while (i$.hasNext()) {
-                JsonNode itemNode = (JsonNode) i$.next();
-                if (!itemNode.isObject()) {
-                    errMsg = "Managed variable schema must be a JSON object: " + itemNode;
-                    logger.e(Upsight.LOG_TAG, errMsg, new Object[0]);
-                    throw new IllegalArgumentException(errMsg);
-                } else if (!itemNode.path(ITEM_SCHEMA_KEY_TAG).isTextual()) {
-                    errMsg = "Managed variable schema must contain a tag: " + itemNode;
-                    logger.e(Upsight.LOG_TAG, errMsg, new Object[0]);
-                    throw new IllegalArgumentException(errMsg);
-                } else if (!itemNode.path(ITEM_SCHEMA_KEY_TYPE).isTextual()) {
-                    errMsg = "Managed variable schema must contain a type: " + itemNode;
-                    logger.e(Upsight.LOG_TAG, errMsg, new Object[0]);
-                    throw new IllegalArgumentException(errMsg);
-                } else if (itemNode.has(ITEM_SCHEMA_KEY_DEFAULT)) {
-                    String type = (String) sTypeSchemaMap.get(itemNode.path(ITEM_SCHEMA_KEY_TYPE).asText());
-                    if (TextUtils.isEmpty(type)) {
-                        errMsg = "Managed variable contains invalid types: " + itemNode;
-                        logger.e(Upsight.LOG_TAG, errMsg, new Object[0]);
-                        throw new IllegalArgumentException(errMsg);
-                    }
-                    ((ObjectNode) itemNode).put(ITEM_SCHEMA_KEY_TYPE, type);
-                    String tag = itemNode.path(ITEM_SCHEMA_KEY_TAG).asText();
-                    Class clazz = (Class) sModelTypeSchemaMap.get(type);
-                    if (clazz != null) {
-                        try {
-                            BaseSchema itemSchema = (BaseSchema) mapper.treeToValue(itemNode, clazz);
-                            itemList.add(itemSchema);
-                            itemSchemaMap.put(tag, itemSchema);
-                        } catch (JsonProcessingException e) {
-                            errMsg = "Managed variable contains invalid fields: " + itemNode;
-                            logger.e(Upsight.LOG_TAG, e, errMsg, new Object[0]);
-                            throw new IllegalArgumentException(errMsg, e);
+            JsonElement uxmSchemaElement = parser.parse(uxmSchemaString);
+            if (uxmSchemaElement == null || !uxmSchemaElement.isJsonArray()) {
+                errMsg = "UXM schema must be a JSON array: " + uxmSchemaString;
+                upsightLogger = logger;
+                upsightLogger.e(Upsight.LOG_TAG, errMsg, new Object[0]);
+                throw new IllegalArgumentException(errMsg);
+            }
+            JsonArray uxmSchemaArray = uxmSchemaElement.getAsJsonArray();
+            Iterator it = uxmSchemaArray.iterator();
+            while (it.hasNext()) {
+                JsonElement itemNode = (JsonElement) it.next();
+                if (itemNode.isJsonObject()) {
+                    JsonElement tagElement = itemNode.getAsJsonObject().get(ITEM_SCHEMA_KEY_TAG);
+                    if (tagElement != null && tagElement.isJsonPrimitive() && tagElement.getAsJsonPrimitive().isString()) {
+                        JsonElement typeElement = itemNode.getAsJsonObject().get(ITEM_SCHEMA_KEY_TYPE);
+                        if (typeElement == null || !typeElement.isJsonPrimitive() || !typeElement.getAsJsonPrimitive().isString()) {
+                            errMsg = "Managed variable schema must contain a type: " + itemNode;
+                            upsightLogger = logger;
+                            upsightLogger.e(Upsight.LOG_TAG, errMsg, new Object[0]);
+                            throw new IllegalArgumentException(errMsg);
+                        } else if (itemNode.getAsJsonObject().has(ITEM_SCHEMA_KEY_DEFAULT)) {
+                            String type = (String) sTypeSchemaMap.get(typeElement.getAsString());
+                            if (TextUtils.isEmpty(type)) {
+                                errMsg = "Managed variable contains invalid types: " + itemNode;
+                                upsightLogger = logger;
+                                upsightLogger.e(Upsight.LOG_TAG, errMsg, new Object[0]);
+                                throw new IllegalArgumentException(errMsg);
+                            }
+                            itemNode.getAsJsonObject().addProperty(ITEM_SCHEMA_KEY_TYPE, type);
+                            String tag = tagElement.getAsString();
+                            Class clazz = (Class) sModelTypeSchemaMap.get(type);
+                            if (clazz != null) {
+                                try {
+                                    BaseSchema itemSchema = (BaseSchema) gson.fromJson(itemNode, clazz);
+                                    itemSchema.validate(itemNode);
+                                    itemList.add(itemSchema);
+                                    itemSchemaMap.put(tag, itemSchema);
+                                } catch (JsonSyntaxException e) {
+                                    errMsg = "Managed variable contains invalid fields: " + itemNode;
+                                    upsightLogger = logger;
+                                    upsightLogger.e(Upsight.LOG_TAG, e, errMsg, new Object[0]);
+                                    throw new IllegalArgumentException(errMsg, e);
+                                }
+                            }
+                            errMsg = "Unknown managed variable type: " + type;
+                            upsightLogger = logger;
+                            upsightLogger.e(Upsight.LOG_TAG, errMsg, new Object[0]);
+                            throw new IllegalArgumentException(errMsg);
+                        } else {
+                            errMsg = "Managed variable schema must contain a default value: " + itemNode;
+                            upsightLogger = logger;
+                            upsightLogger.e(Upsight.LOG_TAG, errMsg, new Object[0]);
+                            throw new IllegalArgumentException(errMsg);
                         }
                     }
-                    errMsg = "Unknown managed variable type: " + type;
-                    logger.e(Upsight.LOG_TAG, errMsg, new Object[0]);
-                    throw new IllegalArgumentException(errMsg);
-                } else {
-                    errMsg = "Managed variable schema must contain a default value: " + itemNode;
-                    logger.e(Upsight.LOG_TAG, errMsg, new Object[0]);
+                    errMsg = "Managed variable schema must contain a tag: " + itemNode;
+                    upsightLogger = logger;
+                    upsightLogger.e(Upsight.LOG_TAG, errMsg, new Object[0]);
                     throw new IllegalArgumentException(errMsg);
                 }
+                errMsg = "Managed variable schema must be a JSON object: " + itemNode;
+                upsightLogger = logger;
+                upsightLogger.e(Upsight.LOG_TAG, errMsg, new Object[0]);
+                throw new IllegalArgumentException(errMsg);
             }
-            return new UxmSchema(itemList, itemSchemaMap, logger, uxmSchemaNode.toString());
-        } catch (IOException e2) {
+            return new UxmSchema(itemList, itemSchemaMap, logger, uxmSchemaArray.toString());
+        } catch (JsonSyntaxException e2) {
             errMsg = "Failed to parse UXM schema JSON: " + uxmSchemaString;
-            logger.e(Upsight.LOG_TAG, e2, errMsg, new Object[0]);
+            upsightLogger = logger;
+            upsightLogger.e(Upsight.LOG_TAG, e2, errMsg, new Object[0]);
             throw new IllegalArgumentException(errMsg, e2);
-        } catch (ClassCastException e3) {
-            errMsg = "UXM schema must be a JSON array: " + uxmSchemaString;
-            logger.e(Upsight.LOG_TAG, e3, errMsg, new Object[0]);
-            throw new IllegalArgumentException(errMsg, e3);
         }
     }
 

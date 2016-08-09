@@ -1,5 +1,6 @@
 package com.voxelbusters.nativeplugins.features.reachability;
 
+import com.upsight.android.googlepushservices.UpsightPushNotificationBuilderFactory.Default;
 import com.voxelbusters.nativeplugins.defines.CommonDefines;
 import com.voxelbusters.nativeplugins.utilities.Debug;
 import java.io.IOException;
@@ -15,7 +16,7 @@ public class HostConnectionPoller {
     private int maxRetryCount = 3;
     private int port = 56;
     private Future socketFutureTask = null;
-    private float timeGapBetweenPolls = 2.0f;
+    private float timeGapBetweenPolls = Default.HTTP_REQUEST_BACKOFF_MULT;
 
     HostConnectionPoller() {
     }

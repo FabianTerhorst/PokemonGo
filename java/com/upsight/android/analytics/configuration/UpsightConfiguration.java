@@ -1,19 +1,24 @@
 package com.upsight.android.analytics.configuration;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.persistence.annotation.UpsightStorableIdentifier;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
 
 @UpsightStorableType("upsight.configuration")
 public final class UpsightConfiguration {
+    @SerializedName("id")
+    @Expose
     @UpsightStorableIdentifier
-    @JsonProperty("id")
     String id;
-    @JsonProperty("scope")
+    @SerializedName("scope")
+    @Expose
     private String mScope;
-    @JsonProperty("session_num_created")
+    @SerializedName("session_num_created")
+    @Expose
     private int mSessionNumCreated;
-    @JsonProperty("value")
+    @SerializedName("value")
+    @Expose
     private String mValue;
 
     public static UpsightConfiguration create(String type, String configuration, int currentSessionNum) {

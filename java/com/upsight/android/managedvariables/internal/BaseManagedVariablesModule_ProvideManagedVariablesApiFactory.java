@@ -4,6 +4,7 @@ import com.upsight.android.managedvariables.UpsightManagedVariablesApi;
 import com.upsight.android.managedvariables.experience.UpsightUserExperience;
 import com.upsight.android.managedvariables.internal.type.ManagedVariableManager;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class BaseManagedVariablesModule_ProvideManagedVariablesApiFactory implements Factory<UpsightManagedVariablesApi> {
@@ -29,11 +30,7 @@ public final class BaseManagedVariablesModule_ProvideManagedVariablesApiFactory 
     }
 
     public UpsightManagedVariablesApi get() {
-        UpsightManagedVariablesApi provided = this.module.provideManagedVariablesApi((ManagedVariableManager) this.managedVariableManagerProvider.get(), (UpsightUserExperience) this.userExperienceProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (UpsightManagedVariablesApi) Preconditions.checkNotNull(this.module.provideManagedVariablesApi((ManagedVariableManager) this.managedVariableManagerProvider.get(), (UpsightUserExperience) this.userExperienceProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<UpsightManagedVariablesApi> create(BaseManagedVariablesModule module, Provider<ManagedVariableManager> managedVariableManagerProvider, Provider<UpsightUserExperience> userExperienceProvider) {

@@ -1,12 +1,11 @@
 package com.upsight.android.analytics.event.monetization;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.JsonObject;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.analytics.event.UpsightPublisherData;
 import com.upsight.android.analytics.internal.AnalyticsEvent;
-import com.upsight.android.analytics.internal.util.JacksonHelper.JSONObjectSerializer;
+import com.upsight.android.analytics.internal.util.GsonHelper.JSONObjectSerializer;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
 import org.json.JSONObject;
 
@@ -14,8 +13,9 @@ import org.json.JSONObject;
 public class UpsightMonetizationIapEvent extends AnalyticsEvent<UpsightData> {
 
     public static class Builder extends com.upsight.android.analytics.internal.AnalyticsEvent.Builder<UpsightMonetizationIapEvent, UpsightData> {
+        private String cookie;
         private String currency;
-        private ObjectNode iapBundle;
+        private JsonObject iapBundle;
         private Double price;
         private String product;
         private Integer quantity;
@@ -27,7 +27,7 @@ public class UpsightMonetizationIapEvent extends AnalyticsEvent<UpsightData> {
 
         protected Builder(String store, JSONObject iapBundle, Double totalPrice, Double price, Integer quantity, String currency, String product) {
             this.store = store;
-            this.iapBundle = JSONObjectSerializer.toObjectNode(iapBundle);
+            this.iapBundle = JSONObjectSerializer.toJsonObject(iapBundle);
             this.totalPrice = totalPrice;
             this.price = price;
             this.quantity = quantity;
@@ -37,6 +37,11 @@ public class UpsightMonetizationIapEvent extends AnalyticsEvent<UpsightData> {
 
         public Builder setStreamId(String streamId) {
             this.streamId = streamId;
+            return this;
+        }
+
+        public Builder setCookie(String cookie) {
+            this.cookie = cookie;
             return this;
         }
 
@@ -56,28 +61,38 @@ public class UpsightMonetizationIapEvent extends AnalyticsEvent<UpsightData> {
     }
 
     static class UpsightData {
-        @JsonProperty("currency")
+        @SerializedName("cookie")
+        @Expose
+        String cookie;
+        @SerializedName("currency")
+        @Expose
         String currency;
-        @JsonProperty("iap_bundle")
-        ObjectNode iapBundle;
-        @JsonProperty("price")
+        @SerializedName("iap_bundle")
+        @Expose
+        JsonObject iapBundle;
+        @SerializedName("price")
+        @Expose
         Double price;
-        @JsonProperty("product")
+        @SerializedName("product")
+        @Expose
         String product;
-        @JsonProperty("quantity")
+        @SerializedName("quantity")
+        @Expose
         Integer quantity;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("resolution")
+        @SerializedName("resolution")
+        @Expose
         String resolution;
-        @JsonProperty("store")
+        @SerializedName("store")
+        @Expose
         String store;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("stream_id")
+        @SerializedName("stream_id")
+        @Expose
         String streamId;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("stream_start_ts")
+        @SerializedName("stream_start_ts")
+        @Expose
         String streamStartTs;
-        @JsonProperty("total_price")
+        @SerializedName("total_price")
+        @Expose
         Double totalPrice;
 
         protected UpsightData(Builder builder) {
@@ -86,6 +101,7 @@ public class UpsightMonetizationIapEvent extends AnalyticsEvent<UpsightData> {
             this.streamId = builder.streamId;
             this.price = builder.price;
             this.currency = builder.currency;
+            this.cookie = builder.cookie;
             this.iapBundle = builder.iapBundle;
             this.streamStartTs = builder.streamStartTs;
             this.resolution = builder.resolution;
@@ -116,8 +132,12 @@ public class UpsightMonetizationIapEvent extends AnalyticsEvent<UpsightData> {
             return this.currency;
         }
 
+        public String getCookie() {
+            return this.cookie;
+        }
+
         public JSONObject getIapBundle() {
-            return JSONObjectSerializer.fromObjectNode(this.iapBundle);
+            return JSONObjectSerializer.fromJsonObject(this.iapBundle);
         }
 
         public String getStreamStartTs() {

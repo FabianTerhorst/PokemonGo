@@ -2,6 +2,7 @@ package com.upsight.android.analytics.internal.session;
 
 import android.app.Application.ActivityLifecycleCallbacks;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class LifecycleTrackerModule_ProvideUpsightLifeCycleCallbacksFactory implements Factory<ActivityLifecycleCallbacks> {
@@ -22,11 +23,7 @@ public final class LifecycleTrackerModule_ProvideUpsightLifeCycleCallbacksFactor
     }
 
     public ActivityLifecycleCallbacks get() {
-        ActivityLifecycleCallbacks provided = this.module.provideUpsightLifeCycleCallbacks((ActivityLifecycleTracker) this.handlerProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (ActivityLifecycleCallbacks) Preconditions.checkNotNull(this.module.provideUpsightLifeCycleCallbacks((ActivityLifecycleTracker) this.handlerProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<ActivityLifecycleCallbacks> create(LifecycleTrackerModule module, Provider<ActivityLifecycleTracker> handlerProvider) {

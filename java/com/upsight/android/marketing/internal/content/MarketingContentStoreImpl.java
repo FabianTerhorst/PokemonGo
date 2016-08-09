@@ -3,6 +3,7 @@ package com.upsight.android.marketing.internal.content;
 import android.text.TextUtils;
 import com.squareup.otto.Bus;
 import com.upsight.android.analytics.internal.session.Clock;
+import com.upsight.android.logger.UpsightLogger;
 import com.upsight.android.marketing.UpsightMarketingContentStore;
 import com.upsight.android.marketing.internal.content.MarketingContent.ScopedAvailabilityEvent;
 import com.upsight.android.marketing.internal.content.MarketingContent.ScopelessAvailabilityEvent;
@@ -14,16 +15,19 @@ import java.util.Set;
 
 class MarketingContentStoreImpl extends UpsightMarketingContentStore implements MarketingContentStore {
     public static final long DEFAULT_TIME_TO_LIVE_MS = 600000;
+    private static final String LOG_TAG = MarketingContentStore.class.getSimpleName();
     private Bus mBus;
     private Clock mClock;
     private final Map<String, MarketingContent> mContentMap = new HashMap();
+    private UpsightLogger mLogger;
     private final Map<String, String> mParentEligibilityMap = new HashMap();
     private final Map<String, Set<String>> mScopeEligibilityMap = new HashMap();
     private final Map<String, Long> mTimestamps = new HashMap();
 
-    public MarketingContentStoreImpl(Bus bus, Clock clock) {
+    public MarketingContentStoreImpl(Bus bus, Clock clock, UpsightLogger logger) {
         this.mBus = bus;
         this.mClock = clock;
+        this.mLogger = logger;
     }
 
     public synchronized boolean put(String id, MarketingContent content) {
@@ -34,6 +38,7 @@ class MarketingContentStoreImpl extends UpsightMarketingContentStore implements 
             this.mTimestamps.put(id, Long.valueOf(this.mClock.currentTimeMillis()));
             isAdded = true;
         }
+        this.mLogger.d(LOG_TAG, "put id=" + id + " isAdded=" + isAdded, new Object[0]);
         return isAdded;
     }
 
@@ -44,6 +49,7 @@ class MarketingContentStoreImpl extends UpsightMarketingContentStore implements 
             remove(id);
             marketingContent = null;
         } else {
+            this.mLogger.d(LOG_TAG, "get id=" + id, new Object[0]);
             marketingContent = (MarketingContent) this.mContentMap.get(id);
         }
         return marketingContent;
@@ -53,13 +59,16 @@ class MarketingContentStoreImpl extends UpsightMarketingContentStore implements 
         boolean isRemoved;
         isRemoved = false;
         if (!TextUtils.isEmpty(id)) {
-            isRemoved = this.mContentMap.remove(id) != null;
+            if (this.mContentMap.remove(id) != null) {
+                isRemoved = true;
+            } else {
+                isRemoved = false;
+            }
             if (isRemoved) {
-                Iterator<String> eligibleIdsItr = this.mScopeEligibilityMap.keySet().iterator();
-                while (eligibleIdsItr.hasNext()) {
-                    Set<String> ids = (Set) this.mScopeEligibilityMap.get((String) eligibleIdsItr.next());
+                for (String scope : this.mScopeEligibilityMap.keySet()) {
+                    Set<String> ids = (Set) this.mScopeEligibilityMap.get(scope);
                     if (ids != null && ids.contains(id)) {
-                        eligibleIdsItr.remove();
+                        ids.remove(id);
                     }
                 }
                 Iterator<String> childIdMapItr = this.mParentEligibilityMap.keySet().iterator();
@@ -73,6 +82,7 @@ class MarketingContentStoreImpl extends UpsightMarketingContentStore implements 
                 this.mTimestamps.remove(id);
             }
         }
+        this.mLogger.d(LOG_TAG, "remove id=" + id + " isRemoved=" + isRemoved, new Object[0]);
         return isRemoved;
     }
 
@@ -81,41 +91,54 @@ class MarketingContentStoreImpl extends UpsightMarketingContentStore implements 
         ids = (Set) this.mScopeEligibilityMap.get(scope);
         if (ids == null) {
             ids = new HashSet();
+        } else {
+            ids = new HashSet(ids);
         }
+        StringBuilder sb = new StringBuilder();
+        for (String id : ids) {
+            sb.append(id).append(" ");
+        }
+        this.mLogger.d(LOG_TAG, "getIdsForScope scope=" + scope + " ids=[ " + sb + " ]", new Object[0]);
         return ids;
     }
 
     public synchronized boolean presentScopedContent(String id, String[] scopes) {
-        boolean z;
-        MarketingContent content = (MarketingContent) this.mContentMap.get(id);
-        if (content == null || scopes == null || scopes.length <= 0) {
-            z = false;
-        } else {
-            for (String scope : scopes) {
-                Set<String> ids = (Set) this.mScopeEligibilityMap.get(scope);
-                if (ids != null) {
-                    ids.add(id);
-                } else {
-                    ids = new HashSet();
-                    ids.add(id);
-                    this.mScopeEligibilityMap.put(scope, ids);
+        boolean z = false;
+        synchronized (this) {
+            MarketingContent content = (MarketingContent) this.mContentMap.get(id);
+            if (!(content == null || scopes == null || scopes.length <= 0)) {
+                int length = scopes.length;
+                int i;
+                while (i < length) {
+                    String scope = scopes[i];
+                    Set<String> ids = (Set) this.mScopeEligibilityMap.get(scope);
+                    if (ids != null) {
+                        ids.add(id);
+                    } else {
+                        ids = new HashSet();
+                        ids.add(id);
+                        this.mScopeEligibilityMap.put(scope, ids);
+                    }
+                    i++;
                 }
+                content.markPresentable(new ScopedAvailabilityEvent(id, scopes), this.mBus);
+                this.mLogger.d(LOG_TAG, "presentScopedContent id=" + id, new Object[0]);
+                z = true;
             }
-            content.markPresentable(new ScopedAvailabilityEvent(id, scopes), this.mBus);
-            z = true;
         }
         return z;
     }
 
     public synchronized boolean presentScopelessContent(String id, String parentId) {
-        boolean z;
-        MarketingContent content = (MarketingContent) this.mContentMap.get(id);
-        if (content == null || TextUtils.isEmpty(parentId)) {
-            z = false;
-        } else {
-            this.mParentEligibilityMap.put(parentId, id);
-            content.markPresentable(new ScopelessAvailabilityEvent(id, parentId), this.mBus);
-            z = true;
+        boolean z = false;
+        synchronized (this) {
+            MarketingContent content = (MarketingContent) this.mContentMap.get(id);
+            if (!(content == null || TextUtils.isEmpty(parentId))) {
+                this.mParentEligibilityMap.put(parentId, id);
+                content.markPresentable(new ScopelessAvailabilityEvent(id, parentId), this.mBus);
+                this.mLogger.d(LOG_TAG, "presentScopelessContent id=" + id + " parentId=" + parentId, new Object[0]);
+                z = true;
+            }
         }
         return z;
     }

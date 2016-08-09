@@ -1,11 +1,13 @@
 package com.upsight.android.analytics.event.campaign;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.JsonArray;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.analytics.event.UpsightPublisherData;
 import com.upsight.android.analytics.internal.AnalyticsEvent;
+import com.upsight.android.analytics.internal.util.GsonHelper.JSONArraySerializer;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
+import org.json.JSONArray;
 
 @UpsightStorableType("upsight.campaign.impression")
 public class UpsightCampaignImpressionEvent extends AnalyticsEvent<UpsightData> {
@@ -13,14 +15,17 @@ public class UpsightCampaignImpressionEvent extends AnalyticsEvent<UpsightData> 
     public static class Builder extends com.upsight.android.analytics.internal.AnalyticsEvent.Builder<UpsightCampaignImpressionEvent, UpsightData> {
         private Integer adGameId;
         private Integer adTypeId;
+        private JsonArray ads;
         private Integer campaignId;
         private Integer contentId;
         private Integer contentTypeId;
         private Integer creativeId;
+        private String impressionId;
         private Integer ordinal;
         private String scope;
         private String streamId;
         private String streamStartTs;
+        private Boolean testDevice;
 
         protected Builder(String streamId, Integer campaignId, Integer creativeId, Integer contentId) {
             this.streamId = streamId;
@@ -34,8 +39,13 @@ public class UpsightCampaignImpressionEvent extends AnalyticsEvent<UpsightData> 
             return this;
         }
 
-        public Builder setContentTypeId(Integer contentTypeId) {
-            this.contentTypeId = contentTypeId;
+        public Builder setImpressionId(String impressionId) {
+            this.impressionId = impressionId;
+            return this;
+        }
+
+        public Builder setAds(JSONArray ads) {
+            this.ads = JSONArraySerializer.toJsonArray(ads);
             return this;
         }
 
@@ -59,42 +69,66 @@ public class UpsightCampaignImpressionEvent extends AnalyticsEvent<UpsightData> 
             return this;
         }
 
+        public Builder setTestDevice(Boolean testDevice) {
+            this.testDevice = testDevice;
+            return this;
+        }
+
+        public Builder setContentTypeId(Integer contentTypeId) {
+            this.contentTypeId = contentTypeId;
+            return this;
+        }
+
         protected UpsightCampaignImpressionEvent build() {
             return new UpsightCampaignImpressionEvent("upsight.campaign.impression", new UpsightData(this), this.mPublisherDataBuilder.build());
         }
     }
 
     static class UpsightData {
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("ad_game_id")
+        @SerializedName("ad_game_id")
+        @Expose
         Integer adGameId;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("ad_type_id")
+        @SerializedName("ad_type_id")
+        @Expose
         Integer adTypeId;
-        @JsonProperty("campaign_id")
+        @SerializedName("ads")
+        @Expose
+        JsonArray ads;
+        @SerializedName("campaign_id")
+        @Expose
         Integer campaignId;
-        @JsonProperty("content_id")
+        @SerializedName("content_id")
+        @Expose
         Integer contentId;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("content_type_id")
+        @SerializedName("content_type_id")
+        @Expose
         Integer contentTypeId;
-        @JsonProperty("creative_id")
+        @SerializedName("creative_id")
+        @Expose
         Integer creativeId;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("ordinal")
+        @SerializedName("impression_id")
+        @Expose
+        String impressionId;
+        @SerializedName("ordinal")
+        @Expose
         Integer ordinal;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("scope")
+        @SerializedName("scope")
+        @Expose
         String scope;
-        @JsonProperty("stream_id")
+        @SerializedName("stream_id")
+        @Expose
         String streamId;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("stream_start_ts")
+        @SerializedName("stream_start_ts")
+        @Expose
         String streamStartTs;
+        @SerializedName("test_device")
+        @Expose
+        Boolean testDevice;
 
         protected UpsightData(Builder builder) {
             this.ordinal = builder.ordinal;
-            this.contentTypeId = builder.contentTypeId;
+            this.impressionId = builder.impressionId;
+            this.ads = builder.ads;
             this.creativeId = builder.creativeId;
             this.campaignId = builder.campaignId;
             this.adTypeId = builder.adTypeId;
@@ -103,6 +137,8 @@ public class UpsightCampaignImpressionEvent extends AnalyticsEvent<UpsightData> 
             this.streamStartTs = builder.streamStartTs;
             this.scope = builder.scope;
             this.contentId = builder.contentId;
+            this.testDevice = builder.testDevice;
+            this.contentTypeId = builder.contentTypeId;
         }
 
         protected UpsightData() {
@@ -112,8 +148,12 @@ public class UpsightCampaignImpressionEvent extends AnalyticsEvent<UpsightData> 
             return this.ordinal;
         }
 
-        public Integer getContentTypeId() {
-            return this.contentTypeId;
+        public String getImpressionId() {
+            return this.impressionId;
+        }
+
+        public JSONArray getAds() {
+            return JSONArraySerializer.fromJsonArray(this.ads);
         }
 
         public Integer getCreativeId() {
@@ -146,6 +186,14 @@ public class UpsightCampaignImpressionEvent extends AnalyticsEvent<UpsightData> 
 
         public Integer getContentId() {
             return this.contentId;
+        }
+
+        public Boolean getTestDevice() {
+            return this.testDevice;
+        }
+
+        public Integer getContentTypeId() {
+            return this.contentTypeId;
         }
     }
 

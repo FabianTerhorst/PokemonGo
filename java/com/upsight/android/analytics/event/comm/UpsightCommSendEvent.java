@@ -1,12 +1,11 @@
 package com.upsight.android.analytics.event.comm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.JsonObject;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.analytics.event.UpsightPublisherData;
 import com.upsight.android.analytics.internal.AnalyticsEvent;
-import com.upsight.android.analytics.internal.util.JacksonHelper.JSONObjectSerializer;
+import com.upsight.android.analytics.internal.util.GsonHelper.JSONObjectSerializer;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
 import org.json.JSONObject;
 
@@ -16,7 +15,7 @@ public class UpsightCommSendEvent extends AnalyticsEvent<UpsightData> {
     public static class Builder extends com.upsight.android.analytics.internal.AnalyticsEvent.Builder<UpsightCommSendEvent, UpsightData> {
         private Integer msgCampaignId;
         private Integer msgId;
-        private ObjectNode payload;
+        private JsonObject payload;
         private String token;
 
         protected Builder(Integer msgId, String token) {
@@ -25,7 +24,7 @@ public class UpsightCommSendEvent extends AnalyticsEvent<UpsightData> {
         }
 
         public Builder setPayload(JSONObject payload) {
-            this.payload = JSONObjectSerializer.toObjectNode(payload);
+            this.payload = JSONObjectSerializer.toJsonObject(payload);
             return this;
         }
 
@@ -40,15 +39,17 @@ public class UpsightCommSendEvent extends AnalyticsEvent<UpsightData> {
     }
 
     static class UpsightData {
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("msg_campaign_id")
+        @SerializedName("msg_campaign_id")
+        @Expose
         Integer msgCampaignId;
-        @JsonProperty("msg_id")
+        @SerializedName("msg_id")
+        @Expose
         Integer msgId;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("payload")
-        ObjectNode payload;
-        @JsonProperty("token")
+        @SerializedName("payload")
+        @Expose
+        JsonObject payload;
+        @SerializedName("token")
+        @Expose
         String token;
 
         protected UpsightData(Builder builder) {
@@ -70,7 +71,7 @@ public class UpsightCommSendEvent extends AnalyticsEvent<UpsightData> {
         }
 
         public JSONObject getPayload() {
-            return JSONObjectSerializer.fromObjectNode(this.payload);
+            return JSONObjectSerializer.fromJsonObject(this.payload);
         }
 
         public Integer getMsgCampaignId() {

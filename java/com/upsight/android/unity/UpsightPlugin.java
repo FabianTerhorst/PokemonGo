@@ -1,81 +1,384 @@
 package com.upsight.android.unity;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.Application.ActivityLifecycleCallbacks;
 import android.content.Intent;
-import android.os.Build.VERSION;
-import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import com.upsight.android.Upsight;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.UpsightException;
 import com.upsight.android.analytics.UpsightGooglePlayHelper;
+import com.upsight.android.analytics.UpsightLifeCycleTracker;
+import com.upsight.android.analytics.UpsightLifeCycleTracker.ActivityState;
 import com.upsight.android.analytics.event.UpsightCustomEvent;
+import com.upsight.android.analytics.event.UpsightCustomEvent.Builder;
 import com.upsight.android.analytics.event.UpsightPublisherData;
-import com.upsight.android.analytics.event.UpsightPublisherData.Builder;
+import com.upsight.android.analytics.event.install.UpsightInstallAttributionEvent;
 import com.upsight.android.analytics.event.milestone.UpsightMilestoneEvent;
 import com.upsight.android.analytics.event.monetization.UpsightMonetizationEvent;
 import com.upsight.android.analytics.provider.UpsightLocationTracker;
 import com.upsight.android.analytics.provider.UpsightLocationTracker.Data;
 import com.upsight.android.analytics.provider.UpsightOptOutStatus;
 import com.upsight.android.analytics.provider.UpsightUserAttributes;
-import com.upsight.android.googlepushservices.UpsightGooglePushServices;
-import com.upsight.android.googlepushservices.UpsightGooglePushServices.OnRegisterListener;
-import com.upsight.android.googlepushservices.UpsightGooglePushServices.OnUnregisterListener;
-import com.upsight.android.googlepushservices.UpsightPushBillboard;
 import com.upsight.android.logger.UpsightLogger.Level;
 import com.upsight.android.managedvariables.type.UpsightManagedBoolean;
 import com.upsight.android.managedvariables.type.UpsightManagedFloat;
 import com.upsight.android.managedvariables.type.UpsightManagedInt;
 import com.upsight.android.managedvariables.type.UpsightManagedString;
-import com.upsight.android.marketing.UpsightBillboard;
-import com.upsight.android.marketing.UpsightMarketingContentStore;
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.EnumSet;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-@SuppressLint({"NewApi"})
-public class UpsightPlugin extends AbstractUpsightPlugin implements ActivityLifecycleCallbacks {
-    private static UpsightPlugin sInstance;
-    private BillboardHandler mBillboardHandler;
-    private Map<String, UpsightBillboard> mBillboardMap = new HashMap();
-    private boolean mHasActiveBillboard = false;
-    private List<String> mJettisonedBillboardScopes;
-    private UpsightBillboard mPushBillboard;
-    private boolean mShouldSynchronizeManagedVariables = true;
-    private UpsightContext mUpsight;
+public class UpsightPlugin {
+    protected static final String TAG = "Upsight-Unity";
+    @NonNull
+    private Set<IUpsightExtensionManager> mExtensions = new HashSet(2);
+    protected UpsightContext mUpsight;
 
-    @SuppressLint({"NewApi"})
-    public static synchronized UpsightPlugin instance() {
-        UpsightPlugin upsightPlugin;
-        synchronized (UpsightPlugin.class) {
-            if (sInstance == null) {
-                sInstance = new UpsightPlugin();
-                Activity activity = sInstance.getActivity();
-                if (activity != null) {
-                    sInstance.mUpsight = Upsight.createContext(activity);
-                    sInstance.mBillboardHandler = new BillboardHandler(activity, sInstance);
-                    Log.i(Upsight.LOG_TAG, "creating UpsightPushBillboard");
-                    sInstance.mPushBillboard = UpsightPushBillboard.create(sInstance.mUpsight, sInstance.mBillboardHandler);
-                    if (VERSION.SDK_INT >= 14) {
-                        Log.i(Upsight.LOG_TAG, "wiring up an ActivityLifecycleCallback listener since we are on API 14+");
-                        activity.getApplication().registerActivityLifecycleCallbacks(sInstance);
-                    }
+    public UpsightPlugin() {
+        try {
+            final Activity activity = UnityBridge.getActivity();
+            this.mUpsight = Upsight.createContext(activity);
+            this.mUpsight.getLogger().setLogLevel(Upsight.LOG_TAG, EnumSet.of(Level.ERROR));
+            UnityBridge.runSafelyOnUiThread(new Runnable() {
+                public void run() {
+                    UpsightLifeCycleTracker.track(UpsightPlugin.this.mUpsight, activity, ActivityState.STARTED);
+                    Log.i(UpsightPlugin.TAG, "Upsight initialization finished");
                 }
-            }
-            upsightPlugin = sInstance;
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Critical Error: Exception thrown while initializing. Upsight will NOT work!", e);
+            throw e;
         }
-        return upsightPlugin;
     }
 
-    private static UpsightPublisherData publisherDataFromJsonString(String json) {
-        Builder pubData = new Builder();
+    public void registerExtension(IUpsightExtensionManager extension) {
+        if (this.mExtensions.add(extension)) {
+            extension.init(this.mUpsight);
+        }
+    }
+
+    @NonNull
+    public String getAppToken() {
+        return this.mUpsight.getApplicationToken();
+    }
+
+    @NonNull
+    public String getPublicKey() {
+        return this.mUpsight.getPublicKey();
+    }
+
+    @NonNull
+    public String getSid() {
+        return this.mUpsight.getSid();
+    }
+
+    public void setLoggerLevel(@NonNull String logLevel) {
+        try {
+            if (logLevel.toLowerCase().equals("verbose")) {
+                Log.i(TAG, "enabling verbose logs");
+                this.mUpsight.getLogger().setLogLevel(".*", EnumSet.allOf(Level.class));
+                return;
+            }
+            this.mUpsight.getLogger().setLogLevel(Upsight.LOG_TAG, EnumSet.of(Level.valueOf(logLevel)));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @NonNull
+    public String getPluginVersion() {
+        return this.mUpsight.getSdkPlugin();
+    }
+
+    public boolean getOptOutStatus() {
+        try {
+            return UpsightOptOutStatus.get(this.mUpsight);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public void setOptOutStatus(boolean optOutStatus) {
+        try {
+            UpsightOptOutStatus.set(this.mUpsight, optOutStatus);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setLocation(double lat, double lon) {
+        final double d = lat;
+        final double d2 = lon;
+        UnityBridge.runSafelyOnUiThread(new Runnable() {
+            public void run() {
+                UpsightLocationTracker.track(UpsightPlugin.this.mUpsight, Data.create(d, d2));
+            }
+        });
+    }
+
+    public void purgeLocation() {
+        UnityBridge.runSafelyOnUiThread(new Runnable() {
+            public void run() {
+                UpsightLocationTracker.purge(UpsightPlugin.this.mUpsight);
+            }
+        });
+    }
+
+    public void setUserAttributesString(@NonNull final String key, @NonNull final String value) {
+        UnityBridge.runSafelyOnUiThread(new Runnable() {
+            public void run() {
+                UpsightUserAttributes.put(UpsightPlugin.this.mUpsight, key, value);
+            }
+        });
+    }
+
+    public void setUserAttributesFloat(@NonNull final String key, final float value) {
+        UnityBridge.runSafelyOnUiThread(new Runnable() {
+            public void run() {
+                UpsightUserAttributes.put(UpsightPlugin.this.mUpsight, key, Float.valueOf(value));
+            }
+        });
+    }
+
+    public void setUserAttributesInt(@NonNull final String key, final int value) {
+        UnityBridge.runSafelyOnUiThread(new Runnable() {
+            public void run() {
+                UpsightUserAttributes.put(UpsightPlugin.this.mUpsight, key, Integer.valueOf(value));
+            }
+        });
+    }
+
+    public void setUserAttributesBool(@NonNull final String key, final boolean value) {
+        UnityBridge.runSafelyOnUiThread(new Runnable() {
+            public void run() {
+                UpsightUserAttributes.put(UpsightPlugin.this.mUpsight, key, Boolean.valueOf(value));
+            }
+        });
+    }
+
+    public void setUserAttributesDatetime(@NonNull final String key, final long value) {
+        UnityBridge.runSafelyOnUiThread(new Runnable() {
+            public void run() {
+                UpsightUserAttributes.put(UpsightPlugin.this.mUpsight, key, new Date(TimeUnit.MILLISECONDS.convert(value, TimeUnit.SECONDS)));
+            }
+        });
+    }
+
+    @Nullable
+    public String getUserAttributesString(@NonNull String key) {
+        try {
+            return UpsightUserAttributes.getString(this.mUpsight, key);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public float getUserAttributesFloat(@NonNull String key) {
+        try {
+            Float value = UpsightUserAttributes.getFloat(this.mUpsight, key);
+            if (value != null) {
+                return value.floatValue();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0.0f;
+    }
+
+    public int getUserAttributesInt(@NonNull String key) {
+        try {
+            Integer value = UpsightUserAttributes.getInteger(this.mUpsight, key);
+            if (value != null) {
+                return value.intValue();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public boolean getUserAttributesBool(@NonNull String key) {
+        try {
+            Boolean value = UpsightUserAttributes.getBoolean(this.mUpsight, key);
+            if (value != null) {
+                return value.booleanValue();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public long getUserAttributesDatetime(@NonNull String key) {
+        try {
+            Date value = UpsightUserAttributes.getDatetime(this.mUpsight, key);
+            if (value != null) {
+                return TimeUnit.SECONDS.convert(value.getTime(), TimeUnit.MILLISECONDS);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    @Nullable
+    public String getManagedString(@NonNull String key) {
+        try {
+            UpsightManagedString managedString = UpsightManagedString.fetch(this.mUpsight, key);
+            if (managedString != null) {
+                return (String) managedString.get();
+            }
+            Log.e(TAG, "Unknown tag " + key + " for managed string, please check your UXM schema");
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public float getManagedFloat(@NonNull String key) {
+        try {
+            UpsightManagedFloat managedFloat = UpsightManagedFloat.fetch(this.mUpsight, key);
+            if (managedFloat != null) {
+                return ((Float) managedFloat.get()).floatValue();
+            }
+            Log.e(TAG, "Unknown tag " + key + " for managed float, please check your UXM schema");
+            return 0.0f;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0.0f;
+        }
+    }
+
+    public int getManagedInt(@NonNull String key) {
+        try {
+            UpsightManagedInt managedInt = UpsightManagedInt.fetch(this.mUpsight, key);
+            if (managedInt != null) {
+                return ((Integer) managedInt.get()).intValue();
+            }
+            Log.e(TAG, "Unknown tag " + key + " for managed int, please check your UXM schema");
+            return 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    public boolean getManagedBool(@NonNull String key) {
+        try {
+            UpsightManagedBoolean managedBoolean = UpsightManagedBoolean.fetch(this.mUpsight, key);
+            if (managedBoolean != null) {
+                return ((Boolean) managedBoolean.get()).booleanValue();
+            }
+            Log.e(TAG, "Unknown tag " + key + " for managed bool, please check your UXM schema");
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public void recordAnalyticsEvent(@NonNull final String eventName, @NonNull final String properties) {
+        UnityBridge.runSafelyOnUiThread(new Runnable() {
+            public void run() {
+                Builder builder = UpsightCustomEvent.createBuilder(eventName);
+                builder.put(UpsightPlugin.publisherDataFromJsonString(properties));
+                builder.record(UpsightPlugin.this.mUpsight);
+            }
+        });
+    }
+
+    public void recordMilestoneEvent(@NonNull final String scope, @NonNull final String properties) {
+        UnityBridge.runSafelyOnUiThread(new Runnable() {
+            public void run() {
+                UpsightMilestoneEvent.Builder builder = UpsightMilestoneEvent.createBuilder(scope);
+                builder.put(UpsightPlugin.publisherDataFromJsonString(properties));
+                builder.record(UpsightPlugin.this.mUpsight);
+            }
+        });
+    }
+
+    public void recordMonetizationEvent(double totalPrice, @NonNull String currency, @Nullable String product, double price, @Nullable String resolution, int quantity, @Nullable String properties) {
+        final double d = totalPrice;
+        final String str = currency;
+        final String str2 = properties;
+        final String str3 = product;
+        final double d2 = price;
+        final String str4 = resolution;
+        final int i = quantity;
+        UnityBridge.runSafelyOnUiThread(new Runnable() {
+            public void run() {
+                UpsightMonetizationEvent.Builder builder = UpsightMonetizationEvent.createBuilder(Double.valueOf(d), str);
+                builder.put(UpsightPlugin.publisherDataFromJsonString(str2));
+                if (str3 != null) {
+                    builder.setProduct(str3);
+                }
+                if (d2 >= 0.0d) {
+                    builder.setPrice(Double.valueOf(d2));
+                }
+                if (str4 != null) {
+                    builder.setResolution(str4);
+                }
+                if (i > 0) {
+                    builder.setQuantity(Integer.valueOf(i));
+                }
+                builder.record(UpsightPlugin.this.mUpsight);
+            }
+        });
+    }
+
+    public void recordGooglePlayPurchase(int quantity, @NonNull String currency, double price, double totalPrice, @NonNull String product, int reponseCode, @NonNull String inAppPurchaseData, @NonNull String inAppDataSignature, @NonNull String properties) {
+        final String str = properties;
+        final int i = reponseCode;
+        final String str2 = inAppPurchaseData;
+        final String str3 = inAppDataSignature;
+        final int i2 = quantity;
+        final String str4 = currency;
+        final double d = price;
+        final double d2 = totalPrice;
+        final String str5 = product;
+        UnityBridge.runSafelyOnUiThread(new Runnable() {
+            public void run() {
+                UpsightPublisherData.Builder builder = new UpsightPublisherData.Builder();
+                builder.put(UpsightPlugin.publisherDataFromJsonString(str));
+                try {
+                    Intent responseData = new Intent();
+                    responseData.putExtra(UpsightGooglePlayHelper.PURCHASE_RESPONSE_CODE, i);
+                    responseData.putExtra(UpsightGooglePlayHelper.PURCHASE_INAPP_PURCHASE_DATA, str2);
+                    responseData.putExtra(UpsightGooglePlayHelper.PURCHASE_INAPP_DATA_SIGNATURE, str3);
+                    UpsightGooglePlayHelper.trackPurchase(UpsightPlugin.this.mUpsight, i2, str4, d, d2, str5, responseData, builder.build());
+                } catch (UpsightException e) {
+                    Log.i(UpsightPlugin.TAG, "Failed to recordGooglePlayPurchase: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    public void recordAttributionEvent(@Nullable String campaign, @Nullable String creative, @Nullable String source, @Nullable String properties) {
+        final String str = campaign;
+        final String str2 = creative;
+        final String str3 = source;
+        final String str4 = properties;
+        UnityBridge.runSafelyOnUiThread(new Runnable() {
+            public void run() {
+                UpsightInstallAttributionEvent.createBuilder().setAttributionCampaign(str).setAttributionCreative(str2).setAttributionSource(str3).put(UpsightPlugin.publisherDataFromJsonString(str4)).record(UpsightPlugin.this.mUpsight);
+            }
+        });
+    }
+
+    @NonNull
+    private static UpsightPublisherData publisherDataFromJsonString(@Nullable String json) {
+        UpsightPublisherData.Builder pubData = new UpsightPublisherData.Builder();
         if (json != null && json.length() > 0) {
             try {
                 JSONObject jObject = new JSONObject(json);
@@ -106,329 +409,15 @@ public class UpsightPlugin extends AbstractUpsightPlugin implements ActivityLife
         return pubData.build();
     }
 
-    public String getAppToken() {
-        return this.mUpsight.getApplicationToken();
-    }
-
-    public String getPublicKey() {
-        return this.mUpsight.getPublicKey();
-    }
-
-    public String getSid() {
-        return this.mUpsight.getSid();
-    }
-
-    public void setLoggerLevel(String logLevel) {
-        if (logLevel.toLowerCase().equals("verbose")) {
-            Log.i(Upsight.LOG_TAG, "enabling verbose logs");
-            this.mUpsight.getLogger().setLogLevel(Upsight.LOG_TAG, EnumSet.allOf(Level.class));
-            return;
-        }
-        this.mUpsight.getLogger().setLogLevel(Upsight.LOG_TAG, EnumSet.of(Level.valueOf(logLevel)));
-    }
-
-    public String getPluginVersion() {
-        return this.mUpsight.getSdkPlugin();
-    }
-
-    public boolean getOptOutStatus() {
-        return UpsightOptOutStatus.get(this.mUpsight);
-    }
-
-    public void setOptOutStatus(boolean optOutStatus) {
-        UpsightOptOutStatus.set(this.mUpsight, optOutStatus);
-    }
-
-    public void setLocation(double lat, double lon, String timezone) {
-        Data data = Data.create(lat, lon);
-        if (timezone != null && timezone.length() > 0) {
-            data.setTimeZone(timezone);
-        }
-        UpsightLocationTracker.track(this.mUpsight, data);
-    }
-
-    public void purgeLocation() {
-        UpsightLocationTracker.purge(this.mUpsight);
-    }
-
-    public void unregisterForPushNotifications() {
-        Log.i(Upsight.LOG_TAG, "unregistering for push notifications");
-        UpsightGooglePushServices.unregister(this.mUpsight, new OnUnregisterListener() {
-            public void onSuccess() {
-                Log.e(Upsight.LOG_TAG, "unregistration succeeded");
-            }
-
-            public void onFailure(UpsightException e) {
-                Log.e(Upsight.LOG_TAG, "unregistration failed: " + e);
-            }
-        });
-    }
-
-    public void registerForPushNotifications() {
-        Log.i(Upsight.LOG_TAG, "registering for push notifications");
-        UpsightGooglePushServices.register(this.mUpsight, new OnRegisterListener() {
-            public void onSuccess(String arg0) {
-                Log.e(Upsight.LOG_TAG, "registration succeeded");
-            }
-
-            public void onFailure(UpsightException ex) {
-                Log.e(Upsight.LOG_TAG, "registration failed: " + ex);
-            }
-        });
-    }
-
-    public void setUserAttributesString(String key, String value) {
-        try {
-            UpsightUserAttributes.put(this.mUpsight, key, value);
-        } catch (Exception e) {
-            e.printStackTrace();
+    public void onApplicationPaused() {
+        for (IUpsightExtensionManager extension : this.mExtensions) {
+            extension.onApplicationPaused();
         }
     }
 
-    public void setUserAttributesFloat(String key, float value) {
-        try {
-            UpsightUserAttributes.put(this.mUpsight, key, Float.valueOf(value));
-        } catch (Exception e) {
-            e.printStackTrace();
+    public void onApplicationResumed() {
+        for (IUpsightExtensionManager extension : this.mExtensions) {
+            extension.onApplicationResumed();
         }
-    }
-
-    public void setUserAttributesInt(String key, int value) {
-        try {
-            UpsightUserAttributes.put(this.mUpsight, key, Integer.valueOf(value));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void setUserAttributesBool(String key, boolean value) {
-        try {
-            UpsightUserAttributes.put(this.mUpsight, key, Boolean.valueOf(value));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public String getUserAttributesString(String key) {
-        try {
-            return UpsightUserAttributes.getString(this.mUpsight, key);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public float getUserAttributesFloat(String key) {
-        try {
-            return UpsightUserAttributes.getFloat(this.mUpsight, key).floatValue();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return 0.0f;
-        }
-    }
-
-    public int getUserAttributesInt(String key) {
-        try {
-            return UpsightUserAttributes.getInteger(this.mUpsight, key).intValue();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return 0;
-        }
-    }
-
-    public boolean getUserAttributesBool(String key) {
-        try {
-            return UpsightUserAttributes.getBoolean(this.mUpsight, key).booleanValue();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    public String getManagedString(String key) {
-        try {
-            UpsightManagedString managedString = UpsightManagedString.fetch(this.mUpsight, key);
-            if (managedString != null) {
-                return (String) managedString.get();
-            }
-            Log.e(Upsight.LOG_TAG, "Unknown tag " + key + " for managed string, please check your UXM schema");
-            return null;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public float getManagedFloat(String key) {
-        try {
-            UpsightManagedFloat managedFloat = UpsightManagedFloat.fetch(this.mUpsight, key);
-            if (managedFloat != null) {
-                return ((Float) managedFloat.get()).floatValue();
-            }
-            Log.e(Upsight.LOG_TAG, "Unknown tag " + key + " for managed float, please check your UXM schema");
-            return 0.0f;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return 0.0f;
-        }
-    }
-
-    public int getManagedInt(String key) {
-        try {
-            UpsightManagedInt managedInt = UpsightManagedInt.fetch(this.mUpsight, key);
-            if (managedInt != null) {
-                return ((Integer) managedInt.get()).intValue();
-            }
-            Log.e(Upsight.LOG_TAG, "Unknown tag " + key + " for managed int, please check your UXM schema");
-            return 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return 0;
-        }
-    }
-
-    public boolean getManagedBool(String key) {
-        try {
-            UpsightManagedBoolean managedBoolean = UpsightManagedBoolean.fetch(this.mUpsight, key);
-            if (managedBoolean != null) {
-                return ((Boolean) managedBoolean.get()).booleanValue();
-            }
-            Log.e(Upsight.LOG_TAG, "Unknown tag " + key + " for managed bool, please check your UXM schema");
-            return false;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    public void recordAnalyticsEvent(String eventName, String properties) {
-        UpsightCustomEvent.Builder builder = UpsightCustomEvent.createBuilder(eventName);
-        builder.put(publisherDataFromJsonString(properties));
-        builder.record(this.mUpsight);
-    }
-
-    public void recordMilestoneEvent(String scope, String properties) {
-        UpsightMilestoneEvent.Builder builder = UpsightMilestoneEvent.createBuilder(scope);
-        builder.put(publisherDataFromJsonString(properties));
-        builder.record(this.mUpsight);
-    }
-
-    public void recordMonetizationEvent(double totalPrice, String currency, String product, double price, String resolution, int quantity, String properties) {
-        UpsightMonetizationEvent.Builder builder = UpsightMonetizationEvent.createBuilder(Double.valueOf(totalPrice), currency);
-        builder.put(publisherDataFromJsonString(properties));
-        if (product != null) {
-            builder.setProduct(product);
-        }
-        if (price >= 0.0d) {
-            builder.setPrice(Double.valueOf(price));
-        }
-        if (resolution != null) {
-            builder.setResolution(resolution);
-        }
-        if (quantity > 0) {
-            builder.setQuantity(Integer.valueOf(quantity));
-        }
-        builder.record(this.mUpsight);
-    }
-
-    public void recordGooglePlayPurchase(int quantity, String currency, double price, double totalPrice, String product, int reponseCode, String inAppPurchaseData, String inAppDataSignature, String properties) {
-        Builder builder = new Builder();
-        builder.put(publisherDataFromJsonString(properties));
-        try {
-            Intent responseData = new Intent();
-            responseData.putExtra(UpsightGooglePlayHelper.PURCHASE_RESPONSE_CODE, reponseCode);
-            responseData.putExtra(UpsightGooglePlayHelper.PURCHASE_INAPP_PURCHASE_DATA, inAppPurchaseData);
-            responseData.putExtra(UpsightGooglePlayHelper.PURCHASE_INAPP_DATA_SIGNATURE, inAppDataSignature);
-            UpsightGooglePlayHelper.trackPurchase(this.mUpsight, quantity, currency, price, totalPrice, product, responseData, builder.build());
-        } catch (UpsightException e) {
-            Log.i(Upsight.LOG_TAG, "Failed to recordGooglePlayPurchase: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    public boolean isContentReadyForBillboardWithScope(String scope) {
-        return UpsightMarketingContentStore.isContentReady(this.mUpsight, scope);
-    }
-
-    public void prepareBillboard(String scope) {
-        if (!this.mBillboardMap.containsKey(scope) && !getHasActiveBillboard()) {
-            if (this.mBillboardMap.size() > 0) {
-                for (String s : this.mBillboardMap.keySet()) {
-                    Log.i(Upsight.LOG_TAG, "clearing out cached billboard [" + s + "] to make room for the new billboard: " + scope);
-                    ((UpsightBillboard) this.mBillboardMap.get(s)).destroy();
-                }
-                this.mBillboardMap.clear();
-            }
-            this.mBillboardMap.put(scope, UpsightBillboard.create(this.mUpsight, scope, this.mBillboardHandler));
-        }
-    }
-
-    public void destroyBillboard(String scope) {
-        if (this.mBillboardMap.containsKey(scope) && !getHasActiveBillboard()) {
-            Log.i(Upsight.LOG_TAG, "Destroying billboard for scope: " + scope);
-            ((UpsightBillboard) this.mBillboardMap.get(scope)).destroy();
-            this.mBillboardMap.remove(scope);
-        }
-    }
-
-    public void removeBillboardFromMap(String scope) {
-        if (this.mBillboardMap.containsKey(scope)) {
-            Log.i(Upsight.LOG_TAG, "Removing used billboard from internal map for scope: " + scope);
-            this.mBillboardMap.remove(scope);
-        }
-    }
-
-    public void setShouldSynchronizeManagedVariables(boolean shouldSynchronizeManagedVariables) {
-        this.mShouldSynchronizeManagedVariables = shouldSynchronizeManagedVariables;
-    }
-
-    public boolean getShouldSynchronizeManagedVariables() {
-        return this.mShouldSynchronizeManagedVariables;
-    }
-
-    public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
-    }
-
-    public void onActivityDestroyed(Activity activity) {
-    }
-
-    public void onActivityPaused(Activity activity) {
-        this.mPushBillboard.destroy();
-        this.mPushBillboard = null;
-        this.mJettisonedBillboardScopes = new ArrayList();
-        for (String scope : this.mBillboardMap.keySet()) {
-            this.mJettisonedBillboardScopes.add(scope);
-            ((UpsightBillboard) this.mBillboardMap.get(scope)).destroy();
-        }
-        this.mBillboardMap.clear();
-        Log.i(Upsight.LOG_TAG, "tombstoned " + this.mJettisonedBillboardScopes.size() + " scopes when pausing");
-    }
-
-    public void onActivityResumed(Activity activity) {
-        Log.i(Upsight.LOG_TAG, "resurrecting " + this.mJettisonedBillboardScopes.size() + " scopes when resuming and push billboard");
-        if (this.mPushBillboard == null) {
-            this.mPushBillboard = UpsightPushBillboard.create(this.mUpsight, this.mBillboardHandler);
-        }
-        for (String scope : this.mJettisonedBillboardScopes) {
-            prepareBillboard(scope);
-        }
-        this.mJettisonedBillboardScopes = null;
-    }
-
-    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
-    }
-
-    public void onActivityStarted(Activity activity) {
-    }
-
-    public void onActivityStopped(Activity activity) {
-    }
-
-    void setHasActiveBillboard(boolean hasActiveBillboard) {
-        this.mHasActiveBillboard = hasActiveBillboard;
-    }
-
-    boolean getHasActiveBillboard() {
-        return this.mHasActiveBillboard;
     }
 }

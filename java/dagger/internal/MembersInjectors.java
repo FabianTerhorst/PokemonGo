@@ -8,10 +8,13 @@ public final class MembersInjectors {
         INSTANCE;
 
         public void injectMembers(Object instance) {
-            if (instance == null) {
-                throw new NullPointerException();
-            }
+            Preconditions.checkNotNull(instance);
         }
+    }
+
+    public static <T> T injectMembers(MembersInjector<T> membersInjector, T instance) {
+        membersInjector.injectMembers(instance);
+        return instance;
     }
 
     public static <T> MembersInjector<T> noOp() {
@@ -19,7 +22,7 @@ public final class MembersInjectors {
     }
 
     public static <T> MembersInjector<T> delegatingTo(MembersInjector<? super T> delegate) {
-        return delegate;
+        return (MembersInjector) Preconditions.checkNotNull(delegate);
     }
 
     private MembersInjectors() {

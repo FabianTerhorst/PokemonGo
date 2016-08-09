@@ -3,6 +3,7 @@ package com.upsight.android.managedvariables.internal.experience;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.managedvariables.experience.UpsightUserExperience;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class UserExperienceModule_ProvideUserExperienceFactory implements Factory<UpsightUserExperience> {
@@ -23,11 +24,7 @@ public final class UserExperienceModule_ProvideUserExperienceFactory implements 
     }
 
     public UpsightUserExperience get() {
-        UpsightUserExperience provided = this.module.provideUserExperience((UpsightContext) this.upsightProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (UpsightUserExperience) Preconditions.checkNotNull(this.module.provideUserExperience((UpsightContext) this.upsightProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<UpsightUserExperience> create(UserExperienceModule module, Provider<UpsightContext> upsightProvider) {

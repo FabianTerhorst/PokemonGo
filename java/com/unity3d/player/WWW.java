@@ -1,5 +1,6 @@
 package com.unity3d.player;
 
+import com.upsight.mediation.vast.VASTPlayer;
 import com.voxelbusters.nativeplugins.defines.Keys.Scheme;
 import java.io.IOException;
 import java.io.InputStream;
@@ -142,7 +143,7 @@ class WWW extends Thread {
                     try {
                         min = httpURLConnection.getResponseCode();
                         Map headerFields = httpURLConnection.getHeaderFields();
-                        if (headerFields != null && (min == 301 || min == 302)) {
+                        if (headerFields != null && (min == VASTPlayer.ERROR_WRAPPER_TIMEOUT || min == VASTPlayer.ERROR_EXCEEDED_WRAPPER_LIMIT)) {
                             List list = (List) headerFields.get("Location");
                             if (!(list == null || list.isEmpty())) {
                                 httpURLConnection.disconnect();

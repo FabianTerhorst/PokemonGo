@@ -3,6 +3,9 @@ package com.upsight.android.analytics.internal.dispatcher.schema;
 import android.content.Context;
 import android.os.Build;
 import android.os.Build.VERSION;
+import com.squareup.otto.Bus;
+import com.squareup.otto.Subscribe;
+import com.upsight.android.UpsightContext;
 import com.upsight.android.analytics.provider.UpsightDataProvider;
 import com.upsight.android.internal.util.NetworkHelper;
 import java.util.Arrays;
@@ -24,16 +27,25 @@ public class DeviceBlockProvider extends UpsightDataProvider {
     public static final String OS_VERSION_KEY = "device.os_version";
     private static final String SPACE = " ";
     public static final String TYPE_KEY = "device.type";
+    private final Bus mBus;
 
-    DeviceBlockProvider(Context context) {
-        put(CARRIER_KEY, NetworkHelper.getNetworkOperatorName(context));
-        put(CONNECTION_KEY, NetworkHelper.getActiveNetworkType(context));
+    DeviceBlockProvider(UpsightContext upsight) {
+        this.mBus = upsight.getCoreComponent().bus();
+        this.mBus.register(this);
+        put(CARRIER_KEY, NetworkHelper.getNetworkOperatorName(upsight));
+        put(CONNECTION_KEY, NetworkHelper.getActiveNetworkType(upsight));
         put(HARDWARE_KEY, Build.MODEL);
         put(JAILBROKEN_KEY, Boolean.valueOf(isRooted()));
         put(MANUFACTURER_KEY, Build.MANUFACTURER);
         put(OS_KEY, OS_ANDROID);
         put(OS_VERSION_KEY, VERSION.RELEASE + SPACE + VERSION.SDK_INT);
-        put(TYPE_KEY, getDeviceType(context));
+        put(TYPE_KEY, getDeviceType(upsight));
+    }
+
+    @Subscribe
+    public void onNetworkChangeEvent(NetworkChangeEvent event) {
+        put(CARRIER_KEY, event.networkOperatorName);
+        put(CONNECTION_KEY, event.activeNetworkType);
     }
 
     private boolean isRooted() {

@@ -2,6 +2,7 @@ package com.upsight.android.googlepushservices.internal;
 
 import com.upsight.android.googlepushservices.UpsightGooglePushServicesApi;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class PushModule_ProvideGooglePushServicesApiFactory implements Factory<UpsightGooglePushServicesApi> {
@@ -22,11 +23,7 @@ public final class PushModule_ProvideGooglePushServicesApiFactory implements Fac
     }
 
     public UpsightGooglePushServicesApi get() {
-        UpsightGooglePushServicesApi provided = this.module.provideGooglePushServicesApi((GooglePushServices) this.googlePushServicesProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (UpsightGooglePushServicesApi) Preconditions.checkNotNull(this.module.provideGooglePushServicesApi((GooglePushServices) this.googlePushServicesProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<UpsightGooglePushServicesApi> create(PushModule module, Provider<GooglePushServices> googlePushServicesProvider) {

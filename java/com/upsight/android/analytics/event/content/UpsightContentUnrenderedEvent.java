@@ -1,12 +1,11 @@
 package com.upsight.android.analytics.event.content;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.JsonObject;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.analytics.event.UpsightPublisherData;
 import com.upsight.android.analytics.internal.AnalyticsEvent;
-import com.upsight.android.analytics.internal.util.JacksonHelper.JSONObjectSerializer;
+import com.upsight.android.analytics.internal.util.GsonHelper.JSONObjectSerializer;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
 import org.json.JSONObject;
 
@@ -15,14 +14,14 @@ public class UpsightContentUnrenderedEvent extends AnalyticsEvent<UpsightData> {
 
     public static class Builder extends com.upsight.android.analytics.internal.AnalyticsEvent.Builder<UpsightContentUnrenderedEvent, UpsightData> {
         private Integer campaignId;
-        private ObjectNode contentProvider;
+        private JsonObject contentProvider;
         private String id;
         private String scope;
         private String streamId;
         private String streamStartTs;
 
         protected Builder(JSONObject contentProvider) {
-            this.contentProvider = JSONObjectSerializer.toObjectNode(contentProvider);
+            this.contentProvider = JSONObjectSerializer.toJsonObject(contentProvider);
         }
 
         public Builder setCampaignId(Integer campaignId) {
@@ -56,22 +55,23 @@ public class UpsightContentUnrenderedEvent extends AnalyticsEvent<UpsightData> {
     }
 
     static class UpsightData {
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("campaign_id")
+        @SerializedName("campaign_id")
+        @Expose
         Integer campaignId;
-        @JsonProperty("content_provider")
-        ObjectNode contentProvider;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("id")
+        @SerializedName("content_provider")
+        @Expose
+        JsonObject contentProvider;
+        @SerializedName("id")
+        @Expose
         String id;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("scope")
+        @SerializedName("scope")
+        @Expose
         String scope;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("stream_id")
+        @SerializedName("stream_id")
+        @Expose
         String streamId;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("stream_start_ts")
+        @SerializedName("stream_start_ts")
+        @Expose
         String streamStartTs;
 
         protected UpsightData(Builder builder) {
@@ -87,7 +87,7 @@ public class UpsightContentUnrenderedEvent extends AnalyticsEvent<UpsightData> {
         }
 
         public JSONObject getContentProvider() {
-            return JSONObjectSerializer.fromObjectNode(this.contentProvider);
+            return JSONObjectSerializer.fromJsonObject(this.contentProvider);
         }
 
         public Integer getCampaignId() {

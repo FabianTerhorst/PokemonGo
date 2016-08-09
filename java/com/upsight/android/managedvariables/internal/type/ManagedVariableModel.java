@@ -1,14 +1,17 @@
 package com.upsight.android.managedvariables.internal.type;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.persistence.annotation.UpsightStorableIdentifier;
 
 abstract class ManagedVariableModel<T> {
     @UpsightStorableIdentifier
     String id;
-    @JsonProperty("tag")
+    @SerializedName("tag")
+    @Expose
     String tag;
-    @JsonProperty("value")
+    @SerializedName("value")
+    @Expose
     T value;
 
     ManagedVariableModel() {

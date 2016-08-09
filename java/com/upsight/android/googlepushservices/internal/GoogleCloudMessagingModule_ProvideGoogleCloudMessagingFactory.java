@@ -3,6 +3,7 @@ package com.upsight.android.googlepushservices.internal;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.upsight.android.UpsightContext;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class GoogleCloudMessagingModule_ProvideGoogleCloudMessagingFactory implements Factory<GoogleCloudMessaging> {
@@ -23,11 +24,7 @@ public final class GoogleCloudMessagingModule_ProvideGoogleCloudMessagingFactory
     }
 
     public GoogleCloudMessaging get() {
-        GoogleCloudMessaging provided = this.module.provideGoogleCloudMessaging((UpsightContext) this.upsightProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (GoogleCloudMessaging) Preconditions.checkNotNull(this.module.provideGoogleCloudMessaging((UpsightContext) this.upsightProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<GoogleCloudMessaging> create(GoogleCloudMessagingModule module, Provider<UpsightContext> upsightProvider) {

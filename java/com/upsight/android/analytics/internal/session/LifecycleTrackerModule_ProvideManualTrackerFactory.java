@@ -2,6 +2,7 @@ package com.upsight.android.analytics.internal.session;
 
 import com.upsight.android.analytics.UpsightLifeCycleTracker;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class LifecycleTrackerModule_ProvideManualTrackerFactory implements Factory<UpsightLifeCycleTracker> {
@@ -22,11 +23,7 @@ public final class LifecycleTrackerModule_ProvideManualTrackerFactory implements
     }
 
     public UpsightLifeCycleTracker get() {
-        UpsightLifeCycleTracker provided = this.module.provideManualTracker((ManualTracker) this.trackerProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (UpsightLifeCycleTracker) Preconditions.checkNotNull(this.module.provideManualTracker((ManualTracker) this.trackerProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<UpsightLifeCycleTracker> create(LifecycleTrackerModule module, Provider<ManualTracker> trackerProvider) {

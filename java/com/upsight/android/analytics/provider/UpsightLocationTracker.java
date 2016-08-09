@@ -1,6 +1,6 @@
 package com.upsight.android.analytics.provider;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.Expose;
 import com.upsight.android.Upsight;
 import com.upsight.android.UpsightAnalyticsExtension;
 import com.upsight.android.UpsightContext;
@@ -13,25 +13,18 @@ public abstract class UpsightLocationTracker {
     public static final class Data {
         @UpsightStorableIdentifier
         String id;
-        @JsonProperty
+        @Expose
         double latitude;
-        @JsonProperty
+        @Expose
         double longitude;
-        @JsonProperty
-        String timeZone;
-
-        public static Data create(double latitude, double longitude, String timeZone) {
-            return new Data(latitude, longitude, timeZone);
-        }
 
         public static Data create(double latitude, double longitude) {
-            return new Data(latitude, longitude, null);
+            return new Data(latitude, longitude);
         }
 
-        private Data(double latitude, double longitude, String timeZone) {
+        private Data(double latitude, double longitude) {
             this.latitude = latitude;
             this.longitude = longitude;
-            this.timeZone = timeZone;
         }
 
         Data() {
@@ -45,20 +38,12 @@ public abstract class UpsightLocationTracker {
             return this.longitude;
         }
 
-        public String getTimeZone() {
-            return this.timeZone;
-        }
-
         public void setLatitude(double latitude) {
             this.latitude = latitude;
         }
 
         public void setLongitude(double longitude) {
             this.longitude = longitude;
-        }
-
-        public void setTimeZone(String timeZone) {
-            this.timeZone = timeZone;
         }
 
         public boolean equals(Object o) {

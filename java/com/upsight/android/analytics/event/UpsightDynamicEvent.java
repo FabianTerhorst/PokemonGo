@@ -1,25 +1,27 @@
 package com.upsight.android.analytics.event;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.upsight.android.UpsightAnalyticsExtension;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.analytics.internal.DynamicIdentifiers;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
 
 @UpsightStorableType("com.upsight.dynamic")
-public final class UpsightDynamicEvent extends UpsightAnalyticsEvent<JsonNode, JsonNode> implements DynamicIdentifiers {
+public final class UpsightDynamicEvent extends UpsightAnalyticsEvent<JsonElement, JsonElement> implements DynamicIdentifiers {
     private String identifiers;
 
     public static final class Builder {
+        private static final JsonParser JSON_PARSER = new JsonParser();
         private String identifiers;
-        private JsonNode publisherData;
+        private JsonObject publisherData;
         private final String type;
-        private JsonNode upsightData;
+        private JsonObject upsightData;
 
         private Builder(String type) {
-            this.publisherData = JsonNodeFactory.instance.objectNode();
-            this.upsightData = JsonNodeFactory.instance.objectNode();
+            this.publisherData = new JsonObject();
+            this.upsightData = new JsonObject();
             this.type = type;
         }
 
@@ -28,18 +30,14 @@ public final class UpsightDynamicEvent extends UpsightAnalyticsEvent<JsonNode, J
             return this;
         }
 
-        public Builder putPublisherData(JsonNode jsonNode) {
-            this.publisherData = jsonNode.deepCopy();
+        public Builder putPublisherData(JsonObject jsonNode) {
+            this.publisherData = deepCopy(jsonNode);
             return this;
         }
 
-        public Builder putUpsightData(JsonNode jsonNode) {
-            this.upsightData = jsonNode.deepCopy();
+        public Builder putUpsightData(JsonObject jsonNode) {
+            this.upsightData = deepCopy(jsonNode);
             return this;
-        }
-
-        private UpsightDynamicEvent build() {
-            return new UpsightDynamicEvent(this.type, this.identifiers, this.upsightData, this.publisherData);
         }
 
         public final UpsightDynamicEvent record(UpsightContext upsight) {
@@ -47,13 +45,21 @@ public final class UpsightDynamicEvent extends UpsightAnalyticsEvent<JsonNode, J
             ((UpsightAnalyticsExtension) upsight.getUpsightExtension(UpsightAnalyticsExtension.EXTENSION_NAME)).getApi().record(result);
             return result;
         }
+
+        private UpsightDynamicEvent build() {
+            return new UpsightDynamicEvent(this.type, this.identifiers, this.upsightData, this.publisherData);
+        }
+
+        private JsonObject deepCopy(JsonObject source) {
+            return JSON_PARSER.parse(source.toString()).getAsJsonObject();
+        }
     }
 
     public static Builder createBuilder(String type) {
         return new Builder(type);
     }
 
-    UpsightDynamicEvent(String type, String identifiers, JsonNode upsightData, JsonNode publisherData) {
+    UpsightDynamicEvent(String type, String identifiers, JsonElement upsightData, JsonElement publisherData) {
         super(type, upsightData, publisherData);
         this.identifiers = identifiers;
     }

@@ -42,7 +42,7 @@ public class AccountsActivity extends Activity {
         int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
         if (resultCode != 0) {
             Log.e(TAG, "Google Play Services not available, need to do something. Error code: " + resultCode);
-            this.accountManager.setAuthToken(Status.NON_RECOVERABLE_ERROR, BuildConfig.FLAVOR);
+            this.accountManager.setAuthToken(Status.NON_RECOVERABLE_ERROR, BuildConfig.FLAVOR, this.accountManager.getAccountName());
             finish();
         } else if (!this.authInProgress) {
             this.authInProgress = true;
@@ -62,7 +62,7 @@ public class AccountsActivity extends Activity {
                     return;
                 } else {
                     String accountName = data.getStringExtra("authAccount");
-                    if (accountName == null || BuildConfig.FLAVOR.equals(accountName)) {
+                    if (accountName == null || accountName.isEmpty()) {
                         failAuth(Status.NON_RECOVERABLE_ERROR, "Attempt to choose unnamed account, resultCode: " + resultCode);
                         return;
                     }
@@ -81,13 +81,13 @@ public class AccountsActivity extends Activity {
 
     private void getAuthOrAccount() {
         String accountName = this.accountManager.getAccountName();
-        if (accountName != null) {
-            getAuth(accountName);
+        if (accountName == null || accountName.isEmpty()) {
+            String[] strArr = new String[REQUEST_CHOOSE_ACCOUNT];
+            strArr[0] = "com.google";
+            startActivityForResult(AccountPicker.newChooseAccountIntent(null, null, strArr, false, null, null, null, null), REQUEST_CHOOSE_ACCOUNT);
             return;
         }
-        String[] strArr = new String[REQUEST_CHOOSE_ACCOUNT];
-        strArr[0] = "com.google";
-        startActivityForResult(AccountPicker.newChooseAccountIntent(null, null, strArr, false, null, null, null, null), REQUEST_CHOOSE_ACCOUNT);
+        getAuth(accountName);
     }
 
     private void getAuth(final String accountName) {
@@ -106,24 +106,24 @@ public class AccountsActivity extends Activity {
             Log.i(TAG, "Authenticating with client id: " + clientId);
             String scope = AUTH_TOKEN_SCOPE_PREFIX + clientId;
             Log.i(TAG, "Authenticating with scope: " + scope);
-            activity.accountManager.setAuthToken(Status.OK, GoogleAuthUtil.getToken(activity, accountName, scope));
+            activity.accountManager.setAuthToken(Status.OK, GoogleAuthUtil.getToken(activity, accountName, scope), accountName);
             activity.postFinish();
         } catch (UserRecoverableAuthException userAuthEx) {
             activity.askUserToRecover(userAuthEx);
         } catch (IOException transientEx) {
             Log.e(TAG, "Unable to get authToken at this time.", transientEx);
-            activity.accountManager.setAuthToken(Status.NON_RECOVERABLE_ERROR, BuildConfig.FLAVOR);
+            activity.accountManager.setAuthToken(Status.NON_RECOVERABLE_ERROR, BuildConfig.FLAVOR, accountName);
             activity.postFinish();
         } catch (GoogleAuthException authEx) {
             Log.e(TAG, "User cannot be authenticated.", authEx);
-            activity.accountManager.setAuthToken(Status.NON_RECOVERABLE_ERROR, BuildConfig.FLAVOR);
+            activity.accountManager.setAuthToken(Status.NON_RECOVERABLE_ERROR, BuildConfig.FLAVOR, accountName);
             activity.postFinish();
         }
     }
 
     private void failAuth(Status status, String error) {
         Log.e(TAG, error);
-        this.accountManager.setAuthToken(status, BuildConfig.FLAVOR);
+        this.accountManager.setAuthToken(status, BuildConfig.FLAVOR, this.accountManager.getAccountName());
         finish();
     }
 

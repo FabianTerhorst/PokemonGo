@@ -1,7 +1,7 @@
 package com.upsight.android.internal.persistence.storable;
 
 import android.text.TextUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.upsight.android.UpsightException;
 import com.upsight.android.persistence.UpsightStorableSerializer;
 import com.upsight.android.persistence.annotation.UpsightStorableIdentifier;
@@ -13,12 +13,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class StorableInfoCache {
     private final ConcurrentHashMap<Class<?>, StorableIdentifierAccessor> mAccessorMap = new ConcurrentHashMap();
+    private final Gson mGson;
     private final ConcurrentHashMap<Class<?>, StorableInfo<?>> mInfoMap = new ConcurrentHashMap();
-    private final ObjectMapper mObjectMapper;
     private final ConcurrentHashMap<Class<?>, UpsightStorableSerializer<?>> mSerializerMap = new ConcurrentHashMap();
 
-    StorableInfoCache(ObjectMapper objectMapper) {
-        this.mObjectMapper = objectMapper;
+    StorableInfoCache(Gson gson) {
+        this.mGson = gson;
     }
 
     public <T> void setSerializer(Class<T> clazz, UpsightStorableSerializer<T> serializer) {
@@ -48,13 +48,13 @@ public final class StorableInfoCache {
         }
         Class<?> candidate = clazz;
         while (accessor == null && candidate != null) {
-            Field[] arr$ = candidate.getDeclaredFields();
-            int len$ = arr$.length;
-            int i$ = 0;
-            while (i$ < len$) {
-                Field field = arr$[i$];
+            Field[] declaredFields = candidate.getDeclaredFields();
+            int length = declaredFields.length;
+            int i = 0;
+            while (i < length) {
+                Field field = declaredFields[i];
                 if (((UpsightStorableIdentifier) field.getAnnotation(UpsightStorableIdentifier.class)) == null) {
-                    i$++;
+                    i++;
                 } else if (field.getType().equals(String.class)) {
                     accessor = new StorableFieldIdentifierAccessor(field);
                     candidate = candidate.getSuperclass();
@@ -76,7 +76,7 @@ public final class StorableInfoCache {
         if (serializer != null) {
             return serializer;
         }
-        serializer = new DefaultJsonSerializer(this.mObjectMapper, clazz);
+        serializer = new DefaultJsonSerializer(this.mGson, clazz);
         this.mSerializerMap.put(clazz, serializer);
         return serializer;
     }

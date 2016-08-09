@@ -1,22 +1,27 @@
 package com.upsight.android.analytics.event.partner;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.JsonArray;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.analytics.event.UpsightPublisherData;
 import com.upsight.android.analytics.internal.AnalyticsEvent;
+import com.upsight.android.analytics.internal.util.GsonHelper.JSONArraySerializer;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
+import org.json.JSONArray;
 
 @UpsightStorableType("upsight.partner.click")
 public class UpsightPartnerClickEvent extends AnalyticsEvent<UpsightData> {
 
     public static class Builder extends com.upsight.android.analytics.internal.AnalyticsEvent.Builder<UpsightPartnerClickEvent, UpsightData> {
+        private JsonArray ads;
         private Integer contentId;
+        private String impressionId;
         private Integer partnerId;
         private String partnerName;
         private String scope;
         private String streamId;
         private String streamStartTs;
+        private Boolean testDevice;
 
         protected Builder(Integer partnerId, String scope, String streamId, Integer contentId) {
             this.partnerId = partnerId;
@@ -25,13 +30,28 @@ public class UpsightPartnerClickEvent extends AnalyticsEvent<UpsightData> {
             this.contentId = contentId;
         }
 
+        public Builder setAds(JSONArray ads) {
+            this.ads = JSONArraySerializer.toJsonArray(ads);
+            return this;
+        }
+
         public Builder setPartnerName(String partnerName) {
             this.partnerName = partnerName;
             return this;
         }
 
+        public Builder setImpressionId(String impressionId) {
+            this.impressionId = impressionId;
+            return this;
+        }
+
         public Builder setStreamStartTs(String streamStartTs) {
             this.streamStartTs = streamStartTs;
+            return this;
+        }
+
+        public Builder setTestDevice(Boolean testDevice) {
+            this.testDevice = testDevice;
             return this;
         }
 
@@ -41,35 +61,59 @@ public class UpsightPartnerClickEvent extends AnalyticsEvent<UpsightData> {
     }
 
     static class UpsightData {
-        @JsonProperty("content_id")
+        @SerializedName("ads")
+        @Expose
+        JsonArray ads;
+        @SerializedName("content_id")
+        @Expose
         Integer contentId;
-        @JsonProperty("partner_id")
+        @SerializedName("impression_id")
+        @Expose
+        String impressionId;
+        @SerializedName("partner_id")
+        @Expose
         Integer partnerId;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("partner_name")
+        @SerializedName("partner_name")
+        @Expose
         String partnerName;
-        @JsonProperty("scope")
+        @SerializedName("scope")
+        @Expose
         String scope;
-        @JsonProperty("stream_id")
+        @SerializedName("stream_id")
+        @Expose
         String streamId;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("stream_start_ts")
+        @SerializedName("stream_start_ts")
+        @Expose
         String streamStartTs;
+        @SerializedName("test_device")
+        @Expose
+        Boolean testDevice;
 
         protected UpsightData(Builder builder) {
+            this.ads = builder.ads;
             this.partnerName = builder.partnerName;
+            this.impressionId = builder.impressionId;
             this.streamId = builder.streamId;
             this.streamStartTs = builder.streamStartTs;
             this.scope = builder.scope;
             this.contentId = builder.contentId;
             this.partnerId = builder.partnerId;
+            this.testDevice = builder.testDevice;
         }
 
         protected UpsightData() {
         }
 
+        public JSONArray getAds() {
+            return JSONArraySerializer.fromJsonArray(this.ads);
+        }
+
         public String getPartnerName() {
             return this.partnerName;
+        }
+
+        public String getImpressionId() {
+            return this.impressionId;
         }
 
         public String getStreamId() {
@@ -90,6 +134,10 @@ public class UpsightPartnerClickEvent extends AnalyticsEvent<UpsightData> {
 
         public Integer getPartnerId() {
             return this.partnerId;
+        }
+
+        public Boolean getTestDevice() {
+            return this.testDevice;
         }
     }
 

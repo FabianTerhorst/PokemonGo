@@ -3,6 +3,8 @@ package com.nianticlabs.pokemongoplus.ble;
 import com.nianticlabs.pokemongoplus.ble.callback.CompletionCallback;
 
 public abstract class Characteristic {
+    public abstract void disableNotify(CompletionCallback completionCallback);
+
     public abstract void enableNotify(CompletionCallback completionCallback);
 
     public abstract long getLongValue();

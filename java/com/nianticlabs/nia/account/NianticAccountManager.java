@@ -33,7 +33,7 @@ public class NianticAccountManager extends ContextService {
         }
     }
 
-    private native void nativeAuthTokenCallback(int i, String str);
+    private native void nativeAuthTokenCallback(int i, String str, String str2);
 
     public static WeakReference<NianticAccountManager> getInstance() {
         return instance;
@@ -46,29 +46,35 @@ public class NianticAccountManager extends ContextService {
     }
 
     public void getAccount(final String clientId) {
+        String accountName;
         boolean useAccountsActivity = false;
         int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this.context);
         if (resultCode != 0) {
             Log.e(TAG, "Google Play Services not available. Error code: " + resultCode);
-            setAuthToken(Status.NON_RECOVERABLE_ERROR, BuildConfig.FLAVOR);
+            setAuthToken(Status.NON_RECOVERABLE_ERROR, BuildConfig.FLAVOR, getAccountName());
             return;
         }
         try {
-            String accountName = getAccountName();
-            if (accountName != null) {
-                Log.d(TAG, "Authenticating with account: " + accountName);
-                setAuthToken(Status.OK, GoogleAuthUtil.getToken(this.context, accountName, "audience:server:client_id:" + clientId));
-            } else {
+            accountName = getAccountName();
+            if (accountName == null || accountName.isEmpty()) {
                 useAccountsActivity = true;
+            } else {
+                Log.d(TAG, "Authenticating with account: " + accountName);
+                String scope = "audience:server:client_id:" + clientId;
+                Log.d(TAG, "scope: " + scope);
+                setAuthToken(Status.OK, GoogleAuthUtil.getToken(this.context, accountName, scope), accountName);
             }
         } catch (UserRecoverableAuthException e) {
+            Log.d(TAG, "Use account activity");
             useAccountsActivity = true;
         } catch (IOException transientEx) {
+            accountName = getAccountName();
             Log.e(TAG, "Unable to get authToken at this time.", transientEx);
-            setAuthToken(Status.NON_RECOVERABLE_ERROR, BuildConfig.FLAVOR);
+            setAuthToken(Status.NON_RECOVERABLE_ERROR, BuildConfig.FLAVOR, accountName);
         } catch (GoogleAuthException authEx) {
+            accountName = getAccountName();
             Log.e(TAG, "User cannot be authenticated.", authEx);
-            setAuthToken(Status.NON_RECOVERABLE_ERROR, BuildConfig.FLAVOR);
+            setAuthToken(Status.NON_RECOVERABLE_ERROR, BuildConfig.FLAVOR, accountName);
         }
         if (useAccountsActivity) {
             ContextService.runOnUiThread(new Runnable() {
@@ -86,16 +92,17 @@ public class NianticAccountManager extends ContextService {
     }
 
     public synchronized String getAccountName() {
-        return this.prefs.getString(KEY_ACCOUNT_NAME, null);
+        return this.prefs.getString(KEY_ACCOUNT_NAME, BuildConfig.FLAVOR);
     }
 
     public synchronized void setAccountName(String accountName) {
         this.prefs.edit().putString(KEY_ACCOUNT_NAME, accountName).apply();
     }
 
-    public synchronized void setAuthToken(Status status, String authToken) {
+    public synchronized void setAuthToken(Status status, String authToken, String accountName) {
         synchronized (this.callbackLock) {
-            nativeAuthTokenCallback(status.ordinal(), authToken);
+            Log.d(TAG, "setAuthToken: " + accountName + " - " + authToken);
+            nativeAuthTokenCallback(status.ordinal(), authToken, accountName);
         }
     }
 }

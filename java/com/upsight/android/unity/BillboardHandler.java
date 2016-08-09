@@ -1,43 +1,40 @@
 package com.upsight.android.unity;
 
 import android.app.Activity;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
-import android.view.ViewGroup;
-import com.upsight.android.marketing.UpsightBillboard.Dimensions;
-import com.upsight.android.marketing.UpsightBillboard.PresentationStyle;
+import com.upsight.android.marketing.UpsightBillboard.AttachParameters;
 import com.upsight.android.marketing.UpsightBillboardHandlers.DefaultHandler;
 import com.upsight.android.marketing.UpsightPurchase;
 import com.upsight.android.marketing.UpsightReward;
 import java.util.List;
-import java.util.Set;
 import org.json.JSONObject;
 
 public class BillboardHandler extends DefaultHandler {
     protected static final String TAG = "UpsightBillboardHandler";
-    private String mCurrentScope;
-    private UpsightPlugin mPlugin;
+    @Nullable
+    private static String mCurrentScope;
 
-    public BillboardHandler(Activity activity, UpsightPlugin plugin) {
+    public BillboardHandler(Activity activity) {
         super(activity);
-        this.mPlugin = plugin;
     }
 
-    public ViewGroup onAttach(String scope, PresentationStyle presentation, Set<Dimensions> dimensions) {
-        this.mCurrentScope = scope;
-        ViewGroup viewGroup = super.onAttach(scope, presentation, dimensions);
-        if (viewGroup != null) {
-            this.mPlugin.setHasActiveBillboard(true);
-            this.mPlugin.UnitySendMessage("onBillboardAppear", scope);
+    @Nullable
+    public AttachParameters onAttach(@NonNull String scope) {
+        AttachParameters params = super.onAttach(scope);
+        if (params != null) {
+            mCurrentScope = scope;
+            UnityBridge.UnitySendMessage("onBillboardAppear", scope);
         }
-        return viewGroup;
+        return params;
     }
 
     public void onDetach() {
         super.onDetach();
         Log.i(TAG, "onDetach");
-        this.mPlugin.UnitySendMessage("onBillboardDismiss", this.mCurrentScope);
-        this.mPlugin.removeBillboardFromMap(this.mCurrentScope);
-        this.mPlugin.setHasActiveBillboard(false);
+        UnityBridge.UnitySendMessage("onBillboardDismiss", mCurrentScope);
+        mCurrentScope = null;
     }
 
     public void onNextView() {
@@ -45,7 +42,7 @@ public class BillboardHandler extends DefaultHandler {
         Log.i(TAG, "onNextView");
     }
 
-    public void onPurchases(List<UpsightPurchase> purchases) {
+    public void onPurchases(@NonNull List<UpsightPurchase> purchases) {
         super.onPurchases(purchases);
         Log.i(TAG, "onPurchases");
         for (UpsightPurchase p : purchases) {
@@ -53,15 +50,15 @@ public class BillboardHandler extends DefaultHandler {
                 JSONObject json = new JSONObject();
                 json.put("productIdentifier", p.getProduct());
                 json.put("quantity", p.getQuantity());
-                json.put("billboardScope", this.mCurrentScope);
-                this.mPlugin.UnitySendMessage("billboardDidReceivePurchase", json.toString());
+                json.put("billboardScope", mCurrentScope);
+                UnityBridge.UnitySendMessage("billboardDidReceivePurchase", json.toString());
             } catch (Exception e) {
                 Log.i(TAG, "Error creating JSON" + e.getMessage());
             }
         }
     }
 
-    public void onRewards(List<UpsightReward> rewards) {
+    public void onRewards(@NonNull List<UpsightReward> rewards) {
         super.onRewards(rewards);
         Log.i(TAG, "onRewards");
         for (UpsightReward r : rewards) {
@@ -70,11 +67,16 @@ public class BillboardHandler extends DefaultHandler {
                 json.put("productIdentifier", r.getProduct());
                 json.put("quantity", r.getQuantity());
                 json.put("signatureData", r.getSignatureData());
-                json.put("billboardScope", this.mCurrentScope);
-                this.mPlugin.UnitySendMessage("billboardDidReceiveReward", json.toString());
+                json.put("billboardScope", mCurrentScope);
+                UnityBridge.UnitySendMessage("billboardDidReceiveReward", json.toString());
             } catch (Exception e) {
                 Log.i(TAG, "Error creating JSON" + e.getMessage());
             }
         }
+    }
+
+    @Nullable
+    public static String getCurrentScope() {
+        return mCurrentScope;
     }
 }

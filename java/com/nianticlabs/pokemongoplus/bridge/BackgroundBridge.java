@@ -35,7 +35,7 @@ public class BackgroundBridge {
     public native void stopSession();
 
     static {
-        System.loadLibrary("pgpplugin");
+        System.load("libpgpplugin.so");
     }
 
     protected BackgroundBridge() {
@@ -65,71 +65,79 @@ public class BackgroundBridge {
     }
 
     public static void sendUpdateTimestamp(long timestampMs) {
-        Intent i = createIntentWithAction("updateTimestamp");
+        Intent i = createIntentWithAction(BridgeConstants.UPDATE_TIMESTAMP_ACTION);
         i.putExtra(GameServices.USER_TIME_STAMP, timestampMs);
         currentContext.sendBroadcast(i);
     }
 
     public static void sendSfidaState(int state) {
-        Intent i = createIntentWithAction("sfidaState");
+        Intent i = createIntentWithAction(BridgeConstants.SFIDA_STATE_ACTION);
         i.putExtra(GameServices.STATE, state);
         Log.i(TAG, "sfidaState: " + state);
         currentContext.sendBroadcast(i);
     }
 
     public static void sendEncounterId(long encounterId) {
-        Intent i = createIntentWithAction("encounterId");
+        Intent i = createIntentWithAction(BridgeConstants.ENCOUNTER_ID_ACTION);
         i.putExtra(TriggerIfContentAvailable.ID, encounterId);
         Log.i(TAG, "sendEncounterId: " + encounterId);
         currentContext.sendBroadcast(i);
     }
 
     public static void sendPokestopId(String pokestop) {
-        Intent i = createIntentWithAction("pokestop");
+        Intent i = createIntentWithAction(BridgeConstants.POKESTOP_ACTION);
         i.putExtra(TriggerIfContentAvailable.ID, pokestop);
         Log.i(TAG, "sendPokestopId: " + pokestop);
         currentContext.sendBroadcast(i);
     }
 
     public static void sendCentralState(int state) {
-        Intent i = createIntentWithAction("centralState");
+        Intent i = createIntentWithAction(BridgeConstants.CENTRAL_STATE_ACTION);
         i.putExtra(GameServices.STATE, state);
         Log.i(TAG, "centralState: " + state);
         currentContext.sendBroadcast(i);
     }
 
     public static void sendScannedSfida(String deviceId, int buttonValue) {
-        Intent i = createIntentWithAction("scannedSfida");
+        Intent i = createIntentWithAction(BridgeConstants.SCANNED_SFIDA_ACTION);
         i.putExtra("device", deviceId);
         i.putExtra("button", buttonValue);
         Log.i(TAG, "sendScannedSfida: " + deviceId);
         currentContext.sendBroadcast(i);
     }
 
+    public static void sendIsScanning(int isScanning) {
+        Intent i = createIntentWithAction(BridgeConstants.IS_SCANNING_ACTION);
+        i.putExtra(BridgeConstants.IS_SCANNING_ACTION, isScanning);
+        Log.i(TAG, "sendIsScanning: " + isScanning);
+        currentContext.sendBroadcast(i);
+    }
+
     public static void sendPluginState(int state) {
-        Intent i = createIntentWithAction("pluginState");
+        Intent i = createIntentWithAction(BridgeConstants.PLUGIN_STATE_ACTION);
         i.putExtra(GameServices.STATE, state);
         Log.i(TAG, "sendPluginState: " + state);
         currentContext.sendBroadcast(i);
     }
 
     public static void sendBatteryLevel(double batteryLevel) {
-        Intent i = createIntentWithAction("batteryLevel");
+        Intent i = createIntentWithAction(BridgeConstants.BATTERY_LEVEL_ACTION);
         i.putExtra("level", batteryLevel);
         Log.i(TAG, "sendBatteryLevel: " + batteryLevel);
         currentContext.sendBroadcast(i);
     }
 
-    public static void sendNotification(String message) {
-        Intent i = createIntentWithAction("sendNotification");
+    public static void sendNotification(int message, String arg) {
+        Intent i = createIntentWithAction(BridgeConstants.SEND_NOTIFICATION_ACTION);
         i.putExtra(Keys.MESSAGE, message);
+        i.putExtra("arg", arg);
         Log.i(TAG, "sendNotification: " + message);
         currentContext.sendBroadcast(i);
     }
 
     public static void stopNotification() {
-        Intent i = createIntentWithAction("stopNotification");
-        Log.i(TAG, "stopNotification");
+        Intent i = createIntentWithAction(BridgeConstants.STOP_NOTIFICATION_ACTION);
+        Log.i(TAG, BridgeConstants.STOP_NOTIFICATION_ACTION);
         currentContext.sendBroadcast(i);
     }
 }

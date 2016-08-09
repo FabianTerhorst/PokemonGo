@@ -1,10 +1,11 @@
 package com.upsight.android.analytics.event.uxm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.google.gson.JsonArray;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.analytics.event.UpsightPublisherData;
 import com.upsight.android.analytics.internal.AnalyticsEvent;
-import com.upsight.android.analytics.internal.util.JacksonHelper.JSONArraySerializer;
+import com.upsight.android.analytics.internal.util.GsonHelper.JSONArraySerializer;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
 import org.json.JSONArray;
 
@@ -12,10 +13,10 @@ import org.json.JSONArray;
 public class UpsightUxmEnumerateEvent extends AnalyticsEvent<UpsightData> {
 
     public static class Builder extends com.upsight.android.analytics.internal.AnalyticsEvent.Builder<UpsightUxmEnumerateEvent, UpsightData> {
-        private ArrayNode uxm;
+        private JsonArray uxm;
 
         protected Builder(JSONArray uxm) {
-            this.uxm = JSONArraySerializer.toArrayNode(uxm);
+            this.uxm = JSONArraySerializer.toJsonArray(uxm);
         }
 
         protected UpsightUxmEnumerateEvent build() {
@@ -24,8 +25,9 @@ public class UpsightUxmEnumerateEvent extends AnalyticsEvent<UpsightData> {
     }
 
     static class UpsightData {
-        @JsonProperty("uxm")
-        ArrayNode uxm;
+        @SerializedName("uxm")
+        @Expose
+        JsonArray uxm;
 
         protected UpsightData(Builder builder) {
             this.uxm = builder.uxm;
@@ -35,7 +37,7 @@ public class UpsightUxmEnumerateEvent extends AnalyticsEvent<UpsightData> {
         }
 
         public JSONArray getUxm() {
-            return JSONArraySerializer.fromArrayNode(this.uxm);
+            return JSONArraySerializer.fromJsonArray(this.uxm);
         }
     }
 

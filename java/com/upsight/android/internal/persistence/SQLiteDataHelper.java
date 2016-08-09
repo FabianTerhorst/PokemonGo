@@ -32,19 +32,19 @@ class SQLiteDataHelper implements DataHelper {
         this.mOpenHelper = new DatabaseHelper(context);
     }
 
-    public Cursor query(String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+    public synchronized Cursor query(String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         return this.mOpenHelper.getReadableDatabase().query(TABLE_MODELS, projection, selection, selectionArgs, null, null, sortOrder);
     }
 
-    public long insert(ContentValues contentValues) {
+    public synchronized long insert(ContentValues contentValues) {
         return this.mOpenHelper.getWritableDatabase().insert(TABLE_MODELS, null, contentValues);
     }
 
-    public int delete(String selection, String[] selectionArgs) {
+    public synchronized int delete(String selection, String[] selectionArgs) {
         return this.mOpenHelper.getWritableDatabase().delete(TABLE_MODELS, selection, selectionArgs);
     }
 
-    public int update(ContentValues contentValues, String selection, String[] selectionArgs) {
+    public synchronized int update(ContentValues contentValues, String selection, String[] selectionArgs) {
         return this.mOpenHelper.getWritableDatabase().update(TABLE_MODELS, contentValues, selection, selectionArgs);
     }
 }

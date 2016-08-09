@@ -1,21 +1,26 @@
 package com.upsight.android.analytics.event.content;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.JsonArray;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.analytics.event.UpsightPublisherData;
 import com.upsight.android.analytics.internal.AnalyticsEvent;
+import com.upsight.android.analytics.internal.util.GsonHelper.JSONArraySerializer;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
+import org.json.JSONArray;
 
 @UpsightStorableType("upsight.content.dismiss")
 public class UpsightContentDismissEvent extends AnalyticsEvent<UpsightData> {
 
     public static class Builder extends com.upsight.android.analytics.internal.AnalyticsEvent.Builder<UpsightContentDismissEvent, UpsightData> {
         private String action;
+        private JsonArray ads;
         private Integer contentId;
+        private String impressionId;
         private String scope;
         private String streamId;
         private String streamStartTs;
+        private Boolean testDevice;
 
         protected Builder(String streamId, Integer contentId, String action) {
             this.streamId = streamId;
@@ -23,13 +28,28 @@ public class UpsightContentDismissEvent extends AnalyticsEvent<UpsightData> {
             this.action = action;
         }
 
-        public Builder setScope(String scope) {
-            this.scope = scope;
+        public Builder setAds(JSONArray ads) {
+            this.ads = JSONArraySerializer.toJsonArray(ads);
+            return this;
+        }
+
+        public Builder setImpressionId(String impressionId) {
+            this.impressionId = impressionId;
             return this;
         }
 
         public Builder setStreamStartTs(String streamStartTs) {
             this.streamStartTs = streamStartTs;
+            return this;
+        }
+
+        public Builder setScope(String scope) {
+            this.scope = scope;
+            return this;
+        }
+
+        public Builder setTestDevice(Boolean testDevice) {
+            this.testDevice = testDevice;
             return this;
         }
 
@@ -39,32 +59,59 @@ public class UpsightContentDismissEvent extends AnalyticsEvent<UpsightData> {
     }
 
     static class UpsightData {
-        @JsonProperty("action")
+        @SerializedName("action")
+        @Expose
         String action;
-        @JsonProperty("content_id")
+        @SerializedName("ads")
+        @Expose
+        JsonArray ads;
+        @SerializedName("content_id")
+        @Expose
         Integer contentId;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("scope")
+        @SerializedName("impression_id")
+        @Expose
+        String impressionId;
+        @SerializedName("scope")
+        @Expose
         String scope;
-        @JsonProperty("stream_id")
+        @SerializedName("stream_id")
+        @Expose
         String streamId;
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("stream_start_ts")
+        @SerializedName("stream_start_ts")
+        @Expose
         String streamStartTs;
+        @SerializedName("test_device")
+        @Expose
+        Boolean testDevice;
 
         protected UpsightData(Builder builder) {
-            this.action = builder.action;
+            this.ads = builder.ads;
+            this.impressionId = builder.impressionId;
+            this.streamId = builder.streamId;
+            this.streamStartTs = builder.streamStartTs;
             this.scope = builder.scope;
             this.contentId = builder.contentId;
-            this.streamStartTs = builder.streamStartTs;
-            this.streamId = builder.streamId;
+            this.action = builder.action;
+            this.testDevice = builder.testDevice;
         }
 
         protected UpsightData() {
         }
 
-        public String getAction() {
-            return this.action;
+        public JSONArray getAds() {
+            return JSONArraySerializer.fromJsonArray(this.ads);
+        }
+
+        public String getImpressionId() {
+            return this.impressionId;
+        }
+
+        public String getStreamId() {
+            return this.streamId;
+        }
+
+        public String getStreamStartTs() {
+            return this.streamStartTs;
         }
 
         public String getScope() {
@@ -75,12 +122,12 @@ public class UpsightContentDismissEvent extends AnalyticsEvent<UpsightData> {
             return this.contentId;
         }
 
-        public String getStreamStartTs() {
-            return this.streamStartTs;
+        public String getAction() {
+            return this.action;
         }
 
-        public String getStreamId() {
-            return this.streamId;
+        public Boolean getTestDevice() {
+            return this.testDevice;
         }
     }
 

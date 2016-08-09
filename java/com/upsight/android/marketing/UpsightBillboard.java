@@ -1,13 +1,44 @@
 package com.upsight.android.marketing;
 
+import android.app.Activity;
 import android.text.TextUtils;
-import android.view.ViewGroup;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.marketing.internal.billboard.Billboard;
 import java.util.List;
-import java.util.Set;
 
 public abstract class UpsightBillboard {
+
+    public static class AttachParameters {
+        private Activity mActivity;
+        private Integer mDialogTheme;
+        private PresentationStyle mPresentationStyle;
+
+        public AttachParameters(Activity activity) {
+            this.mActivity = activity;
+        }
+
+        public Activity getActivity() {
+            return this.mActivity;
+        }
+
+        public AttachParameters putPreferredPresentationStyle(PresentationStyle presentationStyle) {
+            this.mPresentationStyle = presentationStyle;
+            return this;
+        }
+
+        public PresentationStyle getPreferredPresentationStyle() {
+            return this.mPresentationStyle;
+        }
+
+        public AttachParameters putDialogTheme(int dialogTheme) {
+            this.mDialogTheme = Integer.valueOf(dialogTheme);
+            return this;
+        }
+
+        public Integer getDialogTheme() {
+            return this.mDialogTheme;
+        }
+    }
 
     public static class Dimensions {
         public final int height;
@@ -27,7 +58,7 @@ public abstract class UpsightBillboard {
     }
 
     public interface Handler {
-        ViewGroup onAttach(String str, PresentationStyle presentationStyle, Set<Dimensions> set);
+        AttachParameters onAttach(String str);
 
         void onDetach();
 

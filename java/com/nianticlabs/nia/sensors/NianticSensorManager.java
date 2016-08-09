@@ -12,6 +12,8 @@ import android.view.WindowManager;
 import com.nianticlabs.nia.contextservice.ContextService;
 import com.nianticlabs.nia.contextservice.ServiceStatus;
 import com.nianticlabs.pokemongoplus.ble.BluetoothGattSupport;
+import com.upsight.android.googlepushservices.UpsightPushNotificationBuilderFactory.Default;
+import com.upsight.mediation.mraid.properties.MRAIDResizeProperties;
 import spacemadness.com.lunarconsole.R;
 
 public class NianticSensorManager extends ContextService implements SensorEventListener {
@@ -20,7 +22,7 @@ public class NianticSensorManager extends ContextService implements SensorEventL
     private static final boolean ENABLE_VERBOSE_LOGS = false;
     private static final int MAX_SENSOR_UPDATE_DIFF_MSEC = 5000;
     private static final int MIN_SENSOR_UPDATE_INTERVAL_MSEC = 50;
-    private static final float SINE_OF_45_DEGREES = (((float) Math.sqrt(2.0d)) / 2.0f);
+    private static final float SINE_OF_45_DEGREES = (((float) Math.sqrt(2.0d)) / Default.HTTP_REQUEST_BACKOFF_MULT);
     private static final String TAG = "NianticSensorManager";
     private Sensor accelerometer;
     private float[] accelerometerData = new float[3];
@@ -155,15 +157,15 @@ public class NianticSensorManager extends ContextService implements SensorEventL
         float q1 = reading[0];
         float q2 = reading[1];
         float q3 = reading[2];
-        float sq_q1 = (2.0f * q1) * q1;
-        float sq_q2 = (2.0f * q2) * q2;
-        float sq_q3 = (2.0f * q3) * q3;
-        float q1_q2 = (2.0f * q1) * q2;
-        float q3_q0 = (2.0f * q3) * q0;
-        float q1_q3 = (2.0f * q1) * q3;
-        float q2_q0 = (2.0f * q2) * q0;
-        float q2_q3 = (2.0f * q2) * q3;
-        float q1_q0 = (2.0f * q1) * q0;
+        float sq_q1 = (Default.HTTP_REQUEST_BACKOFF_MULT * q1) * q1;
+        float sq_q2 = (Default.HTTP_REQUEST_BACKOFF_MULT * q2) * q2;
+        float sq_q3 = (Default.HTTP_REQUEST_BACKOFF_MULT * q3) * q3;
+        float q1_q2 = (Default.HTTP_REQUEST_BACKOFF_MULT * q1) * q2;
+        float q3_q0 = (Default.HTTP_REQUEST_BACKOFF_MULT * q3) * q0;
+        float q1_q3 = (Default.HTTP_REQUEST_BACKOFF_MULT * q1) * q3;
+        float q2_q0 = (Default.HTTP_REQUEST_BACKOFF_MULT * q2) * q0;
+        float q2_q3 = (Default.HTTP_REQUEST_BACKOFF_MULT * q2) * q3;
+        float q1_q0 = (Default.HTTP_REQUEST_BACKOFF_MULT * q1) * q0;
         matrix[0] = (ANGLE_CHANGE_THRESHOLD_DEGREES - sq_q2) - sq_q3;
         matrix[1] = q1_q2 - q3_q0;
         matrix[2] = q1_q3 + q2_q0;
@@ -206,7 +208,7 @@ public class NianticSensorManager extends ContextService implements SensorEventL
                 xAxis = BluetoothGattSupport.GATT_INTERNAL_ERROR;
                 yAxis = 130;
                 break;
-            case 3:
+            case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_CENTER /*3*/:
                 xAxis = 130;
                 yAxis = 1;
                 break;

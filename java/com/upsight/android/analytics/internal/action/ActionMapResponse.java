@@ -1,17 +1,21 @@
 package com.upsight.android.analytics.internal.action;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.google.gson.JsonArray;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.persistence.annotation.UpsightStorableIdentifier;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
 
 @UpsightStorableType("upsight.action_map")
 public final class ActionMapResponse {
-    @JsonProperty("action_factory")
+    @SerializedName("action_factory")
+    @Expose
     String actionFactory;
-    @JsonProperty("action_map")
-    JsonNode actionMap;
-    @JsonProperty("id")
+    @SerializedName("action_map")
+    @Expose
+    JsonArray actionMap;
+    @SerializedName("id")
+    @Expose
     String actionMapId;
     @UpsightStorableIdentifier
     String id;
@@ -24,7 +28,7 @@ public final class ActionMapResponse {
         return this.actionFactory;
     }
 
-    public JsonNode getActionMap() {
+    public JsonArray getActionMap() {
         return this.actionMap;
     }
 

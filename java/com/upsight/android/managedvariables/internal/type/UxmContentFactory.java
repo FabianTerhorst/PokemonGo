@@ -1,7 +1,7 @@
 package com.upsight.android.managedvariables.internal.type;
 
 import android.text.TextUtils;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.google.gson.JsonElement;
 import com.upsight.android.analytics.internal.action.ActionMap;
 import com.upsight.android.analytics.internal.action.ActionMapResponse;
 import com.upsight.android.managedvariables.experience.UpsightUserExperience;
@@ -29,29 +29,30 @@ public final class UxmContentFactory {
             return null;
         }
         boolean shouldApplyBundle = false;
-        JsonNode actionMapNode = actionMapResponse.getActionMap();
-        if (actionMapNode != null && actionMapNode.isArray()) {
-            Iterator it = actionMapNode.iterator();
-            while (it.hasNext()) {
-                JsonNode actionsNode = ((JsonNode) it.next()).findPath(KEY_ACTIONS);
-                if (actionsNode != null && actionsNode.isArray()) {
-                    Iterator i$ = actionsNode.iterator();
-                    while (i$.hasNext()) {
-                        JsonNode typeNode = ((JsonNode) i$.next()).findPath(KEY_ACTION_TYPE);
-                        if (!ACTION_SET_BUNDLE_ID.equals(typeNode.asText())) {
-                            if (ACTION_MODIFY_VALUE.equals(typeNode.asText())) {
-                            }
+        JsonElement actionMapNode = actionMapResponse.getActionMap();
+        if (actionMapNode == null || !actionMapNode.isJsonArray()) {
+            return null;
+        }
+        Iterator it = actionMapNode.getAsJsonArray().iterator();
+        while (it.hasNext()) {
+            JsonElement actionsNode = ((JsonElement) it.next()).getAsJsonObject().get(KEY_ACTIONS);
+            if (actionsNode != null && actionsNode.isJsonArray()) {
+                Iterator it2 = actionsNode.getAsJsonArray().iterator();
+                while (it2.hasNext()) {
+                    JsonElement typeNode = ((JsonElement) it2.next()).getAsJsonObject().get(KEY_ACTION_TYPE);
+                    if (!ACTION_SET_BUNDLE_ID.equals(typeNode.getAsString())) {
+                        if (ACTION_MODIFY_VALUE.equals(typeNode.getAsString())) {
                         }
-                        shouldApplyBundle = this.mUserExperience.getHandler().onReceive();
-                        continue;
                     }
+                    shouldApplyBundle = this.mUserExperience.getHandler().onReceive();
                     continue;
                 }
-                if (shouldApplyBundle) {
-                    break;
-                }
+                continue;
+            }
+            if (shouldApplyBundle) {
+                break;
             }
         }
-        return UxmContent.create(id, new ActionMap(sUxmContentActionFactory, this.mActionContext, actionMapNode), shouldApplyBundle);
+        return UxmContent.create(id, new ActionMap(sUxmContentActionFactory, this.mActionContext, actionMapNode.getAsJsonArray()), shouldApplyBundle);
     }
 }

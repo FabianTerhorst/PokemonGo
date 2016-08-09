@@ -4,15 +4,12 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.text.TextUtils;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.webkit.WebView;
 import android.widget.ImageView;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 import com.upsight.android.UpsightContext;
@@ -27,9 +24,13 @@ import com.upsight.android.analytics.internal.association.Association;
 import com.upsight.android.analytics.internal.session.Clock;
 import com.upsight.android.logger.UpsightLogger;
 import com.upsight.android.marketing.R;
+import com.upsight.android.marketing.UpsightContentMediator;
 import com.upsight.android.marketing.UpsightPurchase;
 import com.upsight.android.marketing.UpsightReward;
 import com.upsight.android.marketing.internal.content.MarketingContent.ContentLoadedEvent;
+import com.upsight.android.marketing.internal.content.MarketingContent.PendingDialog;
+import com.upsight.android.marketing.internal.content.MarketingContent.SubcontentAvailabilityEvent;
+import com.upsight.android.marketing.internal.content.MarketingContent.SubdialogAvailabilityEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,67 +46,82 @@ public final class MarketingContentActions {
     private static final Map<String, InternalFactory> FACTORY_MAP = new HashMap<String, InternalFactory>() {
         {
             put("action_trigger", new InternalFactory() {
-                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new Trigger(actionContext, actionType, actionParams);
                 }
             });
             put("action_trigger_if_content_built", new InternalFactory() {
-                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new TriggerIfContentBuilt(actionContext, actionType, actionParams);
                 }
             });
             put("action_trigger_if_content_available", new InternalFactory() {
-                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new TriggerIfContentAvailable(actionContext, actionType, actionParams);
                 }
             });
             put("action_present_scoped_content", new InternalFactory() {
-                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new PresentScopedContent(actionContext, actionType, actionParams);
                 }
             });
+            put("action_present_scoped_dialog", new InternalFactory() {
+                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonObject actionParams) {
+                    return new PresentScopedDialog(actionContext, actionType, actionParams);
+                }
+            });
+            put("action_present_content", new InternalFactory() {
+                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonObject actionParams) {
+                    return new PresentContent(actionContext, actionType, actionParams);
+                }
+            });
+            put("action_present_dialog", new InternalFactory() {
+                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonObject actionParams) {
+                    return new PresentDialog(actionContext, actionType, actionParams);
+                }
+            });
             put("action_present_scopeless_content", new InternalFactory() {
-                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new PresentScopelessContent(actionContext, actionType, actionParams);
                 }
             });
             put("action_present_close_button", new InternalFactory() {
-                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new PresentCloseButton(actionContext, actionType, actionParams);
                 }
             });
             put("action_destroy", new InternalFactory() {
-                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new Destroy(actionContext, actionType, actionParams);
                 }
             });
             put("action_open_url", new InternalFactory() {
-                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new OpenUrl(actionContext, actionType, actionParams);
                 }
             });
             put("action_send_event", new InternalFactory() {
-                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new SendEvent(actionContext, actionType, actionParams);
                 }
             });
             put("action_send_form_data", new InternalFactory() {
-                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new SendFormData(actionContext, actionType, actionParams);
                 }
             });
             put("action_notify_rewards", new InternalFactory() {
-                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new NotifyRewards(actionContext, actionType, actionParams);
                 }
             });
             put("action_notify_purchases", new InternalFactory() {
-                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new NotifyPurchases(actionContext, actionType, actionParams);
                 }
             });
             put("action_associate_once", new InternalFactory() {
-                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new AssociateOnce(actionContext, actionType, actionParams);
                 }
             });
@@ -113,7 +129,7 @@ public final class MarketingContentActions {
     };
 
     private interface InternalFactory {
-        Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext marketingContentActionContext, String str, JsonNode jsonNode);
+        Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext marketingContentActionContext, String str, JsonObject jsonObject);
     }
 
     static class AssociateOnce extends Action<MarketingContent, MarketingContentActionContext> {
@@ -121,7 +137,7 @@ public final class MarketingContentActions {
         public static final String UPSIGHT_DATA_FILTER = "upsight_data_filter";
         public static final String WITH = "with";
 
-        private AssociateOnce(MarketingContentActionContext actionContext, String type, JsonNode params) {
+        private AssociateOnce(MarketingContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
         }
 
@@ -129,15 +145,15 @@ public final class MarketingContentActions {
             Exception e;
             ActionContext actionContext = getActionContext();
             String with = optParamString(WITH);
-            ObjectNode upsightDataFilter = optParamJsonObject(UPSIGHT_DATA_FILTER);
-            ObjectNode upsightData = optParamJsonObject(UPSIGHT_DATA);
+            JsonObject upsightDataFilter = optParamJsonObject(UPSIGHT_DATA_FILTER);
+            JsonObject upsightData = optParamJsonObject(UPSIGHT_DATA);
             try {
-                actionContext.mUpsight.getDataStore().store(Association.from(with, upsightDataFilter, upsightData, actionContext.mMapper, actionContext.mClock));
+                actionContext.mUpsight.getDataStore().store(Association.from(with, upsightDataFilter, upsightData, actionContext.mGson, actionContext.mClock));
             } catch (IllegalArgumentException e2) {
                 e = e2;
                 actionContext.mLogger.e(getClass().getSimpleName(), e, "Failed to parse Association with=" + with + " upsightDataFilter=" + upsightDataFilter + " upsightData" + upsightData, new Object[0]);
                 content.signalActionCompleted(actionContext.mBus);
-            } catch (JsonProcessingException e3) {
+            } catch (IOException e3) {
                 e = e3;
                 actionContext.mLogger.e(getClass().getSimpleName(), e, "Failed to parse Association with=" + with + " upsightDataFilter=" + upsightDataFilter + " upsightData" + upsightData, new Object[0]);
                 content.signalActionCompleted(actionContext.mBus);
@@ -147,7 +163,7 @@ public final class MarketingContentActions {
     }
 
     static class Destroy extends Action<MarketingContent, MarketingContentActionContext> {
-        private Destroy(MarketingContentActionContext actionContext, String type, JsonNode params) {
+        private Destroy(MarketingContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
         }
 
@@ -173,11 +189,13 @@ public final class MarketingContentActions {
     }
 
     public static class MarketingContentActionContext extends ActionContext {
+        public final MarketingContentMediatorManager mContentMediatorManager;
         public final MarketingContentStore mContentStore;
         public final ContentTemplateWebViewClientFactory mContentTemplateWebViewClientFactory;
 
-        public MarketingContentActionContext(UpsightContext upsight, Bus bus, ObjectMapper mapper, Clock clock, Worker mainWorker, UpsightLogger logger, MarketingContentStore contentStore, ContentTemplateWebViewClientFactory contentTemplateWebViewClientFactory) {
-            super(upsight, bus, mapper, clock, mainWorker, logger);
+        public MarketingContentActionContext(UpsightContext upsight, Bus bus, Gson gson, Clock clock, Worker mainWorker, UpsightLogger logger, MarketingContentMediatorManager contentMediatorManager, MarketingContentStore contentStore, ContentTemplateWebViewClientFactory contentTemplateWebViewClientFactory) {
+            super(upsight, bus, gson, clock, mainWorker, logger);
+            this.mContentMediatorManager = contentMediatorManager;
             this.mContentStore = contentStore;
             this.mContentTemplateWebViewClientFactory = contentTemplateWebViewClientFactory;
         }
@@ -186,12 +204,12 @@ public final class MarketingContentActions {
     public static class MarketingContentActionFactory implements ActionFactory<MarketingContent, MarketingContentActionContext> {
         public static final String TYPE = "marketing_content_factory";
 
-        public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, JsonNode actionJSON) throws UpsightException {
+        public Action<MarketingContent, MarketingContentActionContext> create(MarketingContentActionContext actionContext, JsonObject actionJSON) throws UpsightException {
             if (actionJSON == null) {
                 throw new UpsightException("Failed to create Action. JSON is null.", new Object[0]);
             }
-            String actionType = actionJSON.get(ActionFactory.KEY_ACTION_TYPE).asText();
-            JsonNode actionParams = actionJSON.get(ActionFactory.KEY_ACTION_PARAMS);
+            String actionType = actionJSON.get(ActionFactory.KEY_ACTION_TYPE).getAsString();
+            JsonObject actionParams = actionJSON.getAsJsonObject(ActionFactory.KEY_ACTION_PARAMS);
             InternalFactory factory = (InternalFactory) MarketingContentActions.FACTORY_MAP.get(actionType);
             if (factory != null) {
                 return factory.create(actionContext, actionType, actionParams);
@@ -203,21 +221,21 @@ public final class MarketingContentActions {
     static class NotifyPurchases extends Action<MarketingContent, MarketingContentActionContext> {
         public static final String PURCHASES = "purchases";
 
-        private NotifyPurchases(MarketingContentActionContext actionContext, String type, JsonNode params) {
+        private NotifyPurchases(MarketingContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
         }
 
         public void execute(MarketingContent content) {
             List<UpsightPurchase> purchases = new ArrayList();
-            JsonNode purchasesJson = optParamJsonArray(PURCHASES);
-            if (purchasesJson != null && purchasesJson.isArray()) {
+            JsonElement purchasesJson = optParamJsonArray(PURCHASES);
+            if (purchasesJson != null && purchasesJson.isJsonArray()) {
                 ActionContext actionContext = getActionContext();
-                Iterator<JsonNode> itr = purchasesJson.iterator();
+                Iterator<JsonElement> itr = purchasesJson.getAsJsonArray().iterator();
                 while (itr.hasNext()) {
-                    JsonNode purchaseJson = null;
+                    JsonElement purchaseJson = null;
                     try {
-                        purchaseJson = (JsonNode) itr.next();
-                        purchases.add(Purchase.from(purchaseJson, actionContext.mMapper));
+                        purchaseJson = (JsonElement) itr.next();
+                        purchases.add(Purchase.from(purchaseJson, actionContext.mGson));
                     } catch (IOException e) {
                         actionContext.mLogger.e(getClass().getSimpleName(), e, "Failed to parse Purchase purchaseJson=" + purchaseJson, new Object[0]);
                     }
@@ -232,21 +250,21 @@ public final class MarketingContentActions {
     static class NotifyRewards extends Action<MarketingContent, MarketingContentActionContext> {
         public static final String REWARDS = "rewards";
 
-        private NotifyRewards(MarketingContentActionContext actionContext, String type, JsonNode params) {
+        private NotifyRewards(MarketingContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
         }
 
         public void execute(MarketingContent content) {
             List<UpsightReward> rewards = new ArrayList();
-            JsonNode rewardsJson = optParamJsonArray(REWARDS);
-            if (rewardsJson != null && rewardsJson.isArray()) {
+            JsonElement rewardsJson = optParamJsonArray(REWARDS);
+            if (rewardsJson != null && rewardsJson.isJsonArray()) {
                 ActionContext actionContext = getActionContext();
-                Iterator<JsonNode> itr = rewardsJson.iterator();
+                Iterator<JsonElement> itr = rewardsJson.getAsJsonArray().iterator();
                 while (itr.hasNext()) {
-                    JsonNode rewardJson = null;
+                    JsonElement rewardJson = null;
                     try {
-                        rewardJson = (JsonNode) itr.next();
-                        rewards.add(Reward.from(rewardJson, actionContext.mMapper));
+                        rewardJson = (JsonElement) itr.next();
+                        rewards.add(Reward.from(rewardJson, actionContext.mGson));
                     } catch (IOException e) {
                         actionContext.mLogger.e(getClass().getSimpleName(), e, "Failed to parse Reward rewardJson=" + rewardJson, new Object[0]);
                     }
@@ -261,7 +279,7 @@ public final class MarketingContentActions {
     static class OpenUrl extends Action<MarketingContent, MarketingContentActionContext> {
         public static final String URL = "url";
 
-        private OpenUrl(MarketingContentActionContext actionContext, String type, JsonNode params) {
+        private OpenUrl(MarketingContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
         }
 
@@ -286,7 +304,7 @@ public final class MarketingContentActions {
     static class PresentCloseButton extends Action<MarketingContent, MarketingContentActionContext> {
         public static final String DELAY_MS = "delay_ms";
 
-        private PresentCloseButton(MarketingContentActionContext actionContext, String type, JsonNode params) {
+        private PresentCloseButton(MarketingContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
         }
 
@@ -303,24 +321,62 @@ public final class MarketingContentActions {
         }
     }
 
+    static class PresentContent extends Action<MarketingContent, MarketingContentActionContext> {
+        private PresentContent(MarketingContentActionContext actionContext, String type, JsonObject params) {
+            super(actionContext, type, params);
+        }
+
+        public void execute(MarketingContent content) {
+            Bus bus = ((MarketingContentActionContext) getActionContext()).mBus;
+            bus.post(new SubcontentAvailabilityEvent(content.getId()));
+            content.signalActionCompleted(bus);
+        }
+    }
+
+    static class PresentDialog extends Action<MarketingContent, MarketingContentActionContext> {
+        public static final String BUTTONS = "buttons";
+        public static final String DISMISS_TRIGGER = "dismiss_trigger";
+        public static final String MESSAGE = "message";
+        public static final String TITLE = "title";
+
+        private PresentDialog(MarketingContentActionContext actionContext, String type, JsonObject params) {
+            super(actionContext, type, params);
+        }
+
+        public void execute(MarketingContent content) {
+            MarketingContentActionContext actionContext = (MarketingContentActionContext) getActionContext();
+            String title = optParamString(TITLE);
+            String message = optParamString(MESSAGE);
+            JsonArray buttons = optParamJsonArray(BUTTONS);
+            String dismissTrigger = optParamString(DISMISS_TRIGGER);
+            String serializedButtons = null;
+            if (buttons != null) {
+                serializedButtons = buttons.toString();
+            }
+            Bus bus = ((MarketingContentActionContext) getActionContext()).mBus;
+            bus.post(new SubdialogAvailabilityEvent(content.getId(), new PendingDialog(content.getId(), title, message, serializedButtons, dismissTrigger)));
+            content.signalActionCompleted(bus);
+        }
+    }
+
     static class PresentScopedContent extends Action<MarketingContent, MarketingContentActionContext> {
         public static final String ID = "id";
         public static final String SCOPE_LIST = "scope_list";
 
-        private PresentScopedContent(MarketingContentActionContext actionContext, String type, JsonNode params) {
+        private PresentScopedContent(MarketingContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
         }
 
         public void execute(MarketingContent content) {
             String id = optParamString(ID);
-            JsonNode scopeList = optParamJsonArray(SCOPE_LIST);
-            if (!(TextUtils.isEmpty(id) || scopeList == null || !scopeList.isArray())) {
+            JsonElement scopeList = optParamJsonArray(SCOPE_LIST);
+            if (!(TextUtils.isEmpty(id) || scopeList == null || !scopeList.isJsonArray())) {
                 List<String> scopes = new ArrayList();
-                Iterator i$ = scopeList.iterator();
-                while (i$.hasNext()) {
-                    JsonNode scope = (JsonNode) i$.next();
-                    if (scope.isTextual()) {
-                        scopes.add(scope.asText());
+                Iterator it = scopeList.getAsJsonArray().iterator();
+                while (it.hasNext()) {
+                    JsonElement scope = (JsonElement) it.next();
+                    if (scope.isJsonPrimitive() && scope.getAsJsonPrimitive().isString()) {
+                        scopes.add(scope.getAsString());
                     }
                 }
                 ((MarketingContentActionContext) getActionContext()).mContentStore.presentScopedContent(id, (String[]) scopes.toArray(new String[scopes.size()]));
@@ -329,11 +385,47 @@ public final class MarketingContentActions {
         }
     }
 
+    static class PresentScopedDialog extends Action<MarketingContent, MarketingContentActionContext> {
+        public static final String BUTTONS = "buttons";
+        public static final String DISMISS_TRIGGER = "dismiss_trigger";
+        public static final String MESSAGE = "message";
+        public static final String SCOPE_LIST = "scope_list";
+        public static final String TITLE = "title";
+
+        private PresentScopedDialog(MarketingContentActionContext actionContext, String type, JsonObject params) {
+            super(actionContext, type, params);
+        }
+
+        public void execute(MarketingContent content) {
+            MarketingContentActionContext actionContext = (MarketingContentActionContext) getActionContext();
+            JsonArray scopeList = optParamJsonArray(SCOPE_LIST);
+            String title = optParamString(TITLE);
+            String message = optParamString(MESSAGE);
+            JsonArray buttons = optParamJsonArray(BUTTONS);
+            String dismissTrigger = optParamString(DISMISS_TRIGGER);
+            List<String> scopes = new ArrayList();
+            Iterator it = scopeList.iterator();
+            while (it.hasNext()) {
+                JsonElement scope = (JsonElement) it.next();
+                if (scope.isJsonPrimitive() && scope.getAsJsonPrimitive().isString()) {
+                    scopes.add(scope.getAsString());
+                }
+            }
+            String serializedButtons = null;
+            if (buttons != null) {
+                serializedButtons = buttons.toString();
+            }
+            content.addPendingDialog(new PendingDialog(content.getId(), title, message, serializedButtons, dismissTrigger));
+            ((MarketingContentActionContext) getActionContext()).mContentStore.presentScopedContent(content.getId(), (String[]) scopes.toArray(new String[scopes.size()]));
+            content.signalActionCompleted(actionContext.mBus);
+        }
+    }
+
     static class PresentScopelessContent extends Action<MarketingContent, MarketingContentActionContext> {
         public static final String NEXT_ID = "next_id";
         public static final String SELF_ID = "self_id";
 
-        private PresentScopelessContent(MarketingContentActionContext actionContext, String type, JsonNode params) {
+        private PresentScopelessContent(MarketingContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
         }
 
@@ -374,22 +466,22 @@ public final class MarketingContentActions {
         public static final String TYPE = "type";
         public static final String UPSIGHT_DATA = "upsight_data";
 
-        private SendEvent(MarketingContentActionContext actionContext, String type, JsonNode params) {
+        private SendEvent(MarketingContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
         }
 
         public void execute(MarketingContent content) {
             MarketingContentActionContext actionContext = (MarketingContentActionContext) getActionContext();
-            JsonNode event = optParamJsonObject(EVENT);
+            JsonObject event = optParamJsonObject(EVENT);
             if (event != null) {
-                JsonNode type = event.path(TYPE);
-                if (type.isTextual()) {
-                    Builder dynamicEventBuilder = UpsightDynamicEvent.createBuilder(type.asText()).putUpsightData(event.path(UPSIGHT_DATA));
-                    if (!event.path(PUB_DATA).isMissingNode()) {
-                        dynamicEventBuilder.putPublisherData(event.path(PUB_DATA));
+                JsonElement type = event.get(TYPE);
+                if (type.isJsonPrimitive() && type.getAsJsonPrimitive().isString()) {
+                    Builder dynamicEventBuilder = UpsightDynamicEvent.createBuilder(type.getAsString()).putUpsightData(event.get(UPSIGHT_DATA).getAsJsonObject());
+                    if (event.has(PUB_DATA)) {
+                        dynamicEventBuilder.putPublisherData(event.getAsJsonObject(PUB_DATA));
                     }
-                    if (event.path(IDENTIFIERS).isTextual()) {
-                        dynamicEventBuilder.setDynamicIdentifiers(event.path(IDENTIFIERS).asText());
+                    if (event.has(IDENTIFIERS) && event.get(IDENTIFIERS).isJsonPrimitive() && event.get(IDENTIFIERS).getAsJsonPrimitive().isString()) {
+                        dynamicEventBuilder.setDynamicIdentifiers(event.get(IDENTIFIERS).getAsString());
                     }
                     dynamicEventBuilder.record(actionContext.mUpsight);
                 } else {
@@ -406,7 +498,7 @@ public final class MarketingContentActions {
         public static final String DATA_KEY = "data_key";
         public static final String STREAM_ID = "stream_id";
 
-        private SendFormData(MarketingContentActionContext actionContext, String type, JsonNode params) {
+        private SendFormData(MarketingContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
         }
 
@@ -429,7 +521,7 @@ public final class MarketingContentActions {
     static class Trigger extends Action<MarketingContent, MarketingContentActionContext> {
         public static final String TRIGGER = "trigger";
 
-        private Trigger(MarketingContentActionContext actionContext, String type, JsonNode params) {
+        private Trigger(MarketingContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
         }
 
@@ -453,7 +545,7 @@ public final class MarketingContentActions {
         private MarketingContent mContent;
         private Subscription mSubscription;
 
-        private TriggerIfContentAvailable(MarketingContentActionContext actionContext, String type, JsonNode params) {
+        private TriggerIfContentAvailable(MarketingContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
             this.isTriggerExecuted = false;
         }
@@ -463,9 +555,9 @@ public final class MarketingContentActions {
             this.mContent = content;
             long timeoutMs = 0;
             try {
-                JsonNode conditionalParameters = optParamJsonObject(CONDITION_PARAMETERS);
-                this.mConditionalContentID = conditionalParameters.get(ID).asText();
-                timeoutMs = conditionalParameters.get(TIMEOUT_MS).asLong();
+                JsonObject conditionalParameters = optParamJsonObject(CONDITION_PARAMETERS).getAsJsonObject();
+                this.mConditionalContentID = conditionalParameters.get(ID).getAsString();
+                timeoutMs = conditionalParameters.get(TIMEOUT_MS).getAsLong();
             } catch (NullPointerException e) {
                 actionContext.mLogger.e(getClass().getSimpleName(), e, "Action execution failed actionType=" + getType() + " invalid CONDITION_PARAMETERS", new Object[0]);
             }
@@ -518,41 +610,47 @@ public final class MarketingContentActions {
     static class TriggerIfContentBuilt extends Action<MarketingContent, MarketingContentActionContext> {
         public static final String CONDITION_PARAMETERS = "condition_parameters";
         public static final String CONTENT_MODEL = "content_model";
+        public static final String CONTENT_PROVIDER = "content_provider";
+        public static final String CONTENT_PROVIDER_NAME = "name";
         public static final String ELSE_TRIGGER = "else_trigger";
         public static final String THEN_TRIGGER = "then_trigger";
 
-        private TriggerIfContentBuilt(MarketingContentActionContext actionContext, String type, JsonNode params) {
+        private TriggerIfContentBuilt(MarketingContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
         }
 
-        public void execute(final MarketingContent content) {
+        public void execute(MarketingContent content) {
             boolean isContentBuilt = false;
             MarketingContentActionContext actionContext = (MarketingContentActionContext) getActionContext();
-            JsonNode model = null;
+            UpsightContentMediator mediator = null;
+            JsonElement contentProvider = optParamJsonObject(CONDITION_PARAMETERS).get(CONTENT_PROVIDER);
+            if (contentProvider != null) {
+                JsonElement contentProviderName = contentProvider.getAsJsonObject().get(CONTENT_PROVIDER_NAME);
+                if (contentProviderName.isJsonPrimitive() && contentProviderName.getAsJsonPrimitive().isString()) {
+                    mediator = actionContext.mContentMediatorManager.getContentMediator(contentProviderName.getAsString());
+                }
+            }
+            if (mediator == null) {
+                mediator = actionContext.mContentMediatorManager.getDefaultContentMediator();
+            }
+            content.setContentMediator(mediator);
+            JsonElement model = null;
             try {
                 model = optParamJsonObject(CONDITION_PARAMETERS).get(CONTENT_MODEL);
             } catch (NullPointerException e) {
                 actionContext.mLogger.e(getClass().getSimpleName(), e, "Action execution failed actionType=" + getType() + " invalid CONDITION_PARAMETERS", new Object[0]);
             }
-            if (model == null || !model.isObject()) {
+            if (model == null || !model.isJsonObject()) {
                 actionContext.mLogger.e(getClass().getSimpleName(), "Action execution failed actionType=" + getType() + " model=" + model, new Object[0]);
             } else {
                 try {
                     actionContext.mContentStore.put(content.getId(), content);
-                    MarketingContentModel contentModel = MarketingContentModel.from(model, actionContext.mMapper);
-                    View contentView = LayoutInflater.from(actionContext.mUpsight).inflate(R.layout.upsight_marketing_content_view, null);
+                    Object contentModel = mediator.buildContentModel(content, actionContext, model.getAsJsonObject());
+                    isContentBuilt = contentModel != null;
                     content.setContentModel(contentModel);
-                    content.setContentView(contentView);
-                    WebView webView = (WebView) contentView.findViewById(R.id.upsight_marketing_content_view_web_view);
-                    ((ImageView) contentView.findViewById(R.id.upsight_marketing_content_view_close_button)).setOnClickListener(new OnClickListener() {
-                        public void onClick(View view) {
-                            content.executeActions(MarketingContent.TRIGGER_CONTENT_DISMISSED);
-                        }
-                    });
-                    webView.getSettings().setJavaScriptEnabled(true);
-                    webView.setWebViewClient(actionContext.mContentTemplateWebViewClientFactory.create(content));
-                    webView.loadUrl(content.getContentModel().getTemplateUrl());
-                    isContentBuilt = true;
+                    if (isContentBuilt) {
+                        content.setContentView(mediator.buildContentView(content, actionContext));
+                    }
                 } catch (Exception e2) {
                     actionContext.mLogger.e(getClass().getSimpleName(), e2, "Action execution failed actionType=" + getType() + " model=" + model, new Object[0]);
                 }

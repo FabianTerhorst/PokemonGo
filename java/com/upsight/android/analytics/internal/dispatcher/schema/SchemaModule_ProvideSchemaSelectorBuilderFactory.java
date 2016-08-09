@@ -2,6 +2,7 @@ package com.upsight.android.analytics.internal.dispatcher.schema;
 
 import com.upsight.android.UpsightContext;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class SchemaModule_ProvideSchemaSelectorBuilderFactory implements Factory<SchemaSelectorBuilder> {
@@ -22,11 +23,7 @@ public final class SchemaModule_ProvideSchemaSelectorBuilderFactory implements F
     }
 
     public SchemaSelectorBuilder get() {
-        SchemaSelectorBuilder provided = this.module.provideSchemaSelectorBuilder((UpsightContext) this.upsightProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (SchemaSelectorBuilder) Preconditions.checkNotNull(this.module.provideSchemaSelectorBuilder((UpsightContext) this.upsightProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<SchemaSelectorBuilder> create(SchemaModule module, Provider<UpsightContext> upsightProvider) {

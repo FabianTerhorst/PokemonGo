@@ -1,7 +1,9 @@
 package com.upsight.android.analytics.internal.dispatcher;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.analytics.internal.dispatcher.Config.Builder;
 import com.upsight.android.analytics.internal.dispatcher.delivery.Queue.Trash;
@@ -21,52 +23,69 @@ import javax.inject.Singleton;
 @Singleton
 class ConfigParser {
     private static final String LOG_TAG = "Dispatcher";
+    private Gson mGson;
     private UpsightLogger mLogger;
-    private ObjectMapper mMapper;
 
     public static class Config {
-        @JsonProperty("identifier_filters")
+        @SerializedName("identifier_filters")
+        @Expose
         public List<IdentifierFilter> identifierFilters;
-        @JsonProperty("identifiers")
+        @SerializedName("identifiers")
+        @Expose
         public List<Identifier> identifiers;
-        @JsonProperty("queues")
+        @SerializedName("queues")
+        @Expose
         public List<Queue> queues;
-        @JsonProperty("route_filters")
+        @SerializedName("route_filters")
+        @Expose
         public List<RouteFilter> routeFilters;
     }
 
     public static class Identifier {
-        @JsonProperty("ids")
+        @SerializedName("ids")
+        @Expose
         public List<String> ids;
-        @JsonProperty("name")
+        @SerializedName("name")
+        @Expose
         public String name;
     }
 
     public static class IdentifierFilter {
-        @JsonProperty("filter")
+        @SerializedName("filter")
+        @Expose
         public String filter;
-        @JsonProperty("identifiers")
+        @SerializedName("identifiers")
+        @Expose
         public String identifiers;
     }
 
     public static class Queue {
-        @JsonProperty("count_network_fail_retries")
+        @SerializedName("count_network_fail_retries")
+        @Expose
         public boolean countNetworkFail;
-        @JsonProperty("host")
+        @SerializedName("host")
+        @Expose
         public String host;
-        @JsonProperty("max_age")
+        @SerializedName("max_age")
+        @Expose
         public int maxAge;
-        @JsonProperty("max_size")
+        @SerializedName("max_size")
+        @Expose
         public int maxSize;
-        @JsonProperty("name")
+        @SerializedName("name")
+        @Expose
         public String name;
-        @JsonProperty("protocol")
+        @SerializedName("protocol")
+        @Expose
         public String protocol;
-        @JsonProperty("max_retry_count")
+        @SerializedName("max_retry_count")
+        @Expose
         public int retryCount;
-        @JsonProperty("retry_interval")
+        @SerializedName("retry_interval")
+        @Expose
         public int retryInterval;
-        @JsonProperty("url_fmt")
+        @SerializedName("url_fmt")
+        @Expose
         public String urlFormat;
 
         public String formatEndpointAddress() {
@@ -75,21 +94,27 @@ class ConfigParser {
     }
 
     public static class RouteFilter {
-        @JsonProperty("filter")
+        @SerializedName("filter")
+        @Expose
         public String filter;
-        @JsonProperty("queues")
+        @SerializedName("queues")
+        @Expose
         public List<String> queues;
     }
 
     @Inject
-    public ConfigParser(UpsightContext upsight, @Named("config-mapper") ObjectMapper mapper) {
-        this.mMapper = mapper;
+    public ConfigParser(UpsightContext upsight, @Named("config-gson") Gson gson) {
+        this.mGson = gson;
         this.mLogger = upsight.getLogger();
     }
 
     public Config parseConfig(String configContent) throws IOException {
-        Config config = (Config) this.mMapper.readValue(configContent, Config.class);
-        return new Builder().setRoutingConfig(parseRoutingConfig(config)).setIdentifierConfig(parseIdentifierConfig(config)).build();
+        try {
+            Config config = (Config) this.mGson.fromJson(configContent, Config.class);
+            return new Builder().setRoutingConfig(parseRoutingConfig(config)).setIdentifierConfig(parseIdentifierConfig(config)).build();
+        } catch (JsonSyntaxException e) {
+            throw new IOException(e);
+        }
     }
 
     private IdentifierConfig parseIdentifierConfig(Config config) {

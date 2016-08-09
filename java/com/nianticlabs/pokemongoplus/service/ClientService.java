@@ -9,7 +9,9 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import com.nianticlabs.pokemongoplus.ble.BluetoothGattSupport;
+import com.nianticlabs.pokemongoplus.bridge.BridgeConstants;
 import com.nianticlabs.pokemongoplus.bridge.ClientBridge;
+import com.upsight.mediation.mraid.properties.MRAIDResizeProperties;
 import com.voxelbusters.nativeplugins.defines.Keys.GameServices;
 import spacemadness.com.lunarconsole.R;
 
@@ -24,14 +26,13 @@ public class ClientService extends Service {
 
     private static void sendClientServiceIntent(Context context, String serviceAction) {
         Intent i = new Intent(context, ClientService.class);
-        i.setPackage("com.nianticlabs.pokemongoplus.bridge");
         i.putExtra("action", serviceAction);
         context.startService(i);
     }
 
     public static void startClientService(Context context, ClientBridge bridge) {
         pgpClientBridge = bridge;
-        sendClientServiceIntent(context, "startService");
+        sendClientServiceIntent(context, BridgeConstants.START_SERVICE_ACTION);
     }
 
     public static void stopClientService(Context context) {
@@ -77,61 +78,67 @@ public class ClientService extends Service {
                 Object obj = -1;
                 switch (action.hashCode()) {
                     case -1708606089:
-                        if (action.equals("batteryLevel")) {
+                        if (action.equals(BridgeConstants.BATTERY_LEVEL_ACTION)) {
+                            obj = 8;
+                            break;
+                        }
+                        break;
+                    case -1682997253:
+                        if (action.equals(BridgeConstants.IS_SCANNING_ACTION)) {
                             obj = 7;
                             break;
                         }
                         break;
                     case -1076199202:
-                        if (action.equals("sfidaState")) {
+                        if (action.equals(BridgeConstants.SFIDA_STATE_ACTION)) {
                             obj = 1;
                             break;
                         }
                         break;
                     case -384563172:
-                        if (action.equals("centralState")) {
+                        if (action.equals(BridgeConstants.CENTRAL_STATE_ACTION)) {
                             obj = 4;
                             break;
                         }
                         break;
                     case 107147694:
-                        if (action.equals("encounterId")) {
+                        if (action.equals(BridgeConstants.ENCOUNTER_ID_ACTION)) {
                             obj = 2;
                             break;
                         }
                         break;
                     case 515058459:
-                        if (action.equals("pokestop")) {
+                        if (action.equals(BridgeConstants.POKESTOP_ACTION)) {
                             obj = 3;
                             break;
                         }
                         break;
                     case 886369566:
-                        if (action.equals("pluginState")) {
+                        if (action.equals(BridgeConstants.PLUGIN_STATE_ACTION)) {
                             obj = 6;
                             break;
                         }
                         break;
                     case 1260642893:
-                        if (action.equals("updateTimestamp")) {
+                        if (action.equals(BridgeConstants.UPDATE_TIMESTAMP_ACTION)) {
                             obj = null;
                             break;
                         }
                         break;
                     case 1337874399:
-                        if (action.equals("confirmBridgeShutdown")) {
-                            obj = 9;
+                        if (action.equals(BridgeConstants.CONFIRM_BRIDGE_SHUTDOWN_ACTION)) {
+                            obj = 10;
                             break;
                         }
                         break;
                     case 1849706483:
-                        if (action.equals("startService")) {
-                            obj = 8;
+                        if (action.equals(BridgeConstants.START_SERVICE_ACTION)) {
+                            obj = 9;
                             break;
                         }
                         break;
                     case 2138493795:
-                        if (action.equals("scannedSfida")) {
+                        if (action.equals(BridgeConstants.SCANNED_SFIDA_ACTION)) {
                             obj = 5;
                             break;
                         }
@@ -147,24 +154,27 @@ public class ClientService extends Service {
                     case R.styleable.LoadingImageView_circleCrop /*2*/:
                         pgpClientBridge.sendEncounterId(intent.getLongExtra(TriggerIfContentAvailable.ID, 0));
                         return;
-                    case 3:
+                    case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_CENTER /*3*/:
                         pgpClientBridge.sendPokestopId(intent.getStringExtra(TriggerIfContentAvailable.ID));
                         return;
-                    case 4:
+                    case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_BOTTOM_LEFT /*4*/:
                         pgpClientBridge.sendCentralState(intent.getIntExtra(GameServices.STATE, 0));
                         return;
-                    case 5:
+                    case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_BOTTOM_CENTER /*5*/:
                         pgpClientBridge.sendScannedSfida(intent.getStringExtra("device"), intent.getIntExtra("button", 0));
                         return;
-                    case 6:
+                    case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_BOTTOM_RIGHT /*6*/:
                         pgpClientBridge.sendPluginState(intent.getIntExtra(GameServices.STATE, 0));
                         return;
                     case 7:
-                        pgpClientBridge.sendBatteryLevel(intent.getDoubleExtra("level", 0.0d));
+                        pgpClientBridge.sendIsScanning(intent.getIntExtra(BridgeConstants.IS_SCANNING_ACTION, 0));
                         return;
                     case BluetoothGattSupport.GATT_INSUF_AUTHENTICATION /*8*/:
+                        pgpClientBridge.sendBatteryLevel(intent.getDoubleExtra("level", 0.0d));
                         return;
                     case 9:
+                        return;
+                    case 10:
                         confirmBridgeShutdown();
                         return;
                     default:

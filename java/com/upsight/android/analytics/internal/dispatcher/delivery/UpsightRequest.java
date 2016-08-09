@@ -1,11 +1,13 @@
 package com.upsight.android.analytics.internal.dispatcher.delivery;
 
 import android.text.TextUtils;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.google.gson.Gson;
+import com.google.gson.JsonParser;
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.JsonAdapter;
+import com.google.gson.internal.Streams;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.analytics.internal.DataStoreRecord;
 import com.upsight.android.analytics.internal.dispatcher.delivery.BatchSender.Request;
@@ -14,70 +16,76 @@ import com.upsight.android.analytics.internal.dispatcher.schema.Schema;
 import com.upsight.android.analytics.internal.session.Clock;
 import com.upsight.android.analytics.provider.UpsightOptOutStatus;
 import com.upsight.android.internal.util.PreferencesHelper;
-import com.upsight.android.logger.UpsightLogger;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-@JsonSerialize(using = RequestSerializer.class)
+@JsonAdapter(DefaultTypeAdapter.class)
 class UpsightRequest {
     private long mInstallTs;
-    private final UpsightLogger mLogger;
-    private final ObjectMapper mObjectMapper;
+    private final JsonParser mJsonParser;
     private boolean mOptOut = UpsightOptOutStatus.get(this.mUpsight);
     private long mRequestTs;
     private Schema mSchema;
     private Session[] mSessions;
     private UpsightContext mUpsight;
 
-    static class RequestSerializer extends JsonSerializer<UpsightRequest> {
+    public static final class DefaultTypeAdapter extends TypeAdapter<UpsightRequest> {
+        private static final Gson GSON = new Gson();
         private static final String IDENTIFIERS_KEY = "identifiers";
         private static final String LOCALE_KEY = "locale";
         private static final String OPT_OUT_KEY = "opt_out";
         private static final String REQUEST_TS_KEY = "request_ts";
         private static final String SESSIONS_KEY = "sessions";
+        private static final TypeAdapter<Session> SESSION_TYPE_ADAPTER = new DefaultTypeAdapter();
 
-        RequestSerializer() {
-        }
-
-        public void serialize(UpsightRequest request, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-            jsonGenerator.writeStartObject();
+        public void write(JsonWriter writer, UpsightRequest request) throws IOException {
+            writer.beginObject();
             for (String key : request.mSchema.availableKeys()) {
                 Object value = request.mSchema.getValueFor(key);
                 if (value != null) {
-                    jsonGenerator.writeObjectField(key, value);
+                    writer.name(key);
+                    Streams.write(GSON.toJsonTree(value), writer);
                 }
             }
-            jsonGenerator.writeObjectField(REQUEST_TS_KEY, Long.valueOf(request.mRequestTs));
-            jsonGenerator.writeObjectField(OPT_OUT_KEY, Boolean.valueOf(request.mOptOut));
+            writer.name(REQUEST_TS_KEY);
+            writer.value(request.mRequestTs);
+            writer.name(OPT_OUT_KEY);
+            writer.value(request.mOptOut);
             Schema schema = request.mSchema;
             if (schema != null) {
                 String nameString = schema.getName();
                 if (!TextUtils.isEmpty(nameString)) {
-                    jsonGenerator.writeObjectField(IDENTIFIERS_KEY, nameString);
+                    writer.name(IDENTIFIERS_KEY);
+                    writer.value(nameString);
                 }
             }
             Locale locale = Locale.getDefault();
             if (locale != null) {
                 String localeString = locale.toString();
                 if (!TextUtils.isEmpty(localeString)) {
-                    jsonGenerator.writeObjectField(LOCALE_KEY, localeString);
+                    writer.name(LOCALE_KEY);
+                    writer.value(localeString);
                 }
             }
-            jsonGenerator.writeArrayFieldStart(SESSIONS_KEY);
+            writer.name(SESSIONS_KEY);
+            writer.beginArray();
             for (Session session : request.mSessions) {
-                serializerProvider.defaultSerializeValue(session, jsonGenerator);
+                SESSION_TYPE_ADAPTER.write(writer, session);
             }
-            jsonGenerator.writeEndArray();
-            jsonGenerator.writeEndObject();
+            writer.endArray();
+            writer.endObject();
+        }
+
+        public UpsightRequest read(JsonReader in) throws IOException {
+            throw new IOException(UpsightRequest.class.getSimpleName() + " cannot be deserialized");
         }
     }
 
-    public UpsightRequest(UpsightContext upsight, Request request, ObjectMapper objectMapper, Clock clock, UpsightLogger logger) {
+    public UpsightRequest(UpsightContext upsight, Request request, JsonParser jsonParser, Clock clock) {
         this.mUpsight = upsight;
-        this.mObjectMapper = objectMapper;
-        this.mLogger = logger;
+        this.mJsonParser = jsonParser;
         this.mInstallTs = PreferencesHelper.getLong(upsight, PreferencesHelper.INSTALL_TIMESTAMP_NAME, 0);
         this.mSessions = getSessions(request.batch);
         this.mRequestTs = clock.currentTimeSeconds();
@@ -90,10 +98,10 @@ class UpsightRequest {
             DataStoreRecord event = packet.getRecord();
             Session session = (Session) sessions.get(Long.valueOf(event.getSessionID()));
             if (session == null) {
-                session = new Session(event, this.mObjectMapper, this.mLogger, this.mInstallTs);
+                session = new Session(event, this.mInstallTs);
                 sessions.put(Long.valueOf(event.getSessionID()), session);
             }
-            session.addEvent(event);
+            session.addEvent(event, this.mJsonParser);
         }
         return (Session[]) sessions.values().toArray(new Session[sessions.values().size()]);
     }

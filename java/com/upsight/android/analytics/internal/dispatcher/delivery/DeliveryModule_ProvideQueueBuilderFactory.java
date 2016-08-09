@@ -3,6 +3,7 @@ package com.upsight.android.analytics.internal.dispatcher.delivery;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.analytics.internal.session.Clock;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 import rx.Scheduler;
 
@@ -49,11 +50,7 @@ public final class DeliveryModule_ProvideQueueBuilderFactory implements Factory<
     }
 
     public QueueBuilder get() {
-        QueueBuilder provided = this.module.provideQueueBuilder((UpsightContext) this.upsightProvider.get(), (Clock) this.clockProvider.get(), (Scheduler) this.retryExecutorProvider.get(), (Scheduler) this.sendExecutorProvider.get(), (SignatureVerifier) this.signatureVerifierProvider.get(), this.responseParserProvider);
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (QueueBuilder) Preconditions.checkNotNull(this.module.provideQueueBuilder((UpsightContext) this.upsightProvider.get(), (Clock) this.clockProvider.get(), (Scheduler) this.retryExecutorProvider.get(), (Scheduler) this.sendExecutorProvider.get(), (SignatureVerifier) this.signatureVerifierProvider.get(), this.responseParserProvider), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<QueueBuilder> create(DeliveryModule module, Provider<UpsightContext> upsightProvider, Provider<Clock> clockProvider, Provider<Scheduler> retryExecutorProvider, Provider<Scheduler> sendExecutorProvider, Provider<SignatureVerifier> signatureVerifierProvider, Provider<ResponseParser> responseParserProvider) {

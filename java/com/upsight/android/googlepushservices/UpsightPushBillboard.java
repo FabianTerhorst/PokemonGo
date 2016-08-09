@@ -23,10 +23,9 @@ public class UpsightPushBillboard {
     public static UpsightBillboard create(UpsightContext upsight, Handler handler) throws IllegalArgumentException, IllegalStateException {
         UpsightGooglePushServicesExtension extension = (UpsightGooglePushServicesExtension) upsight.getUpsightExtension(UpsightGooglePushServicesExtension.EXTENSION_NAME);
         if (extension != null) {
-            extension.getApi().createPushBillboard(upsight, handler);
-        } else {
-            upsight.getLogger().e(Upsight.LOG_TAG, "com.upsight.extension.googlepushservices must be registered in your Android Manifest", new Object[0]);
+            return extension.getApi().createPushBillboard(upsight, handler);
         }
+        upsight.getLogger().e(Upsight.LOG_TAG, "com.upsight.extension.googlepushservices must be registered in your Android Manifest", new Object[0]);
         return new NoOpBillboard();
     }
 }

@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
+import com.nianticlabs.pokemongoplus.ble.Characteristic;
 import com.nianticlabs.pokemongoplus.ble.Service;
 import com.nianticlabs.pokemongoplus.ble.callback.CompletionCallback;
 import java.util.ArrayList;
@@ -103,5 +104,16 @@ public class SfidaService extends Service {
                 break;
             }
         }
+    }
+
+    public void onDestroy() {
+        Iterator it = this.characteristicRef.iterator();
+        while (it.hasNext()) {
+            Characteristic characteristic = (Characteristic) it.next();
+            if (characteristic instanceof SfidaCharacteristic) {
+                ((SfidaCharacteristic) characteristic).onDestroy();
+            }
+        }
+        this.characteristicRef.clear();
     }
 }

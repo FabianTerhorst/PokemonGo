@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.inject.Provider;
 
 public final class MapProviderFactory<K, V> implements Factory<Map<K, Provider<V>>> {
+    private static final MapProviderFactory<Object, Object> EMPTY = new MapProviderFactory(Collections.emptyMap());
     private final Map<K, Provider<V>> contributingMap;
 
     public static final class Builder<K, V> {
@@ -35,7 +36,11 @@ public final class MapProviderFactory<K, V> implements Factory<Map<K, Provider<V
         return new Builder(size);
     }
 
-    private MapProviderFactory(LinkedHashMap<K, Provider<V>> contributingMap) {
+    public static <K, V> MapProviderFactory<K, V> empty() {
+        return EMPTY;
+    }
+
+    private MapProviderFactory(Map<K, Provider<V>> contributingMap) {
         this.contributingMap = Collections.unmodifiableMap(contributingMap);
     }
 

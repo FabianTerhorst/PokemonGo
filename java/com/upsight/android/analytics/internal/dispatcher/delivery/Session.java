@@ -1,34 +1,74 @@
 package com.upsight.android.analytics.internal.dispatcher.delivery;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import android.text.TextUtils;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+import com.google.gson.internal.Streams;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 import com.upsight.android.analytics.internal.DataStoreRecord;
-import com.upsight.android.logger.UpsightLogger;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 class Session {
-    private Set<DataStoreRecord> mEvents = new HashSet();
+    private static final String EVENTS = "events";
+    private static final String INSTALL_TS = "install_ts";
+    private static final String MSG_CAMPAIGN_ID = "msg_campaign_id";
+    private static final String MSG_ID = "msg_id";
+    private static final String PAST_SESSION_TIME = "past_session_time";
+    private static final String SESSION_NUM = "session_num";
+    private static final String SESSION_START = "session_start";
+    @SerializedName("events")
+    @Expose
+    private JsonArray mEvents = new JsonArray();
+    @SerializedName("install_ts")
+    @Expose
     private long mInstallTs;
-    private final UpsightLogger mLogger;
+    @SerializedName("msg_campaign_id")
+    @Expose
     private Integer mMsgCampaignId;
+    @SerializedName("msg_id")
+    @Expose
     private Integer mMsgId;
-    private final ObjectMapper mObjectMapper;
+    @SerializedName("past_session_time")
+    @Expose
     private long mPastSessionTime;
+    @SerializedName("session_num")
+    @Expose
     private int mSessionNum;
+    @SerializedName("session_start")
+    @Expose
     private long mSessionStart;
 
-    public Session(DataStoreRecord record, ObjectMapper mapper, UpsightLogger logger, long installTs) {
+    static final class DefaultTypeAdapter extends TypeAdapter<Session> {
+        DefaultTypeAdapter() {
+        }
+
+        public void write(JsonWriter out, Session value) throws IOException {
+            out.beginObject();
+            out.name(Session.SESSION_NUM).value((long) value.mSessionNum);
+            out.name(Session.SESSION_START).value(value.mSessionStart);
+            out.name(Session.PAST_SESSION_TIME).value(value.mPastSessionTime);
+            out.name(Session.MSG_ID).value(value.mMsgId);
+            out.name(Session.MSG_CAMPAIGN_ID).value(value.mMsgCampaignId);
+            out.name(Session.INSTALL_TS).value(value.mInstallTs);
+            out.name(Session.EVENTS);
+            out.setSerializeNulls(true);
+            Streams.write(value.mEvents, out);
+            out.setSerializeNulls(false);
+            out.endObject();
+        }
+
+        public Session read(JsonReader in) throws IOException {
+            throw new IllegalStateException(getClass().getSimpleName() + " does not implement read().");
+        }
+    }
+
+    public Session(DataStoreRecord record, long installTs) {
         this.mSessionStart = record.getSessionID();
-        this.mObjectMapper = mapper;
-        this.mLogger = logger;
         this.mInstallTs = installTs;
         this.mMsgId = record.getMessageID();
         this.mMsgCampaignId = record.getCampaignID();
@@ -36,57 +76,13 @@ class Session {
         this.mSessionNum = record.getSessionNumber();
     }
 
-    public void addEvent(DataStoreRecord event) {
-        this.mEvents.add(event);
-    }
-
-    @JsonProperty("events")
-    public ObjectNode[] getEvents() {
-        List<ObjectNode> res = new ArrayList(this.mEvents.size());
-        for (DataStoreRecord record : this.mEvents) {
-            try {
-                JsonNode jsonNode = this.mObjectMapper.readTree(record.getSource());
-                if (jsonNode.isObject()) {
-                    res.add((ObjectNode) jsonNode);
-                }
-            } catch (IOException e) {
-                this.mLogger.e(getClass().getSimpleName(), e, "Error parsing JSON object.", new Object[0]);
-            } catch (Exception e2) {
-                e2.printStackTrace();
+    void addEvent(DataStoreRecord record, JsonParser jsonParser) {
+        String eventString = record.getSource();
+        if (!TextUtils.isEmpty(eventString)) {
+            JsonElement event = jsonParser.parse(eventString);
+            if (event != null && event.isJsonObject()) {
+                this.mEvents.add(event.getAsJsonObject());
             }
         }
-        return (ObjectNode[]) res.toArray(new ObjectNode[this.mEvents.size()]);
-    }
-
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    @JsonProperty("msg_id")
-    public Integer getMsgId() {
-        return this.mMsgId;
-    }
-
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    @JsonProperty("msg_campaign_id")
-    public Integer getMsgCampaignId() {
-        return this.mMsgCampaignId;
-    }
-
-    @JsonProperty("past_session_time")
-    public long getPastSessionTime() {
-        return this.mPastSessionTime;
-    }
-
-    @JsonProperty("session_num")
-    public int getSessionNum() {
-        return this.mSessionNum;
-    }
-
-    @JsonProperty("session_start")
-    public long getSessionStart() {
-        return this.mSessionStart;
-    }
-
-    @JsonProperty("install_ts")
-    public long getInstallTs() {
-        return this.mInstallTs;
     }
 }

@@ -2,7 +2,6 @@ package com.upsight.android;
 
 import android.app.Application.ActivityLifecycleCallbacks;
 import com.upsight.android.analytics.UpsightAnalyticsApi;
-import com.upsight.android.analytics.UpsightAnalyticsComponent;
 import com.upsight.android.analytics.internal.association.AssociationManager;
 import com.upsight.android.analytics.internal.session.Clock;
 import com.upsight.android.internal.util.Opt;
@@ -17,24 +16,19 @@ public final class UpsightAnalyticsExtension_MembersInjector implements MembersI
     private final Provider<Clock> mClockProvider;
     private final Provider<Opt<UncaughtExceptionHandler>> mUncaughtExceptionHandlerProvider;
     private final Provider<ActivityLifecycleCallbacks> mUpsightLifeCycleCallbacksProvider;
-    private final MembersInjector<UpsightExtension<UpsightAnalyticsComponent, UpsightAnalyticsApi>> supertypeInjector;
 
-    public UpsightAnalyticsExtension_MembersInjector(MembersInjector<UpsightExtension<UpsightAnalyticsComponent, UpsightAnalyticsApi>> supertypeInjector, Provider<Opt<UncaughtExceptionHandler>> mUncaughtExceptionHandlerProvider, Provider<UpsightAnalyticsApi> mAnalyticsProvider, Provider<Clock> mClockProvider, Provider<ActivityLifecycleCallbacks> mUpsightLifeCycleCallbacksProvider, Provider<AssociationManager> mAssociationManagerProvider) {
-        if ($assertionsDisabled || supertypeInjector != null) {
-            this.supertypeInjector = supertypeInjector;
-            if ($assertionsDisabled || mUncaughtExceptionHandlerProvider != null) {
-                this.mUncaughtExceptionHandlerProvider = mUncaughtExceptionHandlerProvider;
-                if ($assertionsDisabled || mAnalyticsProvider != null) {
-                    this.mAnalyticsProvider = mAnalyticsProvider;
-                    if ($assertionsDisabled || mClockProvider != null) {
-                        this.mClockProvider = mClockProvider;
-                        if ($assertionsDisabled || mUpsightLifeCycleCallbacksProvider != null) {
-                            this.mUpsightLifeCycleCallbacksProvider = mUpsightLifeCycleCallbacksProvider;
-                            if ($assertionsDisabled || mAssociationManagerProvider != null) {
-                                this.mAssociationManagerProvider = mAssociationManagerProvider;
-                                return;
-                            }
-                            throw new AssertionError();
+    public UpsightAnalyticsExtension_MembersInjector(Provider<Opt<UncaughtExceptionHandler>> mUncaughtExceptionHandlerProvider, Provider<UpsightAnalyticsApi> mAnalyticsProvider, Provider<Clock> mClockProvider, Provider<ActivityLifecycleCallbacks> mUpsightLifeCycleCallbacksProvider, Provider<AssociationManager> mAssociationManagerProvider) {
+        if ($assertionsDisabled || mUncaughtExceptionHandlerProvider != null) {
+            this.mUncaughtExceptionHandlerProvider = mUncaughtExceptionHandlerProvider;
+            if ($assertionsDisabled || mAnalyticsProvider != null) {
+                this.mAnalyticsProvider = mAnalyticsProvider;
+                if ($assertionsDisabled || mClockProvider != null) {
+                    this.mClockProvider = mClockProvider;
+                    if ($assertionsDisabled || mUpsightLifeCycleCallbacksProvider != null) {
+                        this.mUpsightLifeCycleCallbacksProvider = mUpsightLifeCycleCallbacksProvider;
+                        if ($assertionsDisabled || mAssociationManagerProvider != null) {
+                            this.mAssociationManagerProvider = mAssociationManagerProvider;
+                            return;
                         }
                         throw new AssertionError();
                     }
@@ -47,11 +41,14 @@ public final class UpsightAnalyticsExtension_MembersInjector implements MembersI
         throw new AssertionError();
     }
 
+    public static MembersInjector<UpsightAnalyticsExtension> create(Provider<Opt<UncaughtExceptionHandler>> mUncaughtExceptionHandlerProvider, Provider<UpsightAnalyticsApi> mAnalyticsProvider, Provider<Clock> mClockProvider, Provider<ActivityLifecycleCallbacks> mUpsightLifeCycleCallbacksProvider, Provider<AssociationManager> mAssociationManagerProvider) {
+        return new UpsightAnalyticsExtension_MembersInjector(mUncaughtExceptionHandlerProvider, mAnalyticsProvider, mClockProvider, mUpsightLifeCycleCallbacksProvider, mAssociationManagerProvider);
+    }
+
     public void injectMembers(UpsightAnalyticsExtension instance) {
         if (instance == null) {
             throw new NullPointerException("Cannot inject members into a null reference");
         }
-        this.supertypeInjector.injectMembers(instance);
         instance.mUncaughtExceptionHandler = (Opt) this.mUncaughtExceptionHandlerProvider.get();
         instance.mAnalytics = (UpsightAnalyticsApi) this.mAnalyticsProvider.get();
         instance.mClock = (Clock) this.mClockProvider.get();
@@ -59,7 +56,23 @@ public final class UpsightAnalyticsExtension_MembersInjector implements MembersI
         instance.mAssociationManager = (AssociationManager) this.mAssociationManagerProvider.get();
     }
 
-    public static MembersInjector<UpsightAnalyticsExtension> create(MembersInjector<UpsightExtension<UpsightAnalyticsComponent, UpsightAnalyticsApi>> supertypeInjector, Provider<Opt<UncaughtExceptionHandler>> mUncaughtExceptionHandlerProvider, Provider<UpsightAnalyticsApi> mAnalyticsProvider, Provider<Clock> mClockProvider, Provider<ActivityLifecycleCallbacks> mUpsightLifeCycleCallbacksProvider, Provider<AssociationManager> mAssociationManagerProvider) {
-        return new UpsightAnalyticsExtension_MembersInjector(supertypeInjector, mUncaughtExceptionHandlerProvider, mAnalyticsProvider, mClockProvider, mUpsightLifeCycleCallbacksProvider, mAssociationManagerProvider);
+    public static void injectMUncaughtExceptionHandler(UpsightAnalyticsExtension instance, Provider<Opt<UncaughtExceptionHandler>> mUncaughtExceptionHandlerProvider) {
+        instance.mUncaughtExceptionHandler = (Opt) mUncaughtExceptionHandlerProvider.get();
+    }
+
+    public static void injectMAnalytics(UpsightAnalyticsExtension instance, Provider<UpsightAnalyticsApi> mAnalyticsProvider) {
+        instance.mAnalytics = (UpsightAnalyticsApi) mAnalyticsProvider.get();
+    }
+
+    public static void injectMClock(UpsightAnalyticsExtension instance, Provider<Clock> mClockProvider) {
+        instance.mClock = (Clock) mClockProvider.get();
+    }
+
+    public static void injectMUpsightLifeCycleCallbacks(UpsightAnalyticsExtension instance, Provider<ActivityLifecycleCallbacks> mUpsightLifeCycleCallbacksProvider) {
+        instance.mUpsightLifeCycleCallbacks = (ActivityLifecycleCallbacks) mUpsightLifeCycleCallbacksProvider.get();
+    }
+
+    public static void injectMAssociationManager(UpsightAnalyticsExtension instance, Provider<AssociationManager> mAssociationManagerProvider) {
+        instance.mAssociationManager = (AssociationManager) mAssociationManagerProvider.get();
     }
 }

@@ -2,6 +2,7 @@ package com.upsight.android.managedvariables.internal.type;
 
 import com.upsight.android.UpsightContext;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class UxmModule_ProvideUxmBlockProviderFactory implements Factory<UxmBlockProvider> {
@@ -32,11 +33,7 @@ public final class UxmModule_ProvideUxmBlockProviderFactory implements Factory<U
     }
 
     public UxmBlockProvider get() {
-        UxmBlockProvider provided = this.module.provideUxmBlockProvider((UpsightContext) this.upsightProvider.get(), (String) this.uxmSchemaRawStringProvider.get(), (UxmSchema) this.uxmSchemaProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (UxmBlockProvider) Preconditions.checkNotNull(this.module.provideUxmBlockProvider((UpsightContext) this.upsightProvider.get(), (String) this.uxmSchemaRawStringProvider.get(), (UxmSchema) this.uxmSchemaProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<UxmBlockProvider> create(UxmModule module, Provider<UpsightContext> upsightProvider, Provider<String> uxmSchemaRawStringProvider, Provider<UxmSchema> uxmSchemaProvider) {

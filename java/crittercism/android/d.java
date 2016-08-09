@@ -4,7 +4,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import com.nianticlabs.pokemongoplus.ble.BluetoothGattSupport;
-import com.upsight.android.internal.persistence.subscription.Subscriptions;
+import com.upsight.mediation.mraid.properties.MRAIDResizeProperties;
 import spacemadness.com.lunarconsole.R;
 
 public final class d {
@@ -46,16 +46,16 @@ public final class d {
             switch (activeNetworkInfo.getSubtype()) {
                 case R.styleable.LoadingImageView_imageAspectRatio /*1*/:
                 case R.styleable.LoadingImageView_circleCrop /*2*/:
-                case 4:
+                case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_BOTTOM_LEFT /*4*/:
                 case 7:
                 case 11:
                     return "2G";
-                case 3:
-                case 5:
-                case 6:
+                case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_CENTER /*3*/:
+                case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_BOTTOM_CENTER /*5*/:
+                case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_BOTTOM_RIGHT /*6*/:
                 case BluetoothGattSupport.GATT_INSUF_AUTHENTICATION /*8*/:
                 case 9:
-                case Subscriptions.MAX_QUEUE_LENGTH /*10*/:
+                case 10:
                 case 12:
                 case 14:
                 case 15:

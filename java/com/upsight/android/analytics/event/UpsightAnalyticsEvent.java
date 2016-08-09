@@ -1,35 +1,37 @@
 package com.upsight.android.analytics.event;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.JsonObject;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.Upsight;
 import com.upsight.android.UpsightAnalyticsExtension;
 import com.upsight.android.UpsightContext;
-import com.upsight.android.analytics.internal.util.JacksonHelper.JSONObjectSerializer;
+import com.upsight.android.analytics.internal.util.GsonHelper.JSONObjectSerializer;
 import com.upsight.android.persistence.annotation.UpsightStorableIdentifier;
 import java.util.concurrent.TimeUnit;
 import org.json.JSONObject;
 
 public abstract class UpsightAnalyticsEvent<U, P> {
     @UpsightStorableIdentifier
-    @JsonIgnore
     protected String id;
-    @JsonProperty("ts")
+    @SerializedName("ts")
+    @Expose
     protected long mCreationTsMs;
-    @JsonProperty("pub_data")
+    @SerializedName("pub_data")
+    @Expose
     protected P mPublisherData;
-    @JsonProperty("seq_id")
+    @SerializedName("seq_id")
+    @Expose
     protected long mSequenceId;
-    @JsonProperty("type")
+    @SerializedName("type")
+    @Expose
     protected String mType;
-    @JsonProperty("upsight_data")
+    @SerializedName("upsight_data")
+    @Expose
     protected U mUpsightData;
-    @JsonInclude(Include.NON_NULL)
-    @JsonProperty("user_attributes")
-    protected ObjectNode mUserAttributes;
+    @SerializedName("user_attributes")
+    @Expose
+    protected JsonObject mUserAttributes;
 
     public static abstract class Builder<T extends UpsightAnalyticsEvent<U, P>, U, P> {
         protected abstract T build();
@@ -81,6 +83,6 @@ public abstract class UpsightAnalyticsEvent<U, P> {
     }
 
     public JSONObject getUserAttributes() {
-        return JSONObjectSerializer.fromObjectNode(this.mUserAttributes);
+        return JSONObjectSerializer.fromJsonObject(this.mUserAttributes);
     }
 }

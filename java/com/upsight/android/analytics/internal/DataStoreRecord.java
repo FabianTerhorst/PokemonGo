@@ -1,31 +1,42 @@
 package com.upsight.android.analytics.internal;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.persistence.annotation.UpsightStorableIdentifier;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
 
 @UpsightStorableType("upsight.datastore.record")
 public final class DataStoreRecord {
-    @JsonProperty("action")
+    @SerializedName("action")
+    @Expose
     Action action;
-    @JsonProperty("campaign_id")
+    @SerializedName("campaign_id")
+    @Expose
     Integer campaignID;
+    @SerializedName("id")
+    @Expose
     @UpsightStorableIdentifier
-    @JsonProperty
     String id;
-    @JsonProperty("identifiers")
+    @SerializedName("identifiers")
+    @Expose
     String identifiers;
-    @JsonProperty("message_id")
+    @SerializedName("message_id")
+    @Expose
     Integer messageID;
-    @JsonProperty("past_session_time")
+    @SerializedName("past_session_time")
+    @Expose
     long pastSessionTime;
-    @JsonProperty("session_id")
+    @SerializedName("session_id")
+    @Expose
     long sessionID;
-    @JsonProperty("session_num")
+    @SerializedName("session_num")
+    @Expose
     int sessionNumber;
-    @JsonProperty("source")
+    @SerializedName("source")
+    @Expose
     String source;
-    @JsonProperty("source_type")
+    @SerializedName("source_type")
+    @Expose
     String sourceType;
 
     public enum Action {

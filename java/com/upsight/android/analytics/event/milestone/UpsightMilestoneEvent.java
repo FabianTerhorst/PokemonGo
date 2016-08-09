@@ -1,6 +1,7 @@
 package com.upsight.android.analytics.event.milestone;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.analytics.event.UpsightPublisherData;
 import com.upsight.android.analytics.internal.AnalyticsEvent;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
@@ -21,7 +22,8 @@ public class UpsightMilestoneEvent extends AnalyticsEvent<UpsightData> {
     }
 
     static class UpsightData {
-        @JsonProperty("scope")
+        @SerializedName("scope")
+        @Expose
         String scope;
 
         protected UpsightData(Builder builder) {

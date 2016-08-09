@@ -11,7 +11,16 @@ import javax.inject.Provider;
 public final class SetFactory<T> implements Factory<Set<T>> {
     static final /* synthetic */ boolean $assertionsDisabled = (!SetFactory.class.desiredAssertionStatus() ? true : $assertionsDisabled);
     private static final String ARGUMENTS_MUST_BE_NON_NULL = "SetFactory.create() requires its arguments to be non-null";
+    private static final Factory<Set<Object>> EMPTY_FACTORY = new Factory<Set<Object>>() {
+        public Set<Object> get() {
+            return Collections.emptySet();
+        }
+    };
     private final List<Provider<Set<T>>> contributingProviders;
+
+    public static <T> Factory<Set<T>> create() {
+        return EMPTY_FACTORY;
+    }
 
     public static <T> Factory<Set<T>> create(Factory<Set<T>> factory) {
         if ($assertionsDisabled || factory != null) {
@@ -51,7 +60,8 @@ public final class SetFactory<T> implements Factory<Set<T>> {
             Provider<Set<T>> provider = (Provider) this.contributingProviders.get(i);
             Set<T> providedSet = (Set) provider.get();
             if (providedSet == null) {
-                throw new NullPointerException(provider + " returned null");
+                String valueOf = String.valueOf(provider);
+                throw new NullPointerException(new StringBuilder(String.valueOf(valueOf).length() + 14).append(valueOf).append(" returned null").toString());
             }
             providedSets.add(providedSet);
             size += providedSet.size();

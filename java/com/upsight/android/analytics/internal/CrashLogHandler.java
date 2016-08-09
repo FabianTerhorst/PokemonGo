@@ -1,6 +1,7 @@
 package com.upsight.android.analytics.internal;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.analytics.UpsightAnalyticsApi;
 import com.upsight.android.analytics.event.UpsightAnalyticsEvent;
 import com.upsight.android.analytics.event.UpsightPublisherData;
@@ -42,9 +43,11 @@ class CrashLogHandler implements UncaughtExceptionHandler {
         }
 
         public static class UpsightData {
-            @JsonProperty("crashID")
+            @SerializedName("crashID")
+            @Expose
             String crashID;
-            @JsonProperty("stacktrace")
+            @SerializedName("stacktrace")
+            @Expose
             String stacktrace;
 
             protected UpsightData(Builder builder) {

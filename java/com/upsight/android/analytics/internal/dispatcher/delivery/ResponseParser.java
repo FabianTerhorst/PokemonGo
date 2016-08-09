@@ -1,8 +1,10 @@
 package com.upsight.android.analytics.internal.dispatcher.delivery;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.analytics.dispatcher.EndpointResponse;
 import java.io.IOException;
 import java.util.Collection;
@@ -12,7 +14,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 class ResponseParser {
-    private ObjectMapper mMapper;
+    private Gson mGson;
 
     public static class Response {
         public final String error;
@@ -25,33 +27,41 @@ class ResponseParser {
     }
 
     public static class ResponseElementJson {
-        @JsonProperty("content")
-        public JsonNode content;
-        @JsonProperty("type")
+        @SerializedName("content")
+        @Expose
+        public JsonElement content;
+        @SerializedName("type")
+        @Expose
         public String type;
     }
 
     public static class ResponseJson {
-        @JsonProperty("error")
+        @SerializedName("error")
+        @Expose
         public String error;
-        @JsonProperty("response")
+        @SerializedName("response")
+        @Expose
         public List<ResponseElementJson> response;
     }
 
     @Inject
-    public ResponseParser(@Named("config-mapper") ObjectMapper mapper) {
-        this.mMapper = mapper;
+    public ResponseParser(@Named("config-gson") Gson gson) {
+        this.mGson = gson;
     }
 
     public synchronized Response parse(String resposneJson) throws IOException {
         ResponseJson responses;
         Collection<EndpointResponse> resps;
-        responses = (ResponseJson) this.mMapper.readValue(resposneJson, ResponseJson.class);
-        resps = new LinkedList();
-        if (responses.response != null) {
-            for (ResponseElementJson rj : responses.response) {
-                resps.add(EndpointResponse.create(rj.type, this.mMapper.writeValueAsString(rj.content)));
+        try {
+            responses = (ResponseJson) this.mGson.fromJson(resposneJson, ResponseJson.class);
+            resps = new LinkedList();
+            if (responses.response != null) {
+                for (ResponseElementJson rj : responses.response) {
+                    resps.add(EndpointResponse.create(rj.type, rj.content.toString()));
+                }
             }
+        } catch (JsonSyntaxException e) {
+            throw new IOException(e);
         }
         return new Response(resps, responses.error);
     }

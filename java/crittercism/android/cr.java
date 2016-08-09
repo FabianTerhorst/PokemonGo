@@ -1,5 +1,6 @@
 package crittercism.android;
 
+import com.upsight.mediation.mraid.properties.MRAIDResizeProperties;
 import java.io.UnsupportedEncodingException;
 import spacemadness.com.lunarconsole.R;
 
@@ -38,7 +39,7 @@ public final class cr {
                 bArr2[i3 + 2] = a[(i4 >>> 6) & 63];
                 bArr2[i3 + 3] = (byte) 61;
                 break;
-            case 3:
+            case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_CENTER /*3*/:
                 bArr2[i3] = a[i4 >>> 18];
                 bArr2[i3 + 1] = a[(i4 >>> 12) & 63];
                 bArr2[i3 + 2] = a[(i4 >>> 6) & 63];

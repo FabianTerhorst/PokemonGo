@@ -1,5 +1,6 @@
 package dagger.internal;
 
+import com.upsight.mediation.vast.activity.PlayerControls;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 
@@ -22,7 +23,7 @@ final class Collections {
             return expectedSize + 1;
         }
         if (expectedSize < MAX_POWER_OF_TWO) {
-            return (int) ((((float) expectedSize) / 0.75f) + 1.0f);
+            return (int) ((((float) expectedSize) / PlayerControls.DOWN_STATE) + 1.0f);
         }
         return Integer.MAX_VALUE;
     }

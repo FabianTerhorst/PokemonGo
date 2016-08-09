@@ -1,51 +1,64 @@
 package com.upsight.android.analytics.internal.association;
 
 import android.text.TextUtils;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.analytics.internal.session.Clock;
 import com.upsight.android.persistence.annotation.UpsightStorableIdentifier;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
+import java.io.IOException;
 
 @UpsightStorableType("upsight.association")
 public class Association {
+    @Expose
     @UpsightStorableIdentifier
     String id;
-    @JsonProperty("timestamp_ms")
+    @SerializedName("timestamp_ms")
+    @Expose
     long timestampMs;
-    @JsonProperty("upsight_data")
-    ObjectNode upsightData;
-    @JsonProperty("upsight_data_filter")
+    @SerializedName("upsight_data")
+    @Expose
+    JsonObject upsightData;
+    @SerializedName("upsight_data_filter")
+    @Expose
     UpsightDataFilter upsightDataFilter;
-    @JsonProperty("with")
+    @SerializedName("with")
+    @Expose
     String with;
 
     public static class UpsightDataFilter {
-        @JsonProperty("match_key")
+        @SerializedName("match_key")
+        @Expose
         String matchKey;
-        @JsonProperty("match_values")
-        ArrayNode matchValues;
+        @SerializedName("match_values")
+        @Expose
+        JsonArray matchValues;
 
         public String getMatchKey() {
             return this.matchKey;
         }
 
-        public ArrayNode getMatchValues() {
+        public JsonArray getMatchValues() {
             return this.matchValues;
         }
     }
 
-    public static Association from(String with, ObjectNode upsightDataFilter, ObjectNode upsightData, ObjectMapper mapper, Clock clock) throws IllegalArgumentException, JsonProcessingException {
+    public static Association from(String with, JsonObject upsightDataFilter, JsonObject upsightData, Gson gson, Clock clock) throws IllegalArgumentException, IOException {
         if (TextUtils.isEmpty(with) || upsightDataFilter == null || upsightData == null) {
             throw new IllegalArgumentException("Illegal arguments");
         }
-        return new Association(with, (UpsightDataFilter) mapper.treeToValue(upsightDataFilter, UpsightDataFilter.class), upsightData, clock.currentTimeMillis());
+        try {
+            return new Association(with, (UpsightDataFilter) gson.fromJson(upsightDataFilter, UpsightDataFilter.class), upsightData, clock.currentTimeMillis());
+        } catch (JsonSyntaxException e) {
+            throw new IOException(e);
+        }
     }
 
-    private Association(String with, UpsightDataFilter upsightDataFilter, ObjectNode upsightData, long timestampMs) {
+    private Association(String with, UpsightDataFilter upsightDataFilter, JsonObject upsightData, long timestampMs) {
         this.with = with;
         this.upsightDataFilter = upsightDataFilter;
         this.upsightData = upsightData;
@@ -71,7 +84,7 @@ public class Association {
         return this.upsightDataFilter;
     }
 
-    public ObjectNode getUpsightData() {
+    public JsonObject getUpsightData() {
         return this.upsightData;
     }
 }

@@ -4,6 +4,7 @@ import com.upsight.android.UpsightContext;
 import com.upsight.android.marketing.UpsightBillboardManager;
 import com.upsight.android.marketing.internal.content.MarketingContentStore;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class BillboardModule_ProvideBillboardManagerFactory implements Factory<UpsightBillboardManager> {
@@ -29,11 +30,7 @@ public final class BillboardModule_ProvideBillboardManagerFactory implements Fac
     }
 
     public UpsightBillboardManager get() {
-        UpsightBillboardManager provided = this.module.provideBillboardManager((UpsightContext) this.upsightProvider.get(), (MarketingContentStore) this.contentStoreProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (UpsightBillboardManager) Preconditions.checkNotNull(this.module.provideBillboardManager((UpsightContext) this.upsightProvider.get(), (MarketingContentStore) this.contentStoreProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<UpsightBillboardManager> create(BillboardModule module, Provider<UpsightContext> upsightProvider, Provider<MarketingContentStore> contentStoreProvider) {

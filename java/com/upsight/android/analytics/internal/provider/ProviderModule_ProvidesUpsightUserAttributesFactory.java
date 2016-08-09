@@ -2,6 +2,7 @@ package com.upsight.android.analytics.internal.provider;
 
 import com.upsight.android.analytics.provider.UpsightUserAttributes;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class ProviderModule_ProvidesUpsightUserAttributesFactory implements Factory<UpsightUserAttributes> {
@@ -22,11 +23,7 @@ public final class ProviderModule_ProvidesUpsightUserAttributesFactory implement
     }
 
     public UpsightUserAttributes get() {
-        UpsightUserAttributes provided = this.module.providesUpsightUserAttributes((UserAttributes) this.userAttributesProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (UpsightUserAttributes) Preconditions.checkNotNull(this.module.providesUpsightUserAttributes((UserAttributes) this.userAttributesProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<UpsightUserAttributes> create(ProviderModule module, Provider<UserAttributes> userAttributesProvider) {

@@ -3,6 +3,7 @@ package com.upsight.android.internal.logger;
 import com.upsight.android.logger.UpsightLogger;
 import com.upsight.android.persistence.UpsightDataStore;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class LoggerModule_ProvideUpsightLoggerFactory implements Factory<UpsightLogger> {
@@ -28,11 +29,7 @@ public final class LoggerModule_ProvideUpsightLoggerFactory implements Factory<U
     }
 
     public UpsightLogger get() {
-        UpsightLogger provided = this.module.provideUpsightLogger((UpsightDataStore) this.dataStoreProvider.get(), (LogWriter) this.writerProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (UpsightLogger) Preconditions.checkNotNull(this.module.provideUpsightLogger((UpsightDataStore) this.dataStoreProvider.get(), (LogWriter) this.writerProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<UpsightLogger> create(LoggerModule module, Provider<UpsightDataStore> dataStoreProvider, Provider<LogWriter> writerProvider) {

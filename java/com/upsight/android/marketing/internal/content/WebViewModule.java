@@ -12,6 +12,6 @@ public final class WebViewModule {
     @Provides
     ContentTemplateWebViewClientFactory provideContentTemplateWebViewClientFactory(UpsightContext upsight) {
         UpsightCoreComponent coreComponent = upsight.getCoreComponent();
-        return new ContentTemplateWebViewClientFactory(coreComponent.bus(), coreComponent.objectMapper(), upsight.getLogger());
+        return new ContentTemplateWebViewClientFactory(coreComponent.bus(), coreComponent.gson(), coreComponent.jsonParser(), upsight.getLogger());
     }
 }

@@ -1,7 +1,7 @@
 package com.upsight.android.analytics.internal.dispatcher.delivery;
 
 import android.text.TextUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonParser;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.analytics.dispatcher.EndpointResponse;
 import com.upsight.android.analytics.internal.dispatcher.delivery.UpsightEndpoint.Response;
@@ -25,9 +25,9 @@ public class BatchSender {
     private Config mConfig;
     private OnDeliveryListener mDeliveryListener;
     private UpsightEndpoint mEndpoint;
+    private JsonParser mJsonParser;
     private ReentrantLock mListenersLock = new ReentrantLock();
     private final UpsightLogger mLogger;
-    private ObjectMapper mObjectMapper;
     private OnResponseListener mResponseListener;
     private ResponseParser mResponseParser;
     private Scheduler mRetryExecutor;
@@ -45,7 +45,7 @@ public class BatchSender {
         public void run() {
             if (NetworkHelper.isConnected(BatchSender.this.mUpsight)) {
                 try {
-                    Response resp = BatchSender.this.mEndpoint.send(new UpsightRequest(BatchSender.this.mUpsight, this.mRequest, BatchSender.this.mObjectMapper, BatchSender.this.mClock, BatchSender.this.mLogger));
+                    Response resp = BatchSender.this.mEndpoint.send(new UpsightRequest(BatchSender.this.mUpsight, this.mRequest, BatchSender.this.mJsonParser, BatchSender.this.mClock));
                     ResponseParser.Response response = null;
                     if (!TextUtils.isEmpty(resp.body)) {
                         response = BatchSender.this.mResponseParser.parse(resp.body);
@@ -124,12 +124,12 @@ public class BatchSender {
         }
     }
 
-    BatchSender(UpsightContext upsight, Config config, Scheduler retryExecutor, Scheduler sendExecutor, UpsightEndpoint endpoint, ResponseParser responseParser, ObjectMapper objectMapper, Clock clock, UpsightLogger logger) {
+    BatchSender(UpsightContext upsight, Config config, Scheduler retryExecutor, Scheduler sendExecutor, UpsightEndpoint endpoint, ResponseParser responseParser, JsonParser jsonParser, Clock clock, UpsightLogger logger) {
         this.mUpsight = upsight;
         this.mEndpoint = endpoint;
         this.mConfig = config;
         this.mRetryExecutor = retryExecutor;
-        this.mObjectMapper = objectMapper;
+        this.mJsonParser = jsonParser;
         this.mBatchSendExecutor = sendExecutor;
         this.mResponseParser = responseParser;
         this.mClock = clock;

@@ -1,17 +1,17 @@
 package com.upsight.android.analytics.internal.action;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 public abstract class Action<T extends Actionable, U extends ActionContext> {
     private U mActionContext;
-    private JsonNode mParams;
+    private JsonObject mParams;
     private String mType;
 
     public abstract void execute(T t);
 
-    protected Action(U actionContext, String type, JsonNode params) {
+    protected Action(U actionContext, String type, JsonObject params) {
         this.mActionContext = actionContext;
         this.mType = type;
         this.mParams = params;
@@ -27,9 +27,9 @@ public abstract class Action<T extends Actionable, U extends ActionContext> {
 
     protected String optParamString(String key) {
         if (this.mParams != null) {
-            JsonNode jsonNode = this.mParams.get(key);
-            if (jsonNode != null && jsonNode.isTextual()) {
-                return jsonNode.asText();
+            JsonElement element = this.mParams.get(key);
+            if (element != null && element.isJsonPrimitive() && element.getAsJsonPrimitive().isString()) {
+                return element.getAsString();
             }
         }
         return null;
@@ -37,29 +37,29 @@ public abstract class Action<T extends Actionable, U extends ActionContext> {
 
     protected int optParamInt(String key) {
         if (this.mParams != null) {
-            JsonNode jsonNode = this.mParams.get(key);
-            if (jsonNode != null && jsonNode.isInt()) {
-                return jsonNode.asInt();
+            JsonElement element = this.mParams.get(key);
+            if (element != null && element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber()) {
+                return element.getAsInt();
             }
         }
         return 0;
     }
 
-    protected ObjectNode optParamJsonObject(String key) {
+    protected JsonObject optParamJsonObject(String key) {
         if (this.mParams != null) {
-            JsonNode jsonObject = this.mParams.get(key);
-            if (jsonObject != null && jsonObject.isObject()) {
-                return (ObjectNode) jsonObject;
+            JsonElement element = this.mParams.get(key);
+            if (element != null && element.isJsonObject()) {
+                return element.getAsJsonObject();
             }
         }
         return null;
     }
 
-    protected ArrayNode optParamJsonArray(String key) {
+    protected JsonArray optParamJsonArray(String key) {
         if (this.mParams != null) {
-            JsonNode jsonArray = this.mParams.get(key);
-            if (jsonArray != null && jsonArray.isArray()) {
-                return (ArrayNode) jsonArray;
+            JsonElement element = this.mParams.get(key);
+            if (element != null && element.isJsonArray()) {
+                return element.getAsJsonArray();
             }
         }
         return null;

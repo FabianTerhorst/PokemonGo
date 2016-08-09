@@ -6,12 +6,14 @@ import android.os.Build.VERSION;
 import android.text.TextUtils;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.squareup.otto.Bus;
 import com.upsight.android.logger.UpsightLogger;
-import java.io.IOException;
-import java.util.Iterator;
+import java.util.Map.Entry;
 
 class ContentTemplateWebViewClient extends WebViewClient {
     private static final String DISPATCH_CALLBACK = "javascript:PlayHaven.nativeAPI.callback(\"%s\", %s, %s, %s)";
@@ -23,15 +25,17 @@ class ContentTemplateWebViewClient extends WebViewClient {
     private static final String DISPATCH_PARAM_KEY_VIEW_DATA = "view_data";
     private static final String DISPATCH_SCHEME = "ph://";
     private final Bus mBus;
+    private final Gson mGson;
     private boolean mIsTemplateLoaded = false;
+    private final JsonParser mJsonParser;
     private final UpsightLogger mLogger;
-    private final ObjectMapper mMapper;
-    private final MarketingContent mMarketingContent;
+    private final MarketingContent<MarketingContentModel> mMarketingContent;
 
-    public ContentTemplateWebViewClient(MarketingContent marketingContent, Bus bus, ObjectMapper mapper, UpsightLogger logger) {
+    public ContentTemplateWebViewClient(MarketingContent<MarketingContentModel> marketingContent, Bus bus, Gson gson, JsonParser jsoNParser, UpsightLogger logger) {
         this.mMarketingContent = marketingContent;
         this.mBus = bus;
-        this.mMapper = mapper;
+        this.mGson = gson;
+        this.mJsonParser = jsoNParser;
         this.mLogger = logger;
     }
 
@@ -49,27 +53,31 @@ class ContentTemplateWebViewClient extends WebViewClient {
 
     private boolean handleActionDispatch(String url) {
         boolean isHandled = false;
-        if (url != null && url.startsWith(DISPATCH_SCHEME)) {
-            isHandled = true;
-            String context = Uri.parse(url).getQueryParameter(DISPATCH_PARAM_KEY_CONTEXT);
-            if (!TextUtils.isEmpty(context)) {
-                try {
-                    JsonNode contextNode = this.mMapper.readTree(context);
-                    if (contextNode.hasNonNull(DISPATCH_PARAM_KEY_TRIGGER)) {
-                        JsonNode triggerNode = contextNode.path(DISPATCH_PARAM_KEY_TRIGGER);
-                        if (triggerNode.isTextual()) {
-                            this.mMarketingContent.executeActions(triggerNode.asText());
+        if (url != null) {
+            if (url.startsWith(DISPATCH_SCHEME)) {
+                isHandled = true;
+                String context = Uri.parse(url).getQueryParameter(DISPATCH_PARAM_KEY_CONTEXT);
+                if (!TextUtils.isEmpty(context)) {
+                    try {
+                        JsonElement contextElement = this.mJsonParser.parse(context);
+                        if (contextElement.isJsonObject()) {
+                            JsonObject contextNode = contextElement.getAsJsonObject();
+                            JsonElement triggerNode = contextNode.get(DISPATCH_PARAM_KEY_TRIGGER);
+                            JsonElement viewDataNode = contextNode.get(DISPATCH_PARAM_KEY_VIEW_DATA);
+                            if (triggerNode != null && triggerNode.isJsonPrimitive() && triggerNode.getAsJsonPrimitive().isString()) {
+                                this.mMarketingContent.executeActions(triggerNode.getAsString());
+                            } else if (viewDataNode != null && viewDataNode.isJsonObject()) {
+                                for (Entry<String, JsonElement> entry : viewDataNode.getAsJsonObject().entrySet()) {
+                                    JsonElement value = (JsonElement) entry.getValue();
+                                    this.mMarketingContent.putExtra((String) entry.getKey(), value != null ? value.toString() : null);
+                                }
+                            }
+                        } else {
+                            this.mLogger.e(getClass().getSimpleName(), "Failed to parse context into JsonObject context=" + context, new Object[0]);
                         }
-                    } else if (contextNode.hasNonNull(DISPATCH_PARAM_KEY_VIEW_DATA)) {
-                        JsonNode viewDataNode = contextNode.path(DISPATCH_PARAM_KEY_VIEW_DATA);
-                        Iterator<String> iterator = viewDataNode.fieldNames();
-                        while (iterator.hasNext()) {
-                            String dataKey = (String) iterator.next();
-                            this.mMarketingContent.putExtra(dataKey, viewDataNode.path(dataKey).toString());
-                        }
+                    } catch (JsonSyntaxException e) {
+                        this.mLogger.e(getClass().getSimpleName(), e, "Failed to parse context into JsonElement context=" + context, new Object[0]);
                     }
-                } catch (IOException e) {
-                    this.mLogger.e(getClass().getSimpleName(), e, "Failed to parse contextNode=" + null, new Object[0]);
                 }
             }
         }
@@ -82,7 +90,7 @@ class ContentTemplateWebViewClient extends WebViewClient {
         if (url != null && url.startsWith(DISPATCH_LOAD_CONTEXT)) {
             isHandled = true;
             String callbackId = Uri.parse(url).getQueryParameter(DISPATCH_PARAM_KEY_CALLBACK_ID);
-            JsonNode context = this.mMarketingContent.getContentModel().getContext();
+            JsonElement context = ((MarketingContentModel) this.mMarketingContent.getContentModel()).getContext();
             String dispatchCallback = String.format(DISPATCH_CALLBACK, new Object[]{callbackId, context, null, null});
             view.loadUrl(DISPATCH_CALLBACK_PROTOCOL);
             if (VERSION.SDK_INT >= 19) {

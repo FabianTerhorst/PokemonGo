@@ -12,6 +12,6 @@ public final class BillboardModule {
     @Singleton
     @Provides
     UpsightBillboardManager provideBillboardManager(UpsightContext upsight, MarketingContentStore contentStore) {
-        return new BillboardManagerImpl(upsight.getDataStore(), contentStore, upsight.getCoreComponent().bus());
+        return new BillboardManagerImpl(upsight, contentStore, upsight.getCoreComponent().bus());
     }
 }

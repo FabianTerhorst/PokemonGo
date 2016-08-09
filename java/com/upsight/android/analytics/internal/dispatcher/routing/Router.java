@@ -6,6 +6,7 @@ import com.upsight.android.analytics.internal.dispatcher.delivery.OnDeliveryList
 import com.upsight.android.analytics.internal.dispatcher.delivery.OnResponseListener;
 import com.upsight.android.analytics.internal.dispatcher.routing.Packet.State;
 import com.upsight.android.analytics.internal.dispatcher.util.ByFilterSelector;
+import com.upsight.mediation.mraid.properties.MRAIDResizeProperties;
 import java.util.concurrent.atomic.AtomicInteger;
 import rx.Scheduler;
 import rx.Scheduler.Worker;
@@ -80,7 +81,7 @@ public class Router implements OnDeliveryListener, OnResponseListener {
                         Router.this.mRoutingListener.onDelivery(packet.getRecord(), true, false, null);
                         Router.this.finishPacket();
                         return;
-                    case 3:
+                    case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_CENTER /*3*/:
                         Router.this.mRoutingListener.onDelivery(packet.getRecord(), false, true, packet.getDeliveryHistory());
                         Router.this.finishPacket();
                         return;

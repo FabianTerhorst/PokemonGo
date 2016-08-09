@@ -1,19 +1,24 @@
 package com.upsight.android.analytics.dispatcher;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.persistence.annotation.UpsightStorableIdentifier;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
 
 @UpsightStorableType("upsight.dispatcher.delivery.status")
 public final class AnalyticsEventDeliveryStatus {
+    @SerializedName("id")
+    @Expose
     @UpsightStorableIdentifier
-    @JsonProperty("id")
     String id;
-    @JsonProperty("failure_reason")
+    @SerializedName("failure_reason")
+    @Expose
     private String mFailureReason;
-    @JsonProperty("source_event_id")
+    @SerializedName("source_event_id")
+    @Expose
     private String mOriginEventId;
-    @JsonProperty("status")
+    @SerializedName("status")
+    @Expose
     private boolean mStatus;
 
     public static AnalyticsEventDeliveryStatus fromSuccess(String sourceEventId) {

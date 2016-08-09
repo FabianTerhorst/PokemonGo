@@ -1,49 +1,67 @@
 package com.upsight.android.marketing.internal.content;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import java.io.IOException;
 
 public final class MarketingContentModel {
-    @JsonProperty("content_id")
+    @SerializedName("content_id")
+    @Expose
     String contentId;
-    @JsonProperty("context")
-    JsonNode context;
-    @JsonProperty("presentation")
+    @SerializedName("context")
+    @Expose
+    JsonElement context;
+    @SerializedName("presentation")
+    @Expose
     Presentation presentation;
-    @JsonProperty("url")
+    @SerializedName("url")
+    @Expose
     String templateUrl;
 
     public static class Presentation {
         public static final String STYLE_DIALOG = "dialog";
         public static final String STYLE_FULLSCREEN = "fullscreen";
-        @JsonProperty("layout")
+        @SerializedName("layout")
+        @Expose
         DialogLayout layout;
-        @JsonProperty("style")
+        @SerializedName("style")
+        @Expose
         String style;
 
         public static class DialogLayout {
-            @JsonProperty("landscape")
+            @SerializedName("landscape")
+            @Expose
             public Dimensions landscape;
-            @JsonProperty("portrait")
+            @SerializedName("portrait")
+            @Expose
             public Dimensions portrait;
 
             public static class Dimensions {
-                @JsonProperty("h")
+                @SerializedName("h")
+                @Expose
                 public int h;
-                @JsonProperty("w")
+                @SerializedName("w")
+                @Expose
                 public int w;
-                @JsonProperty("x")
+                @SerializedName("x")
+                @Expose
                 public int x;
-                @JsonProperty("y")
+                @SerializedName("y")
+                @Expose
                 public int y;
             }
         }
     }
 
-    static MarketingContentModel from(JsonNode json, ObjectMapper mapper) throws IOException {
-        return (MarketingContentModel) mapper.treeToValue(json, MarketingContentModel.class);
+    static MarketingContentModel from(JsonElement json, Gson gson) throws IOException {
+        try {
+            return (MarketingContentModel) gson.fromJson(json, MarketingContentModel.class);
+        } catch (JsonSyntaxException e) {
+            throw new IOException(e);
+        }
     }
 
     MarketingContentModel() {
@@ -57,15 +75,15 @@ public final class MarketingContentModel {
         return this.templateUrl;
     }
 
-    public JsonNode getContext() {
+    public JsonElement getContext() {
         return this.context;
     }
 
     public String getPresentationStyle() {
-        return this.presentation.style;
+        return this.presentation != null ? this.presentation.style : null;
     }
 
     public DialogLayout getDialogLayouts() {
-        return this.presentation.layout;
+        return this.presentation != null ? this.presentation.layout : null;
     }
 }

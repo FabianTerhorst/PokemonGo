@@ -3,6 +3,7 @@ package com.upsight.android.internal;
 import android.content.Context;
 import com.upsight.android.logger.UpsightLogger;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class PropertiesModule_ProvidePublicKeyFactory implements Factory<String> {
@@ -28,11 +29,7 @@ public final class PropertiesModule_ProvidePublicKeyFactory implements Factory<S
     }
 
     public String get() {
-        String provided = this.module.providePublicKey((Context) this.contextProvider.get(), (UpsightLogger) this.loggerProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (String) Preconditions.checkNotNull(this.module.providePublicKey((Context) this.contextProvider.get(), (UpsightLogger) this.loggerProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<String> create(PropertiesModule module, Provider<Context> contextProvider, Provider<UpsightLogger> loggerProvider) {

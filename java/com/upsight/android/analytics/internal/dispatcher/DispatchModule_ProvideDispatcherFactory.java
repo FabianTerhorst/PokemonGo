@@ -6,6 +6,7 @@ import com.upsight.android.analytics.internal.dispatcher.routing.RouterBuilder;
 import com.upsight.android.analytics.internal.dispatcher.schema.SchemaSelectorBuilder;
 import com.upsight.android.analytics.internal.session.SessionManager;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class DispatchModule_ProvideDispatcherFactory implements Factory<Dispatcher> {
@@ -51,11 +52,7 @@ public final class DispatchModule_ProvideDispatcherFactory implements Factory<Di
     }
 
     public Dispatcher get() {
-        Dispatcher provided = this.module.provideDispatcher((UpsightContext) this.upsightProvider.get(), (SessionManager) this.sessionManagerProvider.get(), (AnalyticsContext) this.contextProvider.get(), (ConfigParser) this.configParserProvider.get(), (RouterBuilder) this.routerBuilderProvider.get(), (SchemaSelectorBuilder) this.schemaSelectorBuilderProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (Dispatcher) Preconditions.checkNotNull(this.module.provideDispatcher((UpsightContext) this.upsightProvider.get(), (SessionManager) this.sessionManagerProvider.get(), (AnalyticsContext) this.contextProvider.get(), (ConfigParser) this.configParserProvider.get(), (RouterBuilder) this.routerBuilderProvider.get(), (SchemaSelectorBuilder) this.schemaSelectorBuilderProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<Dispatcher> create(DispatchModule module, Provider<UpsightContext> upsightProvider, Provider<SessionManager> sessionManagerProvider, Provider<AnalyticsContext> contextProvider, Provider<ConfigParser> configParserProvider, Provider<RouterBuilder> routerBuilderProvider, Provider<SchemaSelectorBuilder> schemaSelectorBuilderProvider) {

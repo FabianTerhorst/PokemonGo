@@ -2,6 +2,7 @@ package com.upsight.android.analytics.internal.provider;
 
 import com.upsight.android.analytics.provider.UpsightLocationTracker;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class ProviderModule_ProvidesUpsightLocationTrackerFactory implements Factory<UpsightLocationTracker> {
@@ -22,11 +23,7 @@ public final class ProviderModule_ProvidesUpsightLocationTrackerFactory implemen
     }
 
     public UpsightLocationTracker get() {
-        UpsightLocationTracker provided = this.module.providesUpsightLocationTracker((LocationTracker) this.locationTrackerProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (UpsightLocationTracker) Preconditions.checkNotNull(this.module.providesUpsightLocationTracker((LocationTracker) this.locationTrackerProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<UpsightLocationTracker> create(ProviderModule module, Provider<LocationTracker> locationTrackerProvider) {

@@ -6,6 +6,7 @@ import com.upsight.android.UpsightCoreComponent;
 import com.upsight.android.analytics.UpsightAnalyticsComponent;
 import com.upsight.android.marketing.UpsightMarketingContentStore;
 import com.upsight.android.marketing.internal.content.MarketingContentActions.MarketingContentActionContext;
+import com.upsight.android.marketing.internal.vast.VastContentMediator;
 import dagger.Module;
 import dagger.Provides;
 import javax.inject.Named;
@@ -16,15 +17,15 @@ import rx.Scheduler;
 public final class ContentModule {
     @Singleton
     @Provides
-    MarketingContentFactory provideMarketingContentFactory(UpsightContext upsight, @Named("main") Scheduler scheduler, MarketingContentStore contentStore, ContentTemplateWebViewClientFactory contentTemplateWebViewClientFactory) {
+    MarketingContentFactory provideMarketingContentFactory(UpsightContext upsight, @Named("main") Scheduler scheduler, MarketingContentMediatorManager contentMediatorManager, MarketingContentStore contentStore, ContentTemplateWebViewClientFactory contentTemplateWebViewClientFactory) {
         UpsightCoreComponent coreComponent = upsight.getCoreComponent();
-        return new MarketingContentFactory(new MarketingContentActionContext(upsight, coreComponent.bus(), coreComponent.objectMapper(), ((UpsightAnalyticsComponent) ((UpsightAnalyticsExtension) upsight.getUpsightExtension(UpsightAnalyticsExtension.EXTENSION_NAME)).getComponent()).clock(), scheduler.createWorker(), upsight.getLogger(), contentStore, contentTemplateWebViewClientFactory));
+        return new MarketingContentFactory(new MarketingContentActionContext(upsight, coreComponent.bus(), coreComponent.gson(), ((UpsightAnalyticsComponent) ((UpsightAnalyticsExtension) upsight.getUpsightExtension(UpsightAnalyticsExtension.EXTENSION_NAME)).getComponent()).clock(), scheduler.createWorker(), upsight.getLogger(), contentMediatorManager, contentStore, contentTemplateWebViewClientFactory));
     }
 
     @Singleton
     @Provides
     MarketingContentStoreImpl provideMarketingContentStoreImpl(UpsightContext upsight) {
-        return new MarketingContentStoreImpl(upsight.getCoreComponent().bus(), ((UpsightAnalyticsComponent) ((UpsightAnalyticsExtension) upsight.getUpsightExtension(UpsightAnalyticsExtension.EXTENSION_NAME)).getComponent()).clock());
+        return new MarketingContentStoreImpl(upsight.getCoreComponent().bus(), ((UpsightAnalyticsComponent) ((UpsightAnalyticsExtension) upsight.getUpsightExtension(UpsightAnalyticsExtension.EXTENSION_NAME)).getComponent()).clock(), upsight.getLogger());
     }
 
     @Singleton
@@ -41,7 +42,19 @@ public final class ContentModule {
 
     @Singleton
     @Provides
+    MarketingContentMediatorManager provideMarketingContentMediatorManager(DefaultContentMediator defaultContentMediator) {
+        return new MarketingContentMediatorManager(defaultContentMediator);
+    }
+
+    @Singleton
+    @Provides
     DefaultContentMediator provideDefaultContentMediator() {
         return new DefaultContentMediator();
+    }
+
+    @Singleton
+    @Provides
+    VastContentMediator provideVastContentMediator(UpsightContext upsight) {
+        return new VastContentMediator(upsight.getLogger(), upsight.getCoreComponent().bus());
     }
 }

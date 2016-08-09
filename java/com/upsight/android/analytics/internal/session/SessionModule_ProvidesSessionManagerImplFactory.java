@@ -2,6 +2,7 @@ package com.upsight.android.analytics.internal.session;
 
 import com.upsight.android.UpsightContext;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class SessionModule_ProvidesSessionManagerImplFactory implements Factory<SessionManagerImpl> {
@@ -32,11 +33,7 @@ public final class SessionModule_ProvidesSessionManagerImplFactory implements Fa
     }
 
     public SessionManagerImpl get() {
-        SessionManagerImpl provided = this.module.providesSessionManagerImpl((UpsightContext) this.upsightProvider.get(), (ConfigParser) this.configParserProvider.get(), (Clock) this.clockProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (SessionManagerImpl) Preconditions.checkNotNull(this.module.providesSessionManagerImpl((UpsightContext) this.upsightProvider.get(), (ConfigParser) this.configParserProvider.get(), (Clock) this.clockProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<SessionManagerImpl> create(SessionModule module, Provider<UpsightContext> upsightProvider, Provider<ConfigParser> configParserProvider, Provider<Clock> clockProvider) {

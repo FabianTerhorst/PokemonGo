@@ -14,14 +14,19 @@ import java.util.ArrayDeque;
 
 public class SfidaCharacteristic extends Characteristic {
     private static final String TAG = SfidaCharacteristic.class.getSimpleName();
+    private final int RETRIES = 7;
+    private final long SLEEP_DELAY_MS = 250;
     private BluetoothGattCharacteristic characteristic;
     private BluetoothGatt gatt;
     private long nativeHandle;
+    private CompletionCallback onDisableNotifyCallback;
     private CompletionCallback onEnableNotifyCallback;
     private CompletionCallback onReadCallback;
     private ValueChangeCallback onValueChangedCallback;
     private CompletionCallback onWriteCallback;
     private volatile ArrayDeque<byte[]> queue = new ArrayDeque();
+
+    private native void nativeDisableNotifyCallback(boolean z, int i);
 
     private native void nativeEnableNotifyCallback(boolean z, int i);
 
@@ -38,6 +43,9 @@ public class SfidaCharacteristic extends Characteristic {
         this.characteristic = characteristic;
     }
 
+    public void onDestroy() {
+    }
+
     public String getUuid() {
         return this.characteristic.getUuid().toString();
     }
@@ -50,19 +58,32 @@ public class SfidaCharacteristic extends Characteristic {
         return (byte[]) this.queue.pollFirst();
     }
 
+    public void cancelNotify() {
+    }
+
     public void notifyValueChanged() {
         this.onValueChangedCallback = new ValueChangeCallback() {
             public void OnValueChange(boolean success, boolean valueChanged, BluetoothError error) {
                 SfidaCharacteristic.this.nativeValueChangedCallback(success, valueChanged, error.getInt());
             }
         };
-        boolean success = this.gatt.setCharacteristicNotification(this.characteristic, true);
     }
 
     public void writeByteArray(byte[] byteArray, CompletionCallback callback) {
         this.onWriteCallback = callback;
         this.characteristic.setValue(byteArray);
-        if (!this.gatt.writeCharacteristic(this.characteristic)) {
+        boolean result = false;
+        for (int i = 0; i < 7; i++) {
+            result = this.gatt.writeCharacteristic(this.characteristic);
+            if (result) {
+                break;
+            }
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException e) {
+            }
+        }
+        if (!result) {
             this.onWriteCallback.onCompletion(false, BluetoothError.Unknown);
             this.onWriteCallback = null;
         }
@@ -92,13 +113,39 @@ public class SfidaCharacteristic extends Characteristic {
     }
 
     public void enableNotify(CompletionCallback callback) {
+        int i;
         this.onEnableNotifyCallback = callback;
+        for (i = 0; i < 7; i++) {
+            boolean success = this.gatt.setCharacteristicNotification(this.characteristic, true);
+            Log.d(TAG, String.format("setCharacteristicNotification success: %b", new Object[]{Boolean.valueOf(success)}));
+            if (success) {
+                break;
+            }
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException e) {
+            }
+        }
+        if ((this.characteristic.getProperties() & 16) == 0) {
+            Log.w(TAG, "Enable Notify not supported");
+        }
+        byte[] previousValue = this.characteristic.getValue();
         BluetoothGattDescriptor descriptor = this.characteristic.getDescriptor(SfidaConstant.UUID_CLIENT_CHARACTERISTIC_CONFIG);
         Log.d(TAG, String.format("Config characteristic:%s descriptor:%s", new Object[]{getUuid(), descriptor}));
         if (descriptor != null) {
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-            boolean result = this.gatt.writeDescriptor(descriptor);
-            Log.d(TAG, String.format("Write description success:%b", new Object[]{Boolean.valueOf(result)}));
+            boolean result = false;
+            for (i = 0; i < 7; i++) {
+                result = this.gatt.writeDescriptor(descriptor);
+                Log.d(TAG, String.format("Write descriptor success: %b", new Object[]{Boolean.valueOf(result)}));
+                if (result) {
+                    break;
+                }
+                try {
+                    Thread.sleep(250);
+                } catch (InterruptedException e2) {
+                }
+            }
             if (!result) {
                 this.onEnableNotifyCallback.onCompletion(false, BluetoothError.Unknown);
             }
@@ -114,13 +161,48 @@ public class SfidaCharacteristic extends Characteristic {
         });
     }
 
+    public void disableNotify(CompletionCallback callback) {
+        this.onDisableNotifyCallback = callback;
+        boolean success = this.gatt.setCharacteristicNotification(this.characteristic, false);
+        byte[] currentValue = this.characteristic.getValue();
+        BluetoothGattDescriptor descriptor = this.characteristic.getDescriptor(SfidaConstant.UUID_CLIENT_CHARACTERISTIC_CONFIG);
+        Log.d(TAG, String.format("Config characteristic:%s descriptor:%s", new Object[]{getUuid(), descriptor}));
+        if (descriptor != null) {
+            descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+            boolean result = false;
+            for (int i = 0; i < 7; i++) {
+                result = this.gatt.writeDescriptor(descriptor);
+                Log.d(TAG, String.format("Write descriptor success: %b", new Object[]{Boolean.valueOf(result)}));
+                if (result) {
+                    break;
+                }
+                try {
+                    Thread.sleep(250);
+                } catch (InterruptedException e) {
+                }
+            }
+            if (!result) {
+                this.onDisableNotifyCallback.onCompletion(false, BluetoothError.Unknown);
+            }
+        }
+    }
+
+    public void disableNotify() {
+        disableNotify(new CompletionCallback() {
+            public void onCompletion(boolean success, BluetoothError error) {
+                Log.d(SfidaCharacteristic.TAG, String.format("disableNotify callback success: %b error[%d]:%s UUID:%s", new Object[]{Boolean.valueOf(success), Integer.valueOf(error.getInt()), error.toString(), SfidaCharacteristic.this.getUuid()}));
+                SfidaCharacteristic.this.nativeDisableNotifyCallback(success, error.getInt());
+            }
+        });
+    }
+
     public void onCharacteristicChanged() {
         AsyncTask.execute(new Runnable() {
             public void run() {
                 Log.d(SfidaCharacteristic.TAG, String.format("onCharacteristicChanged: %s", new Object[]{SfidaCharacteristic.this.characteristic.getUuid().toString()}));
                 byte[] receivedValue = SfidaCharacteristic.this.characteristic.getValue();
-                SfidaCharacteristic.this.nativeSaveValueChangedCallback(receivedValue);
                 if (SfidaCharacteristic.this.onValueChangedCallback != null) {
+                    SfidaCharacteristic.this.nativeSaveValueChangedCallback(receivedValue);
                     SfidaCharacteristic.this.queue.add(receivedValue);
                     SfidaCharacteristic.this.onValueChangedCallback.OnValueChange(true, true, BluetoothError.Unknown);
                 }
@@ -161,13 +243,20 @@ public class SfidaCharacteristic extends Characteristic {
         Log.d(TAG, String.format("onDescriptorWrite status:%d", new Object[]{Integer.valueOf(status)}));
         AsyncTask.execute(new Runnable() {
             public void run() {
-                if (SfidaCharacteristic.this.onEnableNotifyCallback == null) {
-                    return;
-                }
-                if (status == 0) {
-                    SfidaCharacteristic.this.onEnableNotifyCallback.onCompletion(true, BluetoothError.Unknown);
-                } else {
-                    SfidaCharacteristic.this.onEnableNotifyCallback.onCompletion(false, BluetoothError.Unknown);
+                if (SfidaCharacteristic.this.onEnableNotifyCallback != null) {
+                    if (status == 0 || status == 8) {
+                        SfidaCharacteristic.this.onEnableNotifyCallback.onCompletion(true, BluetoothError.Unknown);
+                    } else {
+                        SfidaCharacteristic.this.onEnableNotifyCallback.onCompletion(false, BluetoothError.Unknown);
+                    }
+                    SfidaCharacteristic.this.onEnableNotifyCallback = null;
+                } else if (SfidaCharacteristic.this.onDisableNotifyCallback != null) {
+                    if (status == 0 || status == 8) {
+                        SfidaCharacteristic.this.onDisableNotifyCallback.onCompletion(true, BluetoothError.Unknown);
+                    } else {
+                        SfidaCharacteristic.this.onDisableNotifyCallback.onCompletion(false, BluetoothError.Unknown);
+                    }
+                    SfidaCharacteristic.this.onDisableNotifyCallback = null;
                 }
             }
         });

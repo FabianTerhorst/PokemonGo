@@ -1,8 +1,8 @@
 package com.upsight.android.managedvariables.internal.type;
 
 import android.text.TextUtils;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonParser;
 import com.upsight.android.Upsight;
 import com.upsight.android.UpsightAnalyticsExtension;
 import com.upsight.android.UpsightContext;
@@ -23,14 +23,22 @@ import spacemadness.com.lunarconsole.BuildConfig;
 
 @Module
 public class UxmModule {
-    public static final String MAPPER_UXM_SCHEMA = "mapperUxmSchema";
+    public static final String GSON_UXM_SCHEMA = "gsonUxmSchema";
+    public static final String JSON_PARSER_UXM_SCHEMA = "jsonParserUxmSchema";
     public static final String STRING_RAW_UXM_SCHEMA = "stringRawUxmSchema";
 
     @Singleton
     @Provides
-    @Named("mapperUxmSchema")
-    ObjectMapper provideUxmSchemaMapper(UpsightContext upsight) {
-        return upsight.getCoreComponent().objectMapper().copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
+    @Named("gsonUxmSchema")
+    Gson provideUxmSchemaGson(UpsightContext upsight) {
+        return upsight.getCoreComponent().gson();
+    }
+
+    @Singleton
+    @Provides
+    @Named("jsonParserUxmSchema")
+    JsonParser provideUxmSchemaJsonParser(UpsightContext upsight) {
+        return upsight.getCoreComponent().jsonParser();
     }
 
     @Singleton
@@ -54,12 +62,12 @@ public class UxmModule {
 
     @Singleton
     @Provides
-    UxmSchema provideUxmSchema(UpsightContext upsight, @Named("mapperUxmSchema") ObjectMapper uxmSchemaMapper, @Named("stringRawUxmSchema") String uxmSchemaString) {
+    UxmSchema provideUxmSchema(UpsightContext upsight, @Named("gsonUxmSchema") Gson uxmSchemaGson, @Named("jsonParserUxmSchema") JsonParser uxmSchemaJsonParser, @Named("stringRawUxmSchema") String uxmSchemaString) {
         UpsightLogger logger = upsight.getLogger();
         UxmSchema schema = null;
         if (!TextUtils.isEmpty(uxmSchemaString)) {
             try {
-                schema = UxmSchema.create(uxmSchemaString, uxmSchemaMapper, logger);
+                schema = UxmSchema.create(uxmSchemaString, uxmSchemaGson, uxmSchemaJsonParser, logger);
             } catch (IllegalArgumentException e) {
                 logger.e(Upsight.LOG_TAG, e, "Failed to parse UXM schema", new Object[0]);
             }
@@ -88,6 +96,6 @@ public class UxmModule {
     @Provides
     UxmContentFactory provideUxmContentFactory(UpsightContext upsight, @Named("main") Scheduler scheduler, UpsightUserExperience userExperience) {
         UpsightCoreComponent coreComponent = upsight.getCoreComponent();
-        return new UxmContentFactory(new UxmContentActionContext(upsight, coreComponent.bus(), coreComponent.objectMapper(), ((UpsightAnalyticsComponent) ((UpsightAnalyticsExtension) upsight.getUpsightExtension(UpsightAnalyticsExtension.EXTENSION_NAME)).getComponent()).clock(), scheduler.createWorker(), upsight.getLogger()), userExperience);
+        return new UxmContentFactory(new UxmContentActionContext(upsight, coreComponent.bus(), coreComponent.gson(), ((UpsightAnalyticsComponent) ((UpsightAnalyticsExtension) upsight.getUpsightExtension(UpsightAnalyticsExtension.EXTENSION_NAME)).getComponent()).clock(), scheduler.createWorker(), upsight.getLogger()), userExperience);
     }
 }

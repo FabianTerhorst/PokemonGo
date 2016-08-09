@@ -1,6 +1,7 @@
 package com.upsight.android.analytics.internal.session;
 
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class SessionModule_ProvidesSessionManagerFactory implements Factory<SessionManager> {
@@ -21,11 +22,7 @@ public final class SessionModule_ProvidesSessionManagerFactory implements Factor
     }
 
     public SessionManager get() {
-        SessionManager provided = this.module.providesSessionManager((SessionManagerImpl) this.sessionManagerProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (SessionManager) Preconditions.checkNotNull(this.module.providesSessionManager((SessionManagerImpl) this.sessionManagerProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<SessionManager> create(SessionModule module, Provider<SessionManagerImpl> sessionManagerProvider) {

@@ -4,39 +4,37 @@ import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.text.TextUtils;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.upsight.android.Upsight;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.UpsightGooglePushServicesExtension;
-import com.upsight.android.analytics.event.content.UpsightContentUnrenderedEvent;
-import com.upsight.android.analytics.event.content.UpsightContentUnrenderedEvent.Builder;
 import com.upsight.android.googlepushservices.UpsightGooglePushServicesComponent;
+import com.upsight.android.googlepushservices.UpsightPushNotificationBuilderFactory;
+import com.upsight.android.googlepushservices.UpsightPushNotificationBuilderFactory.Default;
 import com.upsight.android.logger.UpsightLogger;
-import com.upsight.android.marketing.internal.content.MarketingContent;
+import com.upsight.mediation.mraid.properties.MRAIDResizeProperties;
 import javax.inject.Inject;
-import org.json.JSONException;
-import org.json.JSONObject;
 import spacemadness.com.lunarconsole.R;
 
 public final class PushIntentService extends IntentService {
     private static final String ACTION_ACTIVITY = "activity";
     private static final String ACTION_CONTENT_UNIT = "content_id";
     private static final String ACTION_PLACEMENT = "placement";
-    private static final String CONTENT_UNRENDERED_CONTENT_PROVIDER_KEY_NAME = "name";
-    private static final String CONTENT_UNRENDERED_CONTENT_PROVIDER_KEY_PARAMETERS = "parameters";
-    private static final String CONTENT_UNRENDERED_CONTENT_PROVIDER_PARAMETERS_KEY_CONTENT_ID = "content_id";
     private static final Integer INVALID_MSG_ID = Integer.valueOf(0);
     private static final String LOG_TAG = PushIntentService.class.getSimpleName();
+    private static final String NOTIFICATION_BUILDER_FACTORY_KEY_NAME = "com.upsight.notification_builder_factory";
     private static final String SERVICE_NAME = "UpsightGcmPushIntentService";
     private static final String URI_HOST = "com.playhaven.android";
     private static final String URI_SCHEME = "playhaven";
     @Inject
     GoogleCloudMessaging mGcm;
+    private UpsightPushNotificationBuilderFactory mNotificationBuilderFactory;
+    @Inject
+    UpsightContext mUpsight;
 
     static /* synthetic */ class AnonymousClass1 {
         static final /* synthetic */ int[] $SwitchMap$com$upsight$android$googlepushservices$internal$PushIntentService$UriTypes = new int[UriTypes.values().length];
@@ -79,7 +77,8 @@ public final class PushIntentService extends IntentService {
         content_id,
         title,
         text,
-        uri
+        uri,
+        image_url
     }
 
     public enum UriTypes {
@@ -132,45 +131,35 @@ public final class PushIntentService extends IntentService {
             uri = Uri.parse(uriString);
         }
         if (uri != null) {
-            UpsightContext upsight = Upsight.createContext(this);
-            UpsightLogger logger = upsight.getLogger();
+            UpsightLogger logger = this.mUpsight.getLogger();
             PushIds ids = parsePushIds(uri, extras, logger);
             Intent messageIntent = null;
+            boolean isDispatchFromForeground = false;
             switch (AnonymousClass1.$SwitchMap$com$upsight$android$googlepushservices$internal$PushIntentService$UriTypes[checkUri(logger, uri).ordinal()]) {
                 case R.styleable.LoadingImageView_imageAspectRatio /*1*/:
                     messageIntent = new Intent("android.intent.action.VIEW", uri);
+                    isDispatchFromForeground = true;
                     break;
                 case R.styleable.LoadingImageView_circleCrop /*2*/:
                     messageIntent = getPackageManager().getLaunchIntentForPackage(getPackageName());
+                    isDispatchFromForeground = false;
                     break;
-                case 3:
+                case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_CENTER /*3*/:
                     try {
+                        isDispatchFromForeground = true;
                         messageIntent = new Intent(this, Class.forName(uri.getQueryParameter(ACTION_ACTIVITY)));
                         break;
                     } catch (ClassNotFoundException e) {
                         logger.e(LOG_TAG, e, "Could not parse class name", new Object[0]);
                         break;
                     }
-                case 4:
-                    JSONObject contentProviderBundle = new JSONObject();
-                    try {
-                        contentProviderBundle.put(CONTENT_UNRENDERED_CONTENT_PROVIDER_KEY_NAME, MarketingContent.UPSIGHT_CONTENT_PROVIDER);
-                        JSONObject parameters = new JSONObject();
-                        parameters.put(CONTENT_UNRENDERED_CONTENT_PROVIDER_PARAMETERS_KEY_CONTENT_ID, ids.contentId);
-                        contentProviderBundle.put(CONTENT_UNRENDERED_CONTENT_PROVIDER_KEY_PARAMETERS, parameters);
-                    } catch (JSONException e2) {
-                        logger.e(LOG_TAG, e2, "Could not construct \"content_provider\" bundle in \"upsight.content.unrendered\"", new Object[0]);
-                    }
-                    Builder unrenderedEvent = UpsightContentUnrenderedEvent.createBuilder(contentProviderBundle).setScope("com_upsight_push_scope");
-                    if (ids.campaignId != null) {
-                        unrenderedEvent.setCampaignId(ids.campaignId);
-                    }
-                    unrenderedEvent.record(upsight);
+                case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_BOTTOM_LEFT /*4*/:
                     messageIntent = getPackageManager().getLaunchIntentForPackage(getPackageName());
+                    isDispatchFromForeground = false;
                     break;
             }
             if (messageIntent != null) {
-                showNotification(messageIntent, ids.campaignId, ids.messageId, extras.getString(PushParams.title.name()), extras.getString(PushParams.text.name()));
+                showNotification(messageIntent, isDispatchFromForeground, ids.campaignId, ids.messageId, ids.contentId, extras.getString(PushParams.title.name()), extras.getString(PushParams.text.name()), extras.getString(PushParams.image_url.name()));
             }
         }
     }
@@ -197,14 +186,43 @@ public final class PushIntentService extends IntentService {
             if (uri.getQueryParameter(ACTION_PLACEMENT) != null) {
                 return UriTypes.PLACEMENT;
             }
-            if (uri.getQueryParameter(CONTENT_UNRENDERED_CONTENT_PROVIDER_PARAMETERS_KEY_CONTENT_ID) != null) {
+            if (uri.getQueryParameter(ACTION_CONTENT_UNIT) != null) {
                 return UriTypes.PLACEMENT;
             }
             return UriTypes.DEFAULT;
         }
     }
 
-    private void showNotification(Intent messageIntent, Integer campaignId, Integer messageId, String title, String text) {
-        ((NotificationManager) getSystemService("notification")).notify(messageId.intValue(), new NotificationCompat.Builder(this).setAutoCancel(true).setSmallIcon(getApplicationInfo().icon).setContentTitle(title).setContentText(text).setContentIntent(PendingIntent.getService(this, 0, PushClickIntentService.newIntent(this, messageIntent, campaignId, messageId), 268435456)).setStyle(new BigTextStyle().bigText(text)).build());
+    UpsightPushNotificationBuilderFactory loadNotificationBuilderFactory() {
+        UpsightLogger logger = this.mUpsight.getLogger();
+        try {
+            Bundle bundle = getPackageManager().getApplicationInfo(getPackageName(), 128).metaData;
+            if (bundle != null && bundle.containsKey(NOTIFICATION_BUILDER_FACTORY_KEY_NAME)) {
+                try {
+                    Class<?> clazz = Class.forName(bundle.getString(NOTIFICATION_BUILDER_FACTORY_KEY_NAME));
+                    if (UpsightPushNotificationBuilderFactory.class.isAssignableFrom(clazz)) {
+                        return (UpsightPushNotificationBuilderFactory) clazz.newInstance();
+                    }
+                    logger.e(Upsight.LOG_TAG, String.format("Class %s must implement %s!", new Object[]{clazz.getName(), UpsightPushNotificationBuilderFactory.class.getName()}), new Object[0]);
+                } catch (ClassNotFoundException e) {
+                    logger.e(Upsight.LOG_TAG, String.format("Unexpected error: Class: %s was not found.", new Object[]{customBuilderClassName}), e);
+                } catch (InstantiationException e2) {
+                    logger.e(Upsight.LOG_TAG, String.format("Unexpected error: Class: %s does not have public access.", new Object[]{customBuilderClassName}), e2);
+                } catch (IllegalAccessException e3) {
+                    logger.e(Upsight.LOG_TAG, String.format("Unexpected error: Class: %s could not be instantiated.", new Object[]{customBuilderClassName}), e3);
+                }
+            }
+        } catch (NameNotFoundException e4) {
+            logger.e(Upsight.LOG_TAG, "Unexpected error: Package name missing!?", e4);
+        }
+        return new Default();
+    }
+
+    private void showNotification(Intent messageIntent, boolean isDispatchFromForeground, Integer campaignId, Integer messageId, Integer contentId, String title, String text, String imageUrl) {
+        PendingIntent notifyIntent = PendingIntent.getService(this, messageId.intValue(), PushClickIntentService.newIntent(this, messageIntent, isDispatchFromForeground, campaignId, messageId, contentId), 268435456);
+        if (this.mNotificationBuilderFactory == null) {
+            this.mNotificationBuilderFactory = loadNotificationBuilderFactory();
+        }
+        ((NotificationManager) getSystemService("notification")).notify(messageId.intValue(), this.mNotificationBuilderFactory.getNotificationBuilder(this.mUpsight, title, text, imageUrl).setContentIntent(notifyIntent).setAutoCancel(true).build());
     }
 }

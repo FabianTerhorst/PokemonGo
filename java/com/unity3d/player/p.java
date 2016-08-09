@@ -5,6 +5,7 @@ import android.content.ContextWrapper;
 import android.view.MotionEvent;
 import android.view.MotionEvent.PointerCoords;
 import android.view.View;
+import com.upsight.mediation.mraid.properties.MRAIDResizeProperties;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import spacemadness.com.lunarconsole.R;
@@ -36,10 +37,10 @@ public final class p implements j {
                             case R.styleable.AdsAttrs_adSize /*0*/:
                             case R.styleable.LoadingImageView_imageAspectRatio /*1*/:
                             case R.styleable.LoadingImageView_circleCrop /*2*/:
-                            case 3:
-                            case 4:
-                            case 5:
-                            case 6:
+                            case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_CENTER /*3*/:
+                            case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_BOTTOM_LEFT /*4*/:
+                            case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_BOTTOM_CENTER /*5*/:
+                            case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_BOTTOM_RIGHT /*6*/:
                                 decorView.dispatchTouchEvent(motionEvent);
                                 break;
                             default:

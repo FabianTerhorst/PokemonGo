@@ -1,17 +1,21 @@
 package com.upsight.android.analytics.dispatcher;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.persistence.annotation.UpsightStorableIdentifier;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
 
 @UpsightStorableType("upsight.dispatcher.response")
 public final class EndpointResponse {
+    @SerializedName("id")
+    @Expose
     @UpsightStorableIdentifier
-    @JsonProperty("id")
     String id;
-    @JsonProperty("content")
+    @SerializedName("content")
+    @Expose
     private String mContent;
-    @JsonProperty("type")
+    @SerializedName("type")
+    @Expose
     private String mType;
 
     public static EndpointResponse create(String type, String content) {

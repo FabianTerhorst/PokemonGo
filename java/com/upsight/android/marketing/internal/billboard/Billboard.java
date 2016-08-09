@@ -7,11 +7,9 @@ import com.upsight.android.marketing.UpsightBillboard;
 import com.upsight.android.marketing.UpsightBillboard.Handler;
 import com.upsight.android.marketing.UpsightBillboardManager;
 import com.upsight.android.marketing.UpsightMarketingApi;
-import com.upsight.android.marketing.internal.content.MarketingContent;
 
 public class Billboard extends UpsightBillboard {
     private UpsightBillboardManager mBillboardManager;
-    private MarketingContent mContent = null;
     protected final Handler mHandler;
     protected final String mScope;
 
@@ -52,13 +50,5 @@ public class Billboard extends UpsightBillboard {
 
     Handler getHandler() {
         return this.mHandler;
-    }
-
-    void setMarketingContent(MarketingContent content) {
-        this.mContent = content;
-    }
-
-    MarketingContent getMarketingContent() {
-        return this.mContent;
     }
 }

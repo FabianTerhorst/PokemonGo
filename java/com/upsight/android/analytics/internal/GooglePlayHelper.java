@@ -2,39 +2,46 @@ package com.upsight.android.analytics.internal;
 
 import android.content.Intent;
 import android.text.TextUtils;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.Upsight;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.UpsightException;
 import com.upsight.android.analytics.UpsightGooglePlayHelper;
 import com.upsight.android.analytics.event.UpsightPublisherData;
 import com.upsight.android.analytics.event.monetization.UpsightMonetizationIapEvent;
-import java.io.IOException;
 import org.json.JSONException;
 import org.json.JSONObject;
 import spacemadness.com.lunarconsole.R;
 
 class GooglePlayHelper extends UpsightGooglePlayHelper {
     private static final String STORE_NAME = "google_play";
-    private ObjectMapper mMapper;
+    private Gson mGson;
     private UpsightContext mUpsight;
 
     static class PurchaseData {
-        @JsonProperty("developerPayload")
+        @SerializedName("developerPayload")
+        @Expose
         String developerPayload;
-        @JsonProperty("orderId")
+        @SerializedName("orderId")
+        @Expose
         String orderId;
-        @JsonProperty("packageName")
+        @SerializedName("packageName")
+        @Expose
         String packageName;
-        @JsonProperty("productId")
+        @SerializedName("productId")
+        @Expose
         String productId;
-        @JsonProperty("purchaseState")
+        @SerializedName("purchaseState")
+        @Expose
         int purchaseState;
-        @JsonProperty("purchaseTime")
+        @SerializedName("purchaseTime")
+        @Expose
         long purchaseTime;
-        @JsonProperty("purchaseToken")
+        @SerializedName("purchaseToken")
+        @Expose
         String purchaseToken;
 
         PurchaseData() {
@@ -47,9 +54,9 @@ class GooglePlayHelper extends UpsightGooglePlayHelper {
         refund
     }
 
-    GooglePlayHelper(UpsightContext upsight, ObjectMapper mapper) {
+    GooglePlayHelper(UpsightContext upsight, Gson gson) {
         this.mUpsight = upsight;
-        this.mMapper = mapper;
+        this.mGson = gson;
     }
 
     public void trackPurchase(int quantity, String currency, double price, double totalPrice, String product, Intent responseData, UpsightPublisherData publisherData) throws UpsightException {
@@ -69,7 +76,7 @@ class GooglePlayHelper extends UpsightGooglePlayHelper {
                     throw new UpsightException(msg, new Object[0]);
                 } else {
                     try {
-                        PurchaseData purchase = (PurchaseData) this.mMapper.treeToValue(this.mMapper.readTree(purchaseData), PurchaseData.class);
+                        PurchaseData purchase = (PurchaseData) this.mGson.fromJson(purchaseData, PurchaseData.class);
                         if (purchase != null) {
                             Resolution resolution;
                             switch (purchase.purchaseState) {
@@ -99,14 +106,10 @@ class GooglePlayHelper extends UpsightGooglePlayHelper {
                         msg = "Failed to track Google Play purchase due to missing fields in purchase data.";
                         this.mUpsight.getLogger().e(Upsight.LOG_TAG, msg, new Object[0]);
                         throw new UpsightException(msg, new Object[0]);
-                    } catch (JsonParseException e2) {
-                        msg = "Failed to track Google Play purchase due to purchase data schema mismatch.";
+                    } catch (JsonSyntaxException e2) {
+                        msg = "Failed to track Google Play purchase due to malformed purchase data JSON.";
                         this.mUpsight.getLogger().e(Upsight.LOG_TAG, e2, msg, new Object[0]);
                         throw new UpsightException(e2, msg, new Object[0]);
-                    } catch (IOException e3) {
-                        msg = "Failed to track Google Play purchase due to malformed purchase data JSON.";
-                        this.mUpsight.getLogger().e(Upsight.LOG_TAG, e3, msg, new Object[0]);
-                        throw new UpsightException(e3, msg, new Object[0]);
                     }
                 }
             case R.styleable.LoadingImageView_imageAspectRatio /*1*/:

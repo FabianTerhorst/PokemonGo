@@ -2,6 +2,7 @@ package com.upsight.android.marketing.internal.content;
 
 import com.upsight.android.UpsightContext;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class WebViewModule_ProvideContentTemplateWebViewClientFactoryFactory implements Factory<ContentTemplateWebViewClientFactory> {
@@ -22,11 +23,7 @@ public final class WebViewModule_ProvideContentTemplateWebViewClientFactoryFacto
     }
 
     public ContentTemplateWebViewClientFactory get() {
-        ContentTemplateWebViewClientFactory provided = this.module.provideContentTemplateWebViewClientFactory((UpsightContext) this.upsightProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (ContentTemplateWebViewClientFactory) Preconditions.checkNotNull(this.module.provideContentTemplateWebViewClientFactory((UpsightContext) this.upsightProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<ContentTemplateWebViewClientFactory> create(WebViewModule module, Provider<UpsightContext> upsightProvider) {

@@ -7,8 +7,8 @@ import com.upsight.android.UpsightGooglePushServicesExtension_MembersInjector;
 import com.upsight.android.analytics.internal.session.SessionManager;
 import com.upsight.android.googlepushservices.UpsightGooglePushServicesApi;
 import dagger.MembersInjector;
-import dagger.internal.MembersInjectors;
-import dagger.internal.ScopedProvider;
+import dagger.internal.DoubleCheck;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class DaggerGooglePushServicesComponent implements GooglePushServicesComponent {
@@ -24,18 +24,14 @@ public final class DaggerGooglePushServicesComponent implements GooglePushServic
 
     public static final class Builder {
         private GoogleCloudMessagingModule googleCloudMessagingModule;
-        private GooglePushServicesModule googlePushServicesModule;
         private PushModule pushModule;
 
         private Builder() {
         }
 
         public GooglePushServicesComponent build() {
-            if (this.googlePushServicesModule == null) {
-                this.googlePushServicesModule = new GooglePushServicesModule();
-            }
             if (this.pushModule == null) {
-                throw new IllegalStateException("pushModule must be set");
+                throw new IllegalStateException(PushModule.class.getCanonicalName() + " must be set");
             }
             if (this.googleCloudMessagingModule == null) {
                 this.googleCloudMessagingModule = new GoogleCloudMessagingModule();
@@ -43,27 +39,19 @@ public final class DaggerGooglePushServicesComponent implements GooglePushServic
             return new DaggerGooglePushServicesComponent();
         }
 
+        @Deprecated
         public Builder googlePushServicesModule(GooglePushServicesModule googlePushServicesModule) {
-            if (googlePushServicesModule == null) {
-                throw new NullPointerException("googlePushServicesModule");
-            }
-            this.googlePushServicesModule = googlePushServicesModule;
+            Preconditions.checkNotNull(googlePushServicesModule);
             return this;
         }
 
         public Builder pushModule(PushModule pushModule) {
-            if (pushModule == null) {
-                throw new NullPointerException("pushModule");
-            }
-            this.pushModule = pushModule;
+            this.pushModule = (PushModule) Preconditions.checkNotNull(pushModule);
             return this;
         }
 
         public Builder googleCloudMessagingModule(GoogleCloudMessagingModule googleCloudMessagingModule) {
-            if (googleCloudMessagingModule == null) {
-                throw new NullPointerException("googleCloudMessagingModule");
-            }
-            this.googleCloudMessagingModule = googleCloudMessagingModule;
+            this.googleCloudMessagingModule = (GoogleCloudMessagingModule) Preconditions.checkNotNull(googleCloudMessagingModule);
             return this;
         }
     }
@@ -81,14 +69,14 @@ public final class DaggerGooglePushServicesComponent implements GooglePushServic
     }
 
     private void initialize(Builder builder) {
-        this.provideUpsightContextProvider = ScopedProvider.create(PushModule_ProvideUpsightContextFactory.create(builder.pushModule));
-        this.googlePushServicesProvider = ScopedProvider.create(GooglePushServices_Factory.create(this.provideUpsightContextProvider));
-        this.provideGooglePushServicesApiProvider = ScopedProvider.create(PushModule_ProvideGooglePushServicesApiFactory.create(builder.pushModule, this.googlePushServicesProvider));
-        this.upsightGooglePushServicesExtensionMembersInjector = UpsightGooglePushServicesExtension_MembersInjector.create(MembersInjectors.noOp(), this.provideGooglePushServicesApiProvider);
-        this.provideGoogleCloudMessagingProvider = ScopedProvider.create(GoogleCloudMessagingModule_ProvideGoogleCloudMessagingFactory.create(builder.googleCloudMessagingModule, this.provideUpsightContextProvider));
-        this.pushIntentServiceMembersInjector = PushIntentService_MembersInjector.create(MembersInjectors.noOp(), this.provideGoogleCloudMessagingProvider);
-        this.provideSessionManagerProvider = ScopedProvider.create(PushModule_ProvideSessionManagerFactory.create(builder.pushModule, this.provideUpsightContextProvider));
-        this.pushClickIntentServiceMembersInjector = PushClickIntentService_MembersInjector.create(MembersInjectors.noOp(), this.provideSessionManagerProvider);
+        this.provideUpsightContextProvider = DoubleCheck.provider(PushModule_ProvideUpsightContextFactory.create(builder.pushModule));
+        this.googlePushServicesProvider = DoubleCheck.provider(GooglePushServices_Factory.create(this.provideUpsightContextProvider));
+        this.provideGooglePushServicesApiProvider = DoubleCheck.provider(PushModule_ProvideGooglePushServicesApiFactory.create(builder.pushModule, this.googlePushServicesProvider));
+        this.upsightGooglePushServicesExtensionMembersInjector = UpsightGooglePushServicesExtension_MembersInjector.create(this.provideGooglePushServicesApiProvider);
+        this.provideGoogleCloudMessagingProvider = DoubleCheck.provider(GoogleCloudMessagingModule_ProvideGoogleCloudMessagingFactory.create(builder.googleCloudMessagingModule, this.provideUpsightContextProvider));
+        this.pushIntentServiceMembersInjector = PushIntentService_MembersInjector.create(this.provideGoogleCloudMessagingProvider, this.provideUpsightContextProvider);
+        this.provideSessionManagerProvider = DoubleCheck.provider(PushModule_ProvideSessionManagerFactory.create(builder.pushModule, this.provideUpsightContextProvider));
+        this.pushClickIntentServiceMembersInjector = PushClickIntentService_MembersInjector.create(this.provideSessionManagerProvider);
     }
 
     public void inject(UpsightGooglePushServicesExtension arg0) {

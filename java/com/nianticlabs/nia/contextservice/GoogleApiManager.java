@@ -8,6 +8,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.Builder;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.upsight.mediation.mraid.properties.MRAIDResizeProperties;
 import spacemadness.com.lunarconsole.R;
 
 public class GoogleApiManager {
@@ -23,13 +24,13 @@ public class GoogleApiManager {
 
     static /* synthetic */ class AnonymousClass3 {
         static final /* synthetic */ int[] $SwitchMap$com$nianticlabs$nia$contextservice$GoogleApiManager$AppState = new int[AppState.values().length];
+        static final /* synthetic */ int[] $SwitchMap$com$nianticlabs$nia$contextservice$GoogleApiManager$State = new int[State.values().length];
 
         static {
             try {
                 $SwitchMap$com$nianticlabs$nia$contextservice$GoogleApiManager$AppState[AppState.STOP.ordinal()] = 1;
             } catch (NoSuchFieldError e) {
             }
-            $SwitchMap$com$nianticlabs$nia$contextservice$GoogleApiManager$State = new int[State.values().length];
             try {
                 $SwitchMap$com$nianticlabs$nia$contextservice$GoogleApiManager$State[State.STOPPED.ordinal()] = 1;
             } catch (NoSuchFieldError e2) {
@@ -174,7 +175,7 @@ public class GoogleApiManager {
             switch (AnonymousClass3.$SwitchMap$com$nianticlabs$nia$contextservice$GoogleApiManager$State[this.state.ordinal()]) {
                 case R.styleable.LoadingImageView_imageAspectRatio /*1*/:
                 case R.styleable.LoadingImageView_circleCrop /*2*/:
-                case 3:
+                case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_CENTER /*3*/:
                     Log.v(TAG, "State " + this.state.name() + " -> STARTING");
                     this.state = State.STARTING;
                     this.googleApiClient.connect();
@@ -216,8 +217,8 @@ public class GoogleApiManager {
 
     private void requestStateStopping() {
         Log.v(TAG, "requestStateStopping " + this.appState.name() + " " + this.state.name());
-        switch (this.state) {
-            case STARTED:
+        switch (AnonymousClass3.$SwitchMap$com$nianticlabs$nia$contextservice$GoogleApiManager$State[this.state.ordinal()]) {
+            case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_BOTTOM_LEFT /*4*/:
                 Log.v(TAG, "State " + this.state.name() + " -> STOPPING");
                 this.state = State.STOPPING;
                 this.googleApiClient.disconnect();

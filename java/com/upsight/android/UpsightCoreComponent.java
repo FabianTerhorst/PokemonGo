@@ -1,7 +1,8 @@
 package com.upsight.android;
 
 import android.content.Context;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonParser;
 import com.squareup.otto.Bus;
 import com.upsight.android.persistence.UpsightDataStore;
 import javax.inject.Named;
@@ -20,7 +21,9 @@ public interface UpsightCoreComponent {
 
     Bus bus();
 
-    ObjectMapper objectMapper();
+    Gson gson();
+
+    JsonParser jsonParser();
 
     @Named("callback")
     Scheduler observeOnScheduler();

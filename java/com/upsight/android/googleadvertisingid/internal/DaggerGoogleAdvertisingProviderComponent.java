@@ -3,8 +3,8 @@ package com.upsight.android.googleadvertisingid.internal;
 import com.upsight.android.UpsightGoogleAdvertisingIdExtension;
 import com.upsight.android.UpsightGoogleAdvertisingIdExtension_MembersInjector;
 import dagger.MembersInjector;
-import dagger.internal.MembersInjectors;
-import dagger.internal.ScopedProvider;
+import dagger.internal.DoubleCheck;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class DaggerGoogleAdvertisingProviderComponent implements GoogleAdvertisingProviderComponent {
@@ -22,14 +22,11 @@ public final class DaggerGoogleAdvertisingProviderComponent implements GoogleAdv
             if (this.googleAdvertisingProviderModule != null) {
                 return new DaggerGoogleAdvertisingProviderComponent();
             }
-            throw new IllegalStateException("googleAdvertisingProviderModule must be set");
+            throw new IllegalStateException(GoogleAdvertisingProviderModule.class.getCanonicalName() + " must be set");
         }
 
         public Builder googleAdvertisingProviderModule(GoogleAdvertisingProviderModule googleAdvertisingProviderModule) {
-            if (googleAdvertisingProviderModule == null) {
-                throw new NullPointerException("googleAdvertisingProviderModule");
-            }
-            this.googleAdvertisingProviderModule = googleAdvertisingProviderModule;
+            this.googleAdvertisingProviderModule = (GoogleAdvertisingProviderModule) Preconditions.checkNotNull(googleAdvertisingProviderModule);
             return this;
         }
     }
@@ -47,8 +44,8 @@ public final class DaggerGoogleAdvertisingProviderComponent implements GoogleAdv
     }
 
     private void initialize(Builder builder) {
-        this.provideGooglePlayAdvertisingProvider = ScopedProvider.create(GoogleAdvertisingProviderModule_ProvideGooglePlayAdvertisingProviderFactory.create(builder.googleAdvertisingProviderModule));
-        this.upsightGoogleAdvertisingIdExtensionMembersInjector = UpsightGoogleAdvertisingIdExtension_MembersInjector.create(MembersInjectors.noOp(), this.provideGooglePlayAdvertisingProvider);
+        this.provideGooglePlayAdvertisingProvider = DoubleCheck.provider(GoogleAdvertisingProviderModule_ProvideGooglePlayAdvertisingProviderFactory.create(builder.googleAdvertisingProviderModule));
+        this.upsightGoogleAdvertisingIdExtensionMembersInjector = UpsightGoogleAdvertisingIdExtension_MembersInjector.create(this.provideGooglePlayAdvertisingProvider);
     }
 
     public void inject(UpsightGoogleAdvertisingIdExtension arg0) {

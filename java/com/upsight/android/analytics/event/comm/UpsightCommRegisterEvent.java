@@ -1,8 +1,7 @@
 package com.upsight.android.analytics.event.comm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.analytics.event.UpsightPublisherData;
 import com.upsight.android.analytics.internal.AnalyticsEvent;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
@@ -27,8 +26,8 @@ public class UpsightCommRegisterEvent extends AnalyticsEvent<UpsightData> {
     }
 
     static class UpsightData {
-        @JsonInclude(Include.NON_NULL)
-        @JsonProperty("token")
+        @SerializedName("token")
+        @Expose
         String token;
 
         protected UpsightData(Builder builder) {

@@ -18,7 +18,6 @@ import com.nianticlabs.pokemongoplus.ble.SfidaConstant.BluetoothError;
 import com.nianticlabs.pokemongoplus.ble.SfidaConstant.PeripheralState;
 import com.nianticlabs.pokemongoplus.ble.callback.CompletionCallback;
 import com.nianticlabs.pokemongoplus.ble.callback.ConnectCallback;
-import com.upsight.android.internal.persistence.subscription.Subscriptions;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -150,11 +149,14 @@ public class SfidaPeripheral extends Peripheral {
         IntentFilter bluetoothIntentFilter = new IntentFilter();
         bluetoothIntentFilter.addAction("android.bluetooth.device.action.BOND_STATE_CHANGED");
         bluetoothIntentFilter.addAction("android.bluetooth.device.action.PAIRING_REQUEST");
+        Log.d(TAG, "context.registerReceiver(bluetoothReceiver");
         this.context.registerReceiver(this.bluetoothReceiver, bluetoothIntentFilter);
     }
 
     public void onDestroy() {
+        Log.d(TAG, "context.unregisterReceiver(bluetoothReceiver");
         this.context.unregisterReceiver(this.bluetoothReceiver);
+        releaseServices();
     }
 
     public String getIdentifier() {
@@ -245,8 +247,8 @@ public class SfidaPeripheral extends Peripheral {
     }
 
     public void disconnect() {
-        discoverServices(new CompletionCallback() {
-            public void onCompletion(boolean success, BluetoothError error) {
+        disconnect(new ConnectCallback() {
+            public void onConnectionStateChanged(boolean success, BluetoothError error) {
                 SfidaPeripheral.this.nativeDisconnectCallback(success, error.getInt());
             }
         });
@@ -282,7 +284,7 @@ public class SfidaPeripheral extends Peripheral {
             Log.w(TAG, "[BLE] BluetoothAdapter not initialized or unspecified address.");
             this.state = PeripheralState.Disconnected;
         } else if (!address.equals(this.bluetoothDevice.getAddress()) || this.gatt == null) {
-            this.gatt = this.bluetoothDevice.connectGatt(this.context, false, this.bluetoothGattCallback);
+            this.gatt = this.bluetoothDevice.connectGatt(this.context, true, this.bluetoothGattCallback);
             Log.d(TAG, "Trying to create a new connection.");
         } else {
             Log.d(TAG, "[BLE] Trying to use an existing bluetoothGatt for connection.");
@@ -298,6 +300,7 @@ public class SfidaPeripheral extends Peripheral {
 
     public void disconnect(ConnectCallback callback) {
         this.disconnectCallback = callback;
+        this.state = PeripheralState.Disconnecting;
         if (this.bluetoothAdapter == null || this.gatt == null) {
             Log.w(TAG, "[BLE] BluetoothAdapter not initialized");
         } else {
@@ -313,6 +316,14 @@ public class SfidaPeripheral extends Peripheral {
     }
 
     private void releaseServices() {
+        Iterator it = this.serviceRef.iterator();
+        while (it.hasNext()) {
+            Service service = (Service) it.next();
+            if (service instanceof SfidaService) {
+                ((SfidaService) service).onDestroy();
+            }
+        }
+        this.serviceRef.clear();
     }
 
     private Boolean isBoundDevice(BluetoothDevice device) {
@@ -372,7 +383,7 @@ public class SfidaPeripheral extends Peripheral {
         BluetoothDevice device = (BluetoothDevice) intent.getParcelableExtra("android.bluetooth.device.extra.DEVICE");
         if (device != null) {
             switch (newState) {
-                case Subscriptions.MAX_QUEUE_LENGTH /*10*/:
+                case 10:
                     if (oldState == 12) {
                         disconnectFromBonding(device);
                         return;
@@ -396,7 +407,7 @@ public class SfidaPeripheral extends Peripheral {
     }
 
     boolean tryCompleteConnect() {
-        if (this.connectCallback == null) {
+        if (this.state != PeripheralState.Connected || this.connectCallback == null) {
             return false;
         }
         Log.d(TAG, "calling onConnectionStateChanged");
@@ -468,7 +479,9 @@ public class SfidaPeripheral extends Peripheral {
                 return;
             default:
                 this.state = PeripheralState.Disconnected;
-                this.discoverServicesCallback.onCompletion(false, BluetoothError.Unknown);
+                if (this.discoverServicesCallback != null) {
+                    this.discoverServicesCallback.onCompletion(false, BluetoothError.Unknown);
+                }
                 Log.e(TAG, "[BLE] onServicesDiscovered received error: " + status);
                 return;
         }

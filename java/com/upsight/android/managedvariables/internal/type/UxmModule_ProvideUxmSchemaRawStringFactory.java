@@ -2,6 +2,7 @@ package com.upsight.android.managedvariables.internal.type;
 
 import com.upsight.android.UpsightContext;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class UxmModule_ProvideUxmSchemaRawStringFactory implements Factory<String> {
@@ -27,11 +28,7 @@ public final class UxmModule_ProvideUxmSchemaRawStringFactory implements Factory
     }
 
     public String get() {
-        String provided = this.module.provideUxmSchemaRawString((UpsightContext) this.upsightProvider.get(), (Integer) this.uxmSchemaResProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (String) Preconditions.checkNotNull(this.module.provideUxmSchemaRawString((UpsightContext) this.upsightProvider.get(), (Integer) this.uxmSchemaResProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<String> create(UxmModule module, Provider<UpsightContext> upsightProvider, Provider<Integer> uxmSchemaResProvider) {

@@ -1,19 +1,27 @@
 package com.upsight.android.marketing.internal.content;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.upsight.android.marketing.UpsightPurchase;
 import java.io.IOException;
 
 public final class Purchase implements UpsightPurchase {
-    @JsonProperty("product")
+    @SerializedName("product")
+    @Expose
     String product;
-    @JsonProperty("quantity")
+    @SerializedName("quantity")
+    @Expose
     int quantity;
 
-    static UpsightPurchase from(JsonNode json, ObjectMapper mapper) throws IOException {
-        return (UpsightPurchase) mapper.treeToValue(json, Purchase.class);
+    static UpsightPurchase from(JsonElement json, Gson gson) throws IOException {
+        try {
+            return (UpsightPurchase) gson.fromJson(json, Purchase.class);
+        } catch (JsonSyntaxException e) {
+            throw new IOException(e);
+        }
     }
 
     Purchase() {

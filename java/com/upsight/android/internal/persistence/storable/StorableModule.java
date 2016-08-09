@@ -1,6 +1,6 @@
 package com.upsight.android.internal.persistence.storable;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import dagger.Module;
 import dagger.Provides;
 import javax.inject.Singleton;
@@ -9,7 +9,7 @@ import javax.inject.Singleton;
 public final class StorableModule {
     @Singleton
     @Provides
-    public StorableInfoCache provideStorableInfoCache(ObjectMapper objectMapper) {
-        return new StorableInfoCache(objectMapper);
+    public StorableInfoCache provideStorableInfoCache(Gson gson) {
+        return new StorableInfoCache(gson);
     }
 }

@@ -1,8 +1,8 @@
 package com.upsight.android.analytics.internal.association;
 
 import android.text.TextUtils;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.upsight.android.analytics.internal.association.Association.UpsightDataFilter;
 import com.upsight.android.analytics.internal.session.Clock;
 import com.upsight.android.persistence.UpsightDataStore;
@@ -36,7 +36,7 @@ class AssociationManagerImpl implements AssociationManager {
         }
     }
 
-    public synchronized void associate(String eventType, ObjectNode eventNode) {
+    public synchronized void associate(String eventType, JsonObject eventNode) {
         associateInner(eventType, eventNode);
     }
 
@@ -54,7 +54,7 @@ class AssociationManagerImpl implements AssociationManager {
         });
     }
 
-    synchronized void associateInner(String eventType, ObjectNode eventNode) {
+    synchronized void associateInner(String eventType, JsonObject eventNode) {
         Set<Association> associations = (Set) this.mAssociations.get(eventType);
         if (associations != null) {
             boolean isMatched = false;
@@ -63,26 +63,28 @@ class AssociationManagerImpl implements AssociationManager {
                 Association association = (Association) itr.next();
                 if (this.mClock.currentTimeMillis() - association.getTimestampMs() > ASSOCIATION_EXPIRY) {
                     itr.remove();
-                    this.mDataStore.removeObservable(Association.class, association.getId()).subscribe();
+                    if (!TextUtils.isEmpty(association.getId())) {
+                        this.mDataStore.removeObservable(Association.class, association.getId()).subscribe();
+                    }
                 } else if (isMatched) {
                     continue;
                 } else {
                     UpsightDataFilter filter = association.getUpsightDataFilter();
-                    JsonNode associationNode = eventNode.path(KEY_UPSIGHT_DATA);
-                    if (associationNode.isObject()) {
-                        ObjectNode eventUpsightData = (ObjectNode) associationNode;
-                        JsonNode eventMatchValue = eventUpsightData.path(filter.matchKey);
-                        if (eventMatchValue.isValueNode()) {
-                            Iterator i$ = filter.matchValues.iterator();
-                            while (i$.hasNext()) {
-                                if (eventMatchValue.equals((JsonNode) i$.next())) {
-                                    Iterator<Entry<String, JsonNode>> fields = association.getUpsightData().fields();
-                                    while (fields.hasNext()) {
-                                        Entry<String, JsonNode> field = (Entry) fields.next();
-                                        eventUpsightData.put((String) field.getKey(), (JsonNode) field.getValue());
+                    JsonElement associationNode = eventNode.get(KEY_UPSIGHT_DATA);
+                    if (associationNode != null && associationNode.isJsonObject()) {
+                        JsonObject eventUpsightData = associationNode.getAsJsonObject();
+                        JsonElement eventMatchValue = eventUpsightData.get(filter.matchKey);
+                        if (eventMatchValue != null && eventMatchValue.isJsonPrimitive()) {
+                            Iterator it = filter.matchValues.iterator();
+                            while (it.hasNext()) {
+                                if (eventMatchValue.equals((JsonElement) it.next())) {
+                                    for (Entry<String, JsonElement> field : association.getUpsightData().entrySet()) {
+                                        eventUpsightData.add((String) field.getKey(), (JsonElement) field.getValue());
                                     }
                                     itr.remove();
-                                    this.mDataStore.removeObservable(Association.class, association.getId()).subscribe();
+                                    if (!TextUtils.isEmpty(association.getId())) {
+                                        this.mDataStore.removeObservable(Association.class, association.getId()).subscribe();
+                                    }
                                     isMatched = true;
                                 }
                             }

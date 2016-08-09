@@ -1,5 +1,6 @@
 package com.upsight.android.internal.logger;
 
+import com.google.gson.annotations.Expose;
 import com.upsight.android.logger.UpsightLogger.Level;
 import com.upsight.android.persistence.annotation.UpsightStorableIdentifier;
 import com.upsight.android.persistence.annotation.UpsightStorableType;
@@ -8,9 +9,13 @@ import com.upsight.android.persistence.annotation.UpsightStorableType;
 public final class LogMessage {
     @UpsightStorableIdentifier
     public String id;
+    @Expose
     private Level level;
+    @Expose
     private String message;
+    @Expose
     private String tag;
+    @Expose
     private String throwableString;
 
     LogMessage(String tag, Level level, String message, String throwableString) {

@@ -8,8 +8,6 @@ import rx.Subscription;
 import rx.functions.Action1;
 
 public class Subscriptions {
-    public static final int MAX_QUEUE_LENGTH = 10;
-
     public static <T> Action1<T> publishCreated(final Bus bus, final String type) {
         return new Action1<T>() {
             public void call(T t) {
@@ -35,7 +33,7 @@ public class Subscriptions {
     }
 
     public static Observable<DataStoreEvent> toObservable(Bus bus) {
-        return Observable.create(new OnSubscribeBus(bus)).onBackpressureBlock(MAX_QUEUE_LENGTH);
+        return Observable.create(new OnSubscribeBus(bus)).onBackpressureBuffer();
     }
 
     public static UpsightSubscription from(Subscription subscription) {

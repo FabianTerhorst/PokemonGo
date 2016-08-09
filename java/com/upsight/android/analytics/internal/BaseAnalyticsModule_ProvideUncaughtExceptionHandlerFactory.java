@@ -2,6 +2,7 @@ package com.upsight.android.analytics.internal;
 
 import com.upsight.android.internal.util.Opt;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import java.lang.Thread.UncaughtExceptionHandler;
 
 public final class BaseAnalyticsModule_ProvideUncaughtExceptionHandlerFactory implements Factory<Opt<UncaughtExceptionHandler>> {
@@ -17,11 +18,7 @@ public final class BaseAnalyticsModule_ProvideUncaughtExceptionHandlerFactory im
     }
 
     public Opt<UncaughtExceptionHandler> get() {
-        Opt<UncaughtExceptionHandler> provided = this.module.provideUncaughtExceptionHandler();
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (Opt) Preconditions.checkNotNull(this.module.provideUncaughtExceptionHandler(), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<Opt<UncaughtExceptionHandler>> create(BaseAnalyticsModule module) {

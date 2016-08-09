@@ -1,6 +1,7 @@
 package com.upsight.android.analytics.internal;
 
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import rx.Scheduler;
 
 public final class AnalyticsSchedulersModule_ProvideSendingExecutorFactory implements Factory<Scheduler> {
@@ -16,11 +17,7 @@ public final class AnalyticsSchedulersModule_ProvideSendingExecutorFactory imple
     }
 
     public Scheduler get() {
-        Scheduler provided = this.module.provideSendingExecutor();
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (Scheduler) Preconditions.checkNotNull(this.module.provideSendingExecutor(), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<Scheduler> create(AnalyticsSchedulersModule module) {

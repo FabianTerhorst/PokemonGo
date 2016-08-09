@@ -41,8 +41,10 @@ public class Schema {
                 add(AbstractUxmBlockProvider.BUNDLE_SCHEMA_HASH);
                 add(AbstractUxmBlockProvider.BUNDLE_ID);
                 add(AbstractUxmBlockProvider.BUNDLE_HASH);
+                add(Default.PARTNERS_KEY);
             }
         };
+        private static final String PARTNERS_KEY = "partners";
 
         Default(Map<String, UpsightDataProvider> dataProviders) {
             super(null, DEFAULT_REQUEST_ATTRIBUTES, dataProviders);

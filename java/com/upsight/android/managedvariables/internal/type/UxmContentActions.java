@@ -1,11 +1,11 @@
 package com.upsight.android.managedvariables.internal.type;
 
 import android.text.TextUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import com.squareup.otto.Bus;
 import com.upsight.android.Upsight;
 import com.upsight.android.UpsightContext;
@@ -37,27 +37,27 @@ public final class UxmContentActions {
     private static final Map<String, InternalFactory> FACTORY_MAP = new HashMap<String, InternalFactory>() {
         {
             put("action_uxm_enumerate", new InternalFactory() {
-                public Action<UxmContent, UxmContentActionContext> create(UxmContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<UxmContent, UxmContentActionContext> create(UxmContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new UxmEnumerate(actionContext, actionType, actionParams);
                 }
             });
             put("action_set_bundle_id", new InternalFactory() {
-                public Action<UxmContent, UxmContentActionContext> create(UxmContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<UxmContent, UxmContentActionContext> create(UxmContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new SetBundleId(actionContext, actionType, actionParams);
                 }
             });
             put("action_modify_value", new InternalFactory() {
-                public Action<UxmContent, UxmContentActionContext> create(UxmContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<UxmContent, UxmContentActionContext> create(UxmContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new ModifyValue(actionContext, actionType, actionParams);
                 }
             });
             put("action_notify_uxm_values_synchronized", new InternalFactory() {
-                public Action<UxmContent, UxmContentActionContext> create(UxmContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<UxmContent, UxmContentActionContext> create(UxmContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new NotifyUxmValuesSynchronized(actionContext, actionType, actionParams);
                 }
             });
             put("action_destroy", new InternalFactory() {
-                public Action<UxmContent, UxmContentActionContext> create(UxmContentActionContext actionContext, String actionType, JsonNode actionParams) {
+                public Action<UxmContent, UxmContentActionContext> create(UxmContentActionContext actionContext, String actionType, JsonObject actionParams) {
                     return new Destroy(actionContext, actionType, actionParams);
                 }
             });
@@ -65,11 +65,11 @@ public final class UxmContentActions {
     };
 
     private interface InternalFactory {
-        Action<UxmContent, UxmContentActionContext> create(UxmContentActionContext uxmContentActionContext, String str, JsonNode jsonNode);
+        Action<UxmContent, UxmContentActionContext> create(UxmContentActionContext uxmContentActionContext, String str, JsonObject jsonObject);
     }
 
     static class Destroy extends Action<UxmContent, UxmContentActionContext> {
-        private Destroy(UxmContentActionContext actionContext, String type, JsonNode params) {
+        private Destroy(UxmContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
         }
 
@@ -89,7 +89,7 @@ public final class UxmContentActions {
         private static final String TYPE = "type";
         private static final String VALUES = "values";
 
-        private ModifyValue(UxmContentActionContext actionContext, String type, JsonNode params) {
+        private ModifyValue(UxmContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
         }
 
@@ -98,8 +98,8 @@ public final class UxmContentActions {
             ActionContext actionContext = getActionContext();
             if (content.shouldApplyBundle()) {
                 String type = optParamString(TYPE);
-                ArrayNode matchers = optParamJsonArray(MATCH);
-                ArrayNode values = optParamJsonArray(VALUES);
+                JsonArray matchers = optParamJsonArray(MATCH);
+                JsonArray values = optParamJsonArray(VALUES);
                 if (!(TextUtils.isEmpty(type) || matchers == null || values == null)) {
                     Class<?> clazz = null;
                     if ("com.upsight.uxm.string".equals(type)) {
@@ -124,44 +124,44 @@ public final class UxmContentActions {
             }
         }
 
-        private <T> void modifyValue(UxmContent content, Class<T> clazz, JsonNode matchers, JsonNode values) {
+        private <T> void modifyValue(UxmContent content, Class<T> clazz, JsonArray matchers, JsonArray values) {
             final UxmContentActionContext actionContext = (UxmContentActionContext) getActionContext();
-            final ObjectMapper mapper = actionContext.mMapper;
+            final Gson gson = actionContext.mGson;
             final UpsightLogger logger = actionContext.mUpsight.getLogger();
             final UpsightDataStore dataStore = actionContext.mUpsight.getDataStore();
-            Observable<ObjectNode> fetchObservable = dataStore.fetchObservable(clazz).map(new Func1<T, JsonNode>() {
-                public JsonNode call(T model) {
-                    return mapper.valueToTree(model);
+            Observable<JsonObject> fetchObservable = dataStore.fetchObservable(clazz).map(new Func1<T, JsonElement>() {
+                public JsonElement call(T model) {
+                    return gson.toJsonTree(model);
                 }
-            }).cast(ObjectNode.class);
-            ObjectNode seedNode = mapper.createObjectNode();
-            Iterator i$ = matchers.iterator();
-            while (i$.hasNext()) {
-                JsonNode matcher = (JsonNode) i$.next();
-                String propertyName = matcher.path(PROPERTY_NAME).asText();
-                JsonNode propertyValue = matcher.path(PROPERTY_VALUE);
+            }).cast(JsonObject.class);
+            JsonObject seedNode = new JsonObject();
+            Iterator it = matchers.iterator();
+            while (it.hasNext()) {
+                JsonElement matcher = (JsonElement) it.next();
+                String propertyName = matcher.getAsJsonObject().get(PROPERTY_NAME).getAsString();
+                JsonElement propertyValue = matcher.getAsJsonObject().get(PROPERTY_VALUE);
                 final String str = propertyName;
-                final JsonNode jsonNode = propertyValue;
-                fetchObservable = fetchObservable.filter(new Func1<ObjectNode, Boolean>() {
-                    public Boolean call(ObjectNode model) {
-                        return Boolean.valueOf(model.path(str).equals(jsonNode));
+                final JsonElement jsonElement = propertyValue;
+                fetchObservable = fetchObservable.filter(new Func1<JsonObject, Boolean>() {
+                    public Boolean call(JsonObject model) {
+                        return Boolean.valueOf(model.getAsJsonObject().get(str).equals(jsonElement));
                     }
                 });
-                seedNode.replace(propertyName, propertyValue);
+                seedNode.add(propertyName, propertyValue);
             }
             fetchObservable = fetchObservable.defaultIfEmpty(seedNode);
-            i$ = values.iterator();
-            while (i$.hasNext()) {
-                JsonNode value = (JsonNode) i$.next();
-                String operator = value.path(OPERATOR).asText();
-                propertyName = value.path(PROPERTY_NAME).asText();
-                propertyValue = value.path(PROPERTY_VALUE);
+            it = values.iterator();
+            while (it.hasNext()) {
+                JsonElement value = (JsonElement) it.next();
+                String operator = value.getAsJsonObject().get(OPERATOR).getAsString();
+                propertyName = value.getAsJsonObject().get(PROPERTY_NAME).getAsString();
+                propertyValue = value.getAsJsonObject().get(PROPERTY_VALUE);
                 if (OPERATOR_SET.equals(operator)) {
                     str = propertyName;
-                    jsonNode = propertyValue;
-                    fetchObservable = fetchObservable.map(new Func1<ObjectNode, ObjectNode>() {
-                        public ObjectNode call(ObjectNode model) {
-                            model.replace(str, jsonNode);
+                    jsonElement = propertyValue;
+                    fetchObservable = fetchObservable.map(new Func1<JsonObject, JsonObject>() {
+                        public JsonObject call(JsonObject model) {
+                            model.add(str, jsonElement);
                             return model;
                         }
                     });
@@ -173,10 +173,10 @@ public final class UxmContentActions {
             final Class<T> cls2 = clazz;
             final UxmContent uxmContent2 = content;
             final UxmContentActionContext uxmContentActionContext = actionContext;
-            fetchObservable.subscribeOn(actionContext.mUpsight.getCoreComponent().subscribeOnScheduler()).observeOn(actionContext.mUpsight.getCoreComponent().observeOnScheduler()).subscribe(new Action1<ObjectNode>() {
-                public void call(final ObjectNode modelNode) {
+            fetchObservable.subscribeOn(actionContext.mUpsight.getCoreComponent().subscribeOnScheduler()).observeOn(actionContext.mUpsight.getCoreComponent().observeOnScheduler()).subscribe(new Action1<JsonObject>() {
+                public void call(final JsonObject modelNode) {
                     try {
-                        dataStore.storeObservable(mapper.treeToValue(modelNode, cls)).subscribeOn(actionContext.mUpsight.getCoreComponent().subscribeOnScheduler()).observeOn(actionContext.mUpsight.getCoreComponent().observeOnScheduler()).subscribe(new Action1<T>() {
+                        dataStore.storeObservable(gson.fromJson(modelNode, cls)).subscribeOn(actionContext.mUpsight.getCoreComponent().subscribeOnScheduler()).observeOn(actionContext.mUpsight.getCoreComponent().observeOnScheduler()).subscribe(new Action1<T>() {
                             public void call(T t) {
                                 logger.d(Upsight.LOG_TAG, "Modified managed variable of class " + cls + " with value " + modelNode, new Object[0]);
                             }
@@ -189,7 +189,7 @@ public final class UxmContentActions {
                                 uxmContent.signalActionCompleted(actionContext.mBus);
                             }
                         });
-                    } catch (JsonProcessingException e) {
+                    } catch (JsonSyntaxException e) {
                         logger.e(Upsight.LOG_TAG, e, "Failed to parse managed variable of class " + cls, new Object[0]);
                         uxmContent.signalActionCompleted(actionContext.mBus);
                     }
@@ -206,19 +206,19 @@ public final class UxmContentActions {
     static class NotifyUxmValuesSynchronized extends Action<UxmContent, UxmContentActionContext> {
         private static final String TAGS = "tags";
 
-        private NotifyUxmValuesSynchronized(UxmContentActionContext actionContext, String type, JsonNode params) {
+        private NotifyUxmValuesSynchronized(UxmContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
         }
 
         public void execute(UxmContent content) {
             List<String> synchronizedTags = new ArrayList();
-            ArrayNode tagNodes = optParamJsonArray(TAGS);
+            JsonArray tagNodes = optParamJsonArray(TAGS);
             if (content.shouldApplyBundle() && tagNodes != null) {
-                Iterator i$ = tagNodes.iterator();
-                while (i$.hasNext()) {
-                    JsonNode tagNode = (JsonNode) i$.next();
-                    if (tagNode.isTextual()) {
-                        synchronizedTags.add(tagNode.asText());
+                Iterator it = tagNodes.iterator();
+                while (it.hasNext()) {
+                    JsonElement tagNode = (JsonElement) it.next();
+                    if (tagNode.isJsonPrimitive() && tagNode.getAsJsonPrimitive().isString()) {
+                        synchronizedTags.add(tagNode.getAsString());
                     }
                 }
             }
@@ -241,7 +241,7 @@ public final class UxmContentActions {
     static class SetBundleId extends Action<UxmContent, UxmContentActionContext> {
         private static final String BUNDLE_ID = "bundle.id";
 
-        private SetBundleId(UxmContentActionContext actionContext, String type, JsonNode params) {
+        private SetBundleId(UxmContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
         }
 
@@ -254,20 +254,20 @@ public final class UxmContentActions {
     }
 
     public static class UxmContentActionContext extends ActionContext {
-        public UxmContentActionContext(UpsightContext upsight, Bus bus, ObjectMapper mapper, Clock clock, Worker mainWorker, UpsightLogger logger) {
-            super(upsight, bus, mapper, clock, mainWorker, logger);
+        public UxmContentActionContext(UpsightContext upsight, Bus bus, Gson gson, Clock clock, Worker mainWorker, UpsightLogger logger) {
+            super(upsight, bus, gson, clock, mainWorker, logger);
         }
     }
 
     public static class UxmContentActionFactory implements ActionFactory<UxmContent, UxmContentActionContext> {
         public static final String TYPE = "datastore_factory";
 
-        public Action<UxmContent, UxmContentActionContext> create(UxmContentActionContext actionContext, JsonNode actionJSON) throws UpsightException {
+        public Action<UxmContent, UxmContentActionContext> create(UxmContentActionContext actionContext, JsonObject actionJSON) throws UpsightException {
             if (actionJSON == null) {
                 throw new UpsightException("Failed to create Action. JSON is null.", new Object[0]);
             }
-            String actionType = actionJSON.get(ActionFactory.KEY_ACTION_TYPE).asText();
-            JsonNode actionParams = actionJSON.get(ActionFactory.KEY_ACTION_PARAMS);
+            String actionType = actionJSON.get(ActionFactory.KEY_ACTION_TYPE).getAsString();
+            JsonObject actionParams = actionJSON.getAsJsonObject(ActionFactory.KEY_ACTION_PARAMS);
             InternalFactory factory = (InternalFactory) UxmContentActions.FACTORY_MAP.get(actionType);
             if (factory != null) {
                 return factory.create(actionContext, actionType, actionParams);
@@ -277,7 +277,7 @@ public final class UxmContentActions {
     }
 
     static class UxmEnumerate extends Action<UxmContent, UxmContentActionContext> {
-        private UxmEnumerate(UxmContentActionContext actionContext, String type, JsonNode params) {
+        private UxmEnumerate(UxmContentActionContext actionContext, String type, JsonObject params) {
             super(actionContext, type, params);
         }
 

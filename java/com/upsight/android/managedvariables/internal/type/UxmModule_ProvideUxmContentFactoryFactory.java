@@ -3,6 +3,7 @@ package com.upsight.android.managedvariables.internal.type;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.managedvariables.experience.UpsightUserExperience;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 import rx.Scheduler;
 
@@ -34,11 +35,7 @@ public final class UxmModule_ProvideUxmContentFactoryFactory implements Factory<
     }
 
     public UxmContentFactory get() {
-        UxmContentFactory provided = this.module.provideUxmContentFactory((UpsightContext) this.upsightProvider.get(), (Scheduler) this.schedulerProvider.get(), (UpsightUserExperience) this.userExperienceProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (UxmContentFactory) Preconditions.checkNotNull(this.module.provideUxmContentFactory((UpsightContext) this.upsightProvider.get(), (Scheduler) this.schedulerProvider.get(), (UpsightUserExperience) this.userExperienceProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<UxmContentFactory> create(UxmModule module, Provider<UpsightContext> upsightProvider, Provider<Scheduler> schedulerProvider, Provider<UpsightUserExperience> userExperienceProvider) {

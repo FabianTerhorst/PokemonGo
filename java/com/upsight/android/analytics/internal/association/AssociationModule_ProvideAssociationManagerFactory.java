@@ -3,6 +3,7 @@ package com.upsight.android.analytics.internal.association;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.analytics.internal.session.Clock;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 
 public final class AssociationModule_ProvideAssociationManagerFactory implements Factory<AssociationManager> {
@@ -28,11 +29,7 @@ public final class AssociationModule_ProvideAssociationManagerFactory implements
     }
 
     public AssociationManager get() {
-        AssociationManager provided = this.module.provideAssociationManager((UpsightContext) this.upsightProvider.get(), (Clock) this.clockProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (AssociationManager) Preconditions.checkNotNull(this.module.provideAssociationManager((UpsightContext) this.upsightProvider.get(), (Clock) this.clockProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<AssociationManager> create(AssociationModule module, Provider<UpsightContext> upsightProvider, Provider<Clock> clockProvider) {

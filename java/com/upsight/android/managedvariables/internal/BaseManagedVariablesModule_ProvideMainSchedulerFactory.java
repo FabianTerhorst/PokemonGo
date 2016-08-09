@@ -1,6 +1,7 @@
 package com.upsight.android.managedvariables.internal;
 
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import rx.Scheduler;
 
 public final class BaseManagedVariablesModule_ProvideMainSchedulerFactory implements Factory<Scheduler> {
@@ -16,11 +17,7 @@ public final class BaseManagedVariablesModule_ProvideMainSchedulerFactory implem
     }
 
     public Scheduler get() {
-        Scheduler provided = this.module.provideMainScheduler();
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (Scheduler) Preconditions.checkNotNull(this.module.provideMainScheduler(), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<Scheduler> create(BaseManagedVariablesModule module) {

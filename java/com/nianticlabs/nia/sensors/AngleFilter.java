@@ -1,5 +1,7 @@
 package com.nianticlabs.nia.sensors;
 
+import com.upsight.android.googlepushservices.UpsightPushNotificationBuilderFactory.Default;
+
 public class AngleFilter {
     private static final float FRICTION_COEFFICIENT_1 = 1.0f;
     private static final float FRICTION_COEFFICIENT_2 = 0.5f;
@@ -20,7 +22,7 @@ public class AngleFilter {
         if (this.lastReadingTime == 0 || time < this.lastReadingTime) {
             this.currentValue = in;
         } else {
-            if (this.wrap && Math.abs(in - this.currentValue) * 2.0f > 360.0f) {
+            if (this.wrap && Math.abs(in - this.currentValue) * Default.HTTP_REQUEST_BACKOFF_MULT > 360.0f) {
                 if (in < this.currentValue) {
                     in += 360.0f;
                 } else {

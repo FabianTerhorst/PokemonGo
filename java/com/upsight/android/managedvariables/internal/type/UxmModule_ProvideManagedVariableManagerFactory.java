@@ -2,6 +2,7 @@ package com.upsight.android.managedvariables.internal.type;
 
 import com.upsight.android.UpsightContext;
 import dagger.internal.Factory;
+import dagger.internal.Preconditions;
 import javax.inject.Provider;
 import rx.Scheduler;
 
@@ -33,11 +34,7 @@ public final class UxmModule_ProvideManagedVariableManagerFactory implements Fac
     }
 
     public ManagedVariableManager get() {
-        ManagedVariableManager provided = this.module.provideManagedVariableManager((UpsightContext) this.upsightProvider.get(), (Scheduler) this.schedulerProvider.get(), (UxmSchema) this.uxmSchemaProvider.get());
-        if (provided != null) {
-            return provided;
-        }
-        throw new NullPointerException("Cannot return null from a non-@Nullable @Provides method");
+        return (ManagedVariableManager) Preconditions.checkNotNull(this.module.provideManagedVariableManager((UpsightContext) this.upsightProvider.get(), (Scheduler) this.schedulerProvider.get(), (UxmSchema) this.uxmSchemaProvider.get()), "Cannot return null from a non-@Nullable @Provides method");
     }
 
     public static Factory<ManagedVariableManager> create(UxmModule module, Provider<UpsightContext> upsightProvider, Provider<Scheduler> schedulerProvider, Provider<UxmSchema> uxmSchemaProvider) {

@@ -10,11 +10,16 @@ import org.json.JSONArray;
 
 public class UnitySessionCallbacks implements UpsightSessionCallbacks {
     protected static final String TAG = "UnitySessionCallbacks";
+    private static boolean mShouldSynchronizeManagedVariables = true;
+
+    public static void setShouldSynchronizeManagedVariables(boolean shouldSynchronizeManagedVariables) {
+        mShouldSynchronizeManagedVariables = shouldSynchronizeManagedVariables;
+    }
 
     public void onStart(UpsightContext upsight) {
         UpsightUserExperience.registerHandler(upsight, new Handler() {
             public boolean onReceive() {
-                return UpsightPlugin.instance().getShouldSynchronizeManagedVariables();
+                return UnitySessionCallbacks.mShouldSynchronizeManagedVariables;
             }
 
             public void onSynchronize(List<String> tags) {
@@ -23,7 +28,7 @@ public class UnitySessionCallbacks implements UpsightSessionCallbacks {
                 for (String t : tags) {
                     json.put(t);
                 }
-                UpsightPlugin.instance().UnitySendMessage("managedVariablesDidSynchronize", json.toString());
+                UnityBridge.UnitySendMessage("managedVariablesDidSynchronize", json.toString());
             }
         });
     }
