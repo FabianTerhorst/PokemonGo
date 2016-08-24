@@ -87,26 +87,23 @@ public final class R {
         public static final int common_signin_btn_text_pressed_dark = 2130837532;
         public static final int common_signin_btn_text_pressed_light = 2130837533;
         public static final int ic_launcher = 2130837534;
-        public static final int ic_media_pause = 2130837535;
-        public static final int ic_swap_horiz_white_24dp = 2130837536;
-        public static final int lunar_console_icon_button_clear = 2130837537;
-        public static final int lunar_console_icon_button_clipboard = 2130837538;
-        public static final int lunar_console_icon_button_close = 2130837539;
-        public static final int lunar_console_icon_button_console = 2130837540;
-        public static final int lunar_console_icon_button_email = 2130837541;
-        public static final int lunar_console_icon_button_lock = 2130837542;
-        public static final int lunar_console_icon_button_unlock = 2130837543;
-        public static final int lunar_console_icon_log = 2130837544;
-        public static final int lunar_console_icon_log_error = 2130837545;
-        public static final int lunar_console_icon_log_warning = 2130837546;
-        public static final int lunar_console_shape_edit_text = 2130837547;
-        public static final int np_webview_back_button_normal = 2130837548;
-        public static final int np_webview_close_button_normal = 2130837549;
-        public static final int np_webview_forward_button_normal = 2130837550;
-        public static final int np_webview_reload_button_normal = 2130837551;
-        public static final int powered_by_google_dark = 2130837552;
-        public static final int powered_by_google_light = 2130837553;
-        public static final int sfida_icon = 2130837554;
+        public static final int lunar_console_icon_button_clear = 2130837535;
+        public static final int lunar_console_icon_button_clipboard = 2130837536;
+        public static final int lunar_console_icon_button_close = 2130837537;
+        public static final int lunar_console_icon_button_console = 2130837538;
+        public static final int lunar_console_icon_button_email = 2130837539;
+        public static final int lunar_console_icon_button_lock = 2130837540;
+        public static final int lunar_console_icon_button_unlock = 2130837541;
+        public static final int lunar_console_icon_log = 2130837542;
+        public static final int lunar_console_icon_log_error = 2130837543;
+        public static final int lunar_console_icon_log_warning = 2130837544;
+        public static final int lunar_console_shape_edit_text = 2130837545;
+        public static final int np_webview_back_button_normal = 2130837546;
+        public static final int np_webview_close_button_normal = 2130837547;
+        public static final int np_webview_forward_button_normal = 2130837548;
+        public static final int np_webview_reload_button_normal = 2130837549;
+        public static final int powered_by_google_dark = 2130837550;
+        public static final int powered_by_google_light = 2130837551;
     }
 
     public static final class id {
@@ -172,32 +169,18 @@ public final class R {
     public static final class raw {
         public static final int configurator_config = 2131099648;
         public static final int dispatcher_config = 2131099649;
-        public static final int uxm_schema = 2131099650;
+        public static final int push_config = 2131099650;
+        public static final int uxm_schema = 2131099651;
     }
 
     public static final class string {
-        public static final int Captured_Pokemon = 2131165224;
-        public static final int Connecting_GO_Plus = 2131165225;
-        public static final int Disconnecting_GO_Plus = 2131165226;
-        public static final int Item_Inventory_Full = 2131165227;
-        public static final int Loading = 2131165241;
-        public static final int Out_Of_Pokeballs = 2131165228;
-        public static final int Pokemon_Escaped = 2131165229;
-        public static final int Pokemon_Go_Plus = 2131165230;
-        public static final int Pokemon_Inventory_Full = 2131165231;
-        public static final int Pokestop_Cooldown = 2131165232;
-        public static final int Pokestop_Out_Of_Range = 2131165233;
-        public static final int Retrieved_Items = 2131165234;
-        public static final int Retrieved_an_Item = 2131165235;
-        public static final int Session_Ended = 2131165236;
-        public static final int Tracked_Pokemon_Found = 2131165237;
-        public static final int Tracked_Pokemon_Lost = 2131165238;
+        public static final int Loading = 2131165226;
         public static final int accept = 2131165220;
-        public static final int action_settings = 2131165251;
-        public static final int app_name = 2131165239;
+        public static final int action_settings = 2131165236;
+        public static final int app_name = 2131165224;
         public static final int auth_google_play_services_client_facebook_display_name = 2131165185;
         public static final int auth_google_play_services_client_google_display_name = 2131165184;
-        public static final int com_crashlytics_android_build_id = 2131165240;
+        public static final int com_crashlytics_android_build_id = 2131165225;
         public static final int common_android_wear_notification_needs_update_text = 2131165188;
         public static final int common_android_wear_update_text = 2131165201;
         public static final int common_android_wear_update_title = 2131165199;
@@ -233,21 +216,21 @@ public final class R {
         public static final int create_calendar_message = 2131165223;
         public static final int create_calendar_title = 2131165222;
         public static final int decline = 2131165221;
-        public static final int gameservices_app_misconfigured = 2131165247;
-        public static final int gameservices_license_failed = 2131165248;
-        public static final int gameservices_sign_in_failed = 2131165246;
-        public static final int lunar_console_log_details_dialog_button_copy_to_clipboard = 2131165252;
-        public static final int lunar_console_log_details_dialog_no_stacktrace_warning = 2131165253;
-        public static final int lunar_console_overflow_warning_text = 2131165254;
-        public static final int lunar_console_title_fake_status_bar = 2131165255;
-        public static final int np_toolbar_back = 2131165242;
-        public static final int np_toolbar_done = 2131165245;
-        public static final int np_toolbar_forward = 2131165243;
-        public static final int np_toolbar_reload = 2131165244;
+        public static final int gameservices_app_misconfigured = 2131165232;
+        public static final int gameservices_license_failed = 2131165233;
+        public static final int gameservices_sign_in_failed = 2131165231;
+        public static final int lunar_console_log_details_dialog_button_copy_to_clipboard = 2131165237;
+        public static final int lunar_console_log_details_dialog_no_stacktrace_warning = 2131165238;
+        public static final int lunar_console_overflow_warning_text = 2131165239;
+        public static final int lunar_console_title_fake_status_bar = 2131165240;
+        public static final int np_toolbar_back = 2131165227;
+        public static final int np_toolbar_done = 2131165230;
+        public static final int np_toolbar_forward = 2131165228;
+        public static final int np_toolbar_reload = 2131165229;
         public static final int store_picture_message = 2131165219;
         public static final int store_picture_title = 2131165218;
-        public static final int upsight_sdk_build = 2131165249;
-        public static final int upsight_sdk_version = 2131165250;
+        public static final int upsight_sdk_build = 2131165234;
+        public static final int upsight_sdk_version = 2131165235;
     }
 
     public static final class style {

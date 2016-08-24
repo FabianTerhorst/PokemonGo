@@ -102,8 +102,6 @@
     <drawable name="ic_launcher">res/drawable-mdpi-v4/ic_launcher.png</drawable>
     <drawable name="ic_launcher">res/drawable-hdpi-v4/ic_launcher.png</drawable>
     <drawable name="ic_launcher">res/drawable-xhdpi-v4/ic_launcher.png</drawable>
-    <drawable name="ic_media_pause">res/drawable/ic_media_pause.png</drawable>
-    <drawable name="ic_swap_horiz_white_24dp">res/drawable/ic_swap_horiz_white_24dp.png</drawable>
     <drawable name="lunar_console_icon_button_clear">res/drawable/lunar_console_icon_button_clear.png</drawable>
     <drawable name="lunar_console_icon_button_clear">res/drawable-hdpi-v4/lunar_console_icon_button_clear.png</drawable>
     <drawable name="lunar_console_icon_button_clear">res/drawable-xhdpi-v4/lunar_console_icon_button_clear.png</drawable>
@@ -167,5 +165,4 @@
     <drawable name="powered_by_google_light">res/drawable-hdpi-v4/powered_by_google_light.png</drawable>
     <drawable name="powered_by_google_light">res/drawable-xhdpi-v4/powered_by_google_light.png</drawable>
     <drawable name="powered_by_google_light">res/drawable-xxhdpi-v4/powered_by_google_light.png</drawable>
-    <drawable name="sfida_icon">res/drawable/sfida_icon.png</drawable>
 </resources>

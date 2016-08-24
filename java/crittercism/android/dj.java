@@ -28,9 +28,7 @@ public final class dj extends di {
     }
 
     public final void a() {
-        boolean z;
         int i;
-        int i2;
         UnsupportedEncodingException unsupportedEncodingException;
         SocketTimeoutException e;
         IOException iOException;
@@ -39,6 +37,8 @@ public final class dj extends di {
         try {
             URLConnection a = this.b.a();
             if (a != null) {
+                boolean z;
+                int i2;
                 try {
                     this.a.a(a.getOutputStream());
                     int responseCode = a.getResponseCode();
@@ -61,107 +61,107 @@ public final class dj extends di {
                         }
                         jSONObject = jSONObject2;
                         z = false;
-                        i = responseCode;
+                        i2 = responseCode;
                     } catch (UnsupportedEncodingException e2) {
                         UnsupportedEncodingException unsupportedEncodingException2 = e2;
-                        i2 = responseCode;
+                        i = responseCode;
                         unsupportedEncodingException = unsupportedEncodingException2;
                         new StringBuilder("UnsupportedEncodingException in proceed(): ").append(unsupportedEncodingException.getMessage());
                         dx.b();
                         dx.c();
-                        i = i2;
+                        i2 = i;
                         z = false;
                         a.disconnect();
                         if (this.d != null) {
-                            this.d.a(z, i, jSONObject);
+                            this.d.a(z, i2, jSONObject);
                         }
                     } catch (SocketTimeoutException e3) {
                         e = e3;
-                        i = responseCode;
+                        i2 = responseCode;
                         new StringBuilder("SocketTimeoutException in proceed(): ").append(e.getMessage());
                         dx.b();
                         z = true;
                         a.disconnect();
                         if (this.d != null) {
-                            this.d.a(z, i, jSONObject);
+                            this.d.a(z, i2, jSONObject);
                         }
                     } catch (IOException e4) {
                         IOException iOException2 = e4;
-                        i2 = responseCode;
+                        i = responseCode;
                         iOException = iOException2;
                         new StringBuilder("IOException in proceed(): ").append(iOException.getMessage());
                         dx.b();
                         dx.c();
-                        i = i2;
+                        i2 = i;
                         z = false;
                         a.disconnect();
                         if (this.d != null) {
-                            this.d.a(z, i, jSONObject);
+                            this.d.a(z, i2, jSONObject);
                         }
                     } catch (JSONException e5) {
                         JSONException jSONException2 = e5;
-                        i2 = responseCode;
+                        i = responseCode;
                         jSONException = jSONException2;
                         new StringBuilder("JSONException in proceed(): ").append(jSONException.getMessage());
                         dx.b();
-                        i = i2;
+                        i2 = i;
                         z = false;
                         dx.c();
                         a.disconnect();
                         if (this.d != null) {
-                            this.d.a(z, i, jSONObject);
+                            this.d.a(z, i2, jSONObject);
                         }
                     }
                 } catch (UnsupportedEncodingException e22) {
                     unsupportedEncodingException = e22;
-                    i2 = -1;
+                    i = -1;
                     new StringBuilder("UnsupportedEncodingException in proceed(): ").append(unsupportedEncodingException.getMessage());
                     dx.b();
                     dx.c();
-                    i = i2;
+                    i2 = i;
                     z = false;
                     a.disconnect();
                     if (this.d != null) {
-                        this.d.a(z, i, jSONObject);
+                        this.d.a(z, i2, jSONObject);
                     }
                 } catch (SocketTimeoutException e6) {
                     e = e6;
-                    i = -1;
+                    i2 = -1;
                     new StringBuilder("SocketTimeoutException in proceed(): ").append(e.getMessage());
                     dx.b();
                     z = true;
                     a.disconnect();
                     if (this.d != null) {
-                        this.d.a(z, i, jSONObject);
+                        this.d.a(z, i2, jSONObject);
                     }
                 } catch (IOException e42) {
                     iOException = e42;
-                    i2 = -1;
+                    i = -1;
                     new StringBuilder("IOException in proceed(): ").append(iOException.getMessage());
                     dx.b();
                     dx.c();
-                    i = i2;
+                    i2 = i;
                     z = false;
                     a.disconnect();
                     if (this.d != null) {
-                        this.d.a(z, i, jSONObject);
+                        this.d.a(z, i2, jSONObject);
                     }
                 } catch (JSONException e52) {
                     jSONException = e52;
-                    i2 = -1;
+                    i = -1;
                     new StringBuilder("JSONException in proceed(): ").append(jSONException.getMessage());
                     dx.b();
-                    i = i2;
+                    i2 = i;
                     z = false;
                     dx.c();
                     a.disconnect();
                     if (this.d != null) {
-                        this.d.a(z, i, jSONObject);
+                        this.d.a(z, i2, jSONObject);
                     }
                 }
                 a.disconnect();
                 if (this.d != null) {
-                    this.d.a(z, i, jSONObject);
+                    this.d.a(z, i2, jSONObject);
                 }
             }
         } catch (IOException e7) {

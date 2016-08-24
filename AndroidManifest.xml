@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="2016080700" android:versionName="0.33.0" android:installLocation="auto" package="com.nianticlabs.pokemongo" platformBuildVersionCode="24" platformBuildVersionName="N">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="2016082200" android:versionName="0.35.0" android:installLocation="auto" package="com.nianticlabs.pokemongo" platformBuildVersionCode="24" platformBuildVersionName="7.0">
     <supports-screens android:anyDensity="true" android:smallScreens="true" android:normalScreens="true" android:largeScreens="true" android:xlargeScreens="true" />
     <uses-permission android:name="com.android.vending.BILLING" />
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -42,16 +42,6 @@
         <activity android:theme="@*android:style/Theme.Black.NoTitleBar" android:name="com.nianticlabs.nia.account.AccountsActivity" android:screenOrientation="portrait" />
         <activity android:theme="@*android:style/Theme.Translucent.NoTitleBar" android:name="com.nianticlabs.nia.iap.PurchaseActivity" android:exported="false" />
         <service android:name="com.nianticlabs.nia.useractivity.ActivityRecognitionService" android:exported="false" />
-        <service android:name="com.nianticlabs.pokemongoplus.service.BackgroundService" android:exported="false" android:process=":pgp">
-            <intent-filter>
-                <action android:name="com.nianticlabs.pokemongoplus.service.ToServer" />
-            </intent-filter>
-        </service>
-        <service android:name="com.nianticlabs.pokemongoplus.service.ClientService" android:exported="false">
-            <intent-filter>
-                <action android:name="com.nianticlabs.pokemongoplus.service.ToClient" />
-            </intent-filter>
-        </service>
         <activity android:theme="@*android:style/Theme.Translucent" android:name="com.google.android.gms.ads.AdActivity" android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize" />
         <activity android:theme="@style/Theme_IAPTheme" android:name="com.google.android.gms.ads.purchase.InAppPurchaseActivity" />
         <meta-data android:name="com.upsight.session_callbacks" android:value="com.upsight.android.unity.UnitySessionCallbacks" />
@@ -63,16 +53,16 @@
             </intent-filter>
         </receiver>
         <provider android:name="com.upsight.android.internal.persistence.ContentProvider" android:enabled="true" android:exported="false" android:authorities="com.nianticlabs.pokemongo.upsight" />
-        <meta-data android:name="com.upsight.sdk_plugin" android:value="unity:4.2.2" />
+        <meta-data android:name="com.upsight.sdk_plugin" android:value="unity:4.2.3" />
         <meta-data android:name="com.upsight.app_token" android:value="a9cc12f87adc420baf964f187672ecb4" />
         <meta-data android:name="com.upsight.public_key" android:value="MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyYKX0nb1ezY2KLkAl0tuWn2AZ0PfS2NF2BSM0T2OLCJM/H8Siyz1+OTvDWo1w+psbz6ugjTOaBGtkTRI1uikGcu32mhW2I4c9XUUkx1AYlC3wwiqnWZMvMKthp1yaKzrTsqhZzwJ6DvgZHUf1IPIkoxXoGmfyYNRI3QcpW5Uwa1dsZr5YeG8fwC53hyukOutt6PRqwDXQCsyCd/PawjUJZT6oxDFYYZ8a/11OIstlS4jXnQQ+k/f5HV5b8+ITiKhqXuNVsByPZqSIwi5T8pwJan7Rk8OCVImSkgUmWLcmlPcoL1UaF+vMZXZYhk1hM765IUw++7Dw2qvKVi4yl+giwIDAQAB" />
         <meta-data android:name="com.upsight.gcm" android:value="com.nianticlabs.pokemongo.848232511240" />
+        <meta-data android:name="com.upsight.user_attribute.integer.item_count" android:value="0" />
+        <meta-data android:name="com.upsight.user_attribute.integer.player_avatar" android:value="0" />
         <meta-data android:name="com.upsight.user_attribute.integer.player_level" android:value="0" />
         <meta-data android:name="com.upsight.user_attribute.integer.player_xp" android:value="0" />
-        <meta-data android:name="com.upsight.user_attribute.integer.player_avatar" android:value="0" />
-        <meta-data android:name="com.upsight.user_attribute.integer.pokemon_count" android:value="0" />
-        <meta-data android:name="com.upsight.user_attribute.integer.item_count" android:value="0" />
         <meta-data android:name="com.upsight.user_attribute.integer.pokecoin" android:value="0" />
+        <meta-data android:name="com.upsight.user_attribute.integer.pokemon_count" android:value="0" />
     </application>
     <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="23" />
     <uses-feature android:glEsVersion="20000" />
@@ -89,7 +79,6 @@
     <uses-feature android:name="android.hardware.touchscreen" />
     <uses-feature android:name="android.hardware.touchscreen.multitouch" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen.multitouch.distinct" android:required="false" />
-    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
     <permission android:name="com.nianticlabs.pokemongo.permission.C2D_MESSAGE" android:protectionLevel="signature|signatureOrSystem" />
     <uses-permission android:name="com.nianticlabs.pokemongo.permission.C2D_MESSAGE" />
     <uses-permission android:name="android.permission.CAMERA" />

@@ -17,11 +17,13 @@ import com.upsight.android.analytics.event.comm.UpsightCommUnregisterEvent;
 import com.upsight.android.googlepushservices.UpsightGooglePushServices.OnRegisterListener;
 import com.upsight.android.googlepushservices.UpsightGooglePushServices.OnUnregisterListener;
 import com.upsight.android.googlepushservices.UpsightGooglePushServicesApi;
+import com.upsight.android.googlepushservices.internal.PushConfigManager.Config;
 import com.upsight.android.logger.UpsightLogger;
 import com.upsight.android.marketing.UpsightBillboard;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import rx.Observable;
@@ -30,13 +32,14 @@ import rx.Observer;
 import rx.Scheduler;
 import rx.Subscriber;
 import rx.android.schedulers.HandlerScheduler;
+import rx.functions.Action1;
 
 @Singleton
 public class GooglePushServices implements UpsightGooglePushServicesApi {
     private static final String KEY_GCM = "com.upsight.gcm";
     private static final String LOG_TAG = GooglePushServices.class.getName();
     private static final String PREFERENCES_NAME = "com.upsight.android.googleadvertisingid.internal.registration";
-    private static final String PROPERTY_APP_VERSION = "gcmApplicationVersion";
+    private static final String PROPERTY_LAST_PUSH_TOKEN_REGISTRATION_TIME = "lastPushTokenRegistrationTime";
     private static final String PROPERTY_REG_ID = "gcmRegistrationId";
     static final String PUSH_SCOPE = "com_upsight_push_scope";
     private final Scheduler mComputationScheduler;
@@ -45,14 +48,16 @@ public class GooglePushServices implements UpsightGooglePushServicesApi {
     private final Set<OnUnregisterListener> mPendingUnregisterListeners;
     private SharedPreferences mPrefs;
     private UpsightBillboard mPushBillboard;
+    private PushConfigManager mPushConfigManager;
     private boolean mRegistrationIsInProgress;
     private final Handler mUiThreadHandler;
     private boolean mUnregistrationIsInProgress;
     private UpsightContext mUpsight;
 
     @Inject
-    GooglePushServices(UpsightContext upsight) {
+    GooglePushServices(UpsightContext upsight, PushConfigManager pushConfigManager) {
         this.mUpsight = upsight;
+        this.mPushConfigManager = pushConfigManager;
         this.mLogger = upsight.getLogger();
         if (Looper.myLooper() != null) {
             this.mUiThreadHandler = new Handler(Looper.myLooper());
@@ -112,7 +117,12 @@ public class GooglePushServices implements UpsightGooglePushServicesApi {
         Observable.create(new OnSubscribe<String>() {
             public void call(Subscriber<? super String> subscriber) {
                 try {
-                    subscriber.onNext(GoogleCloudMessaging.getInstance(GooglePushServices.this.mUpsight).register(new String[]{projectId}));
+                    String registrationId = GoogleCloudMessaging.getInstance(GooglePushServices.this.mUpsight).register(new String[]{projectId});
+                    if (TextUtils.isEmpty(registrationId)) {
+                        subscriber.onError(new IOException("Invalid push token returned from GoogleCloudMessaging"));
+                        return;
+                    }
+                    subscriber.onNext(registrationId);
                     subscriber.onCompleted();
                 } catch (IOException e) {
                     subscriber.onError(e);
@@ -135,8 +145,7 @@ public class GooglePushServices implements UpsightGooglePushServicesApi {
 
             public void onNext(String registrationId) {
                 synchronized (GooglePushServices.this) {
-                    GooglePushServices.this.storeRegistrationId(registrationId);
-                    UpsightCommRegisterEvent.createBuilder().setToken(registrationId).record(GooglePushServices.this.mUpsight);
+                    GooglePushServices.this.registerPushToken(registrationId);
                     Set<OnRegisterListener> pendingListeners = new HashSet(GooglePushServices.this.mPendingRegisterListeners);
                     GooglePushServices.this.mPendingRegisterListeners.clear();
                     GooglePushServices.this.mRegistrationIsInProgress = false;
@@ -178,6 +187,7 @@ public class GooglePushServices implements UpsightGooglePushServicesApi {
             public void onCompleted() {
                 synchronized (GooglePushServices.this) {
                     UpsightCommUnregisterEvent.createBuilder().record(GooglePushServices.this.mUpsight);
+                    GooglePushServices.this.removeRegistrationInfo();
                     Set<OnUnregisterListener> pendingListeners = new HashSet(GooglePushServices.this.mPendingUnregisterListeners);
                     GooglePushServices.this.mPendingUnregisterListeners.clear();
                     GooglePushServices.this.mUnregistrationIsInProgress = false;
@@ -203,6 +213,22 @@ public class GooglePushServices implements UpsightGooglePushServicesApi {
         });
     }
 
+    private void registerPushToken(final String pushToken) {
+        try {
+            this.mPushConfigManager.fetchCurrentConfigObservable().subscribeOn(this.mUpsight.getCoreComponent().subscribeOnScheduler()).observeOn(this.mUpsight.getCoreComponent().observeOnScheduler()).subscribe(new Action1<Config>() {
+                public void call(Config config) {
+                    long currentTime = TimeUnit.SECONDS.convert(System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+                    if (!pushToken.equals(GooglePushServices.this.getRegistrationId()) || currentTime - GooglePushServices.this.getLastPushTokenRegistrationTime() > config.pushTokenTtl) {
+                        UpsightCommRegisterEvent.createBuilder().setToken(pushToken).record(GooglePushServices.this.mUpsight);
+                        GooglePushServices.this.storeRegistrationInfo(pushToken, currentTime);
+                    }
+                }
+            });
+        } catch (IOException e) {
+            this.mLogger.e(LOG_TAG, "Failed to fetch push configurations", e);
+        }
+    }
+
     private boolean hasPlayServices() {
         if (GooglePlayServicesUtil.isGooglePlayServicesAvailable(this.mUpsight) == 0) {
             return true;
@@ -220,26 +246,25 @@ public class GooglePushServices implements UpsightGooglePushServicesApi {
         if (TextUtils.isEmpty(registrationId)) {
             return null;
         }
-        if (this.mPrefs.getInt(PROPERTY_APP_VERSION, Integer.MIN_VALUE) != getAppVersion()) {
-            return null;
-        }
         return registrationId;
     }
 
-    private void storeRegistrationId(String registrationId) {
-        int appVersion = getAppVersion();
+    private long getLastPushTokenRegistrationTime() {
+        return this.mPrefs.getLong(PROPERTY_LAST_PUSH_TOKEN_REGISTRATION_TIME, 0);
+    }
+
+    private void storeRegistrationInfo(String registrationId, long currentTimeS) {
         Editor editor = this.mPrefs.edit();
         editor.putString(PROPERTY_REG_ID, registrationId);
-        editor.putInt(PROPERTY_APP_VERSION, appVersion);
+        editor.putLong(PROPERTY_LAST_PUSH_TOKEN_REGISTRATION_TIME, currentTimeS);
         editor.apply();
     }
 
-    private int getAppVersion() {
-        try {
-            return this.mUpsight.getPackageManager().getPackageInfo(this.mUpsight.getPackageName(), 0).versionCode;
-        } catch (NameNotFoundException e) {
-            throw new RuntimeException("Could not get package name: " + e);
-        }
+    private void removeRegistrationInfo() {
+        Editor editor = this.mPrefs.edit();
+        editor.remove(PROPERTY_REG_ID);
+        editor.remove(PROPERTY_LAST_PUSH_TOKEN_REGISTRATION_TIME);
+        editor.apply();
     }
 
     public synchronized UpsightBillboard createPushBillboard(UpsightContext upsight, UpsightBillboard.Handler handler) throws IllegalArgumentException, IllegalStateException {

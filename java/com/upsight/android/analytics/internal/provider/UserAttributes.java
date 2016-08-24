@@ -193,7 +193,6 @@ final class UserAttributes extends UpsightUserAttributes {
     }
 
     Entry createEntry(String metaDataKey, Object metaDataValue) throws IllegalArgumentException {
-        String msg;
         Matcher matcher = USER_ATTRIBUTE_PATTERN.matcher(metaDataKey);
         if (matcher.matches()) {
             String type = matcher.group(1);
@@ -205,6 +204,7 @@ final class UserAttributes extends UpsightUserAttributes {
                 value = metaDataValue;
             } else if ("datetime".equals(type)) {
                 String defaultDatetime = (String) metaDataValue;
+                String msg;
                 if (DATETIME_DEFAULT_VALUE_PATTERN.matcher(defaultDatetime).matches()) {
                     try {
                         value = new SimpleDateFormat(DATETIME_FORMAT, Locale.US).parse(defaultDatetime + TIMEZONE_UTC);

@@ -34,7 +34,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView.ScaleType;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
-import com.nianticlabs.pokemongoplus.ble.BluetoothGattSupport;
 import com.squareup.otto.Bus;
 import com.upsight.mediation.mraid.internal.MRAIDHtmlProcessor;
 import com.upsight.mediation.mraid.internal.MRAIDLog;
@@ -821,7 +820,7 @@ public class MRAIDView extends RelativeLayout {
                 return "VISIBLE";
             case STATE_HIDDEN /*4*/:
                 return "INVISIBLE";
-            case BluetoothGattSupport.GATT_INSUF_AUTHENTICATION /*8*/:
+            case 8:
                 return "GONE";
             default:
                 return "UNKNOWN";

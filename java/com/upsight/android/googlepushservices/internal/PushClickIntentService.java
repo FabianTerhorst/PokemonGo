@@ -43,43 +43,46 @@ public class PushClickIntentService extends IntentService {
 
     protected void onHandleIntent(Intent intent) {
         UpsightContext upsight = Upsight.createContext(this);
-        ((UpsightGooglePushServicesComponent) ((UpsightGooglePushServicesExtension) upsight.getUpsightExtension(UpsightGooglePushServicesExtension.EXTENSION_NAME)).getComponent()).inject(this);
-        Intent messageIntent = (Intent) intent.getParcelableExtra(BUNDLE_KEY_MESSAGE_INTENT);
-        Bundle extras = messageIntent.getBundleExtra(SessionManager.SESSION_EXTRA);
-        SessionManager sessionManager = this.mSessionManager;
-        if (State.BACKGROUND.name().equals(((ApplicationStatus) upsight.getDataStore().fetchObservable(ApplicationStatus.class).toBlocking().first()).getState().name())) {
-            sessionManager.startSession(SessionInitializerImpl.fromPush(extras));
-        }
-        if (extras.containsKey(SessionManager.SESSION_MESSAGE_ID)) {
-            Builder clickEvent = UpsightCommClickEvent.createBuilder(Integer.valueOf(extras.getInt(SessionManager.SESSION_MESSAGE_ID)));
-            if (extras.containsKey(SessionManager.SESSION_CAMPAIGN_ID)) {
-                clickEvent.setMsgCampaignId(Integer.valueOf(extras.getInt(SessionManager.SESSION_CAMPAIGN_ID)));
+        UpsightGooglePushServicesExtension extension = (UpsightGooglePushServicesExtension) upsight.getUpsightExtension(UpsightGooglePushServicesExtension.EXTENSION_NAME);
+        if (extension != null) {
+            ((UpsightGooglePushServicesComponent) extension.getComponent()).inject(this);
+            Intent messageIntent = (Intent) intent.getParcelableExtra(BUNDLE_KEY_MESSAGE_INTENT);
+            Bundle extras = messageIntent.getBundleExtra(SessionManager.SESSION_EXTRA);
+            SessionManager sessionManager = this.mSessionManager;
+            if (State.BACKGROUND.name().equals(((ApplicationStatus) upsight.getDataStore().fetchObservable(ApplicationStatus.class).toBlocking().first()).getState().name())) {
+                sessionManager.startSession(SessionInitializerImpl.fromPush(extras));
             }
-            clickEvent.record(upsight);
-        }
-        if (extras.containsKey(PARAM_KEY_PUSH_CONTENT_ID)) {
-            JSONObject contentProviderBundle = new JSONObject();
-            try {
-                contentProviderBundle.put(CONTENT_UNRENDERED_CONTENT_PROVIDER_KEY_NAME, DefaultContentMediator.CONTENT_PROVIDER);
-                JSONObject parameters = new JSONObject();
-                parameters.put(CONTENT_UNRENDERED_CONTENT_PROVIDER_PARAMETERS_KEY_CONTENT_ID, extras.getInt(PARAM_KEY_PUSH_CONTENT_ID));
-                contentProviderBundle.put(CONTENT_UNRENDERED_CONTENT_PROVIDER_KEY_PARAMETERS, parameters);
-                UpsightContentUnrenderedEvent.Builder unrenderedEvent = UpsightContentUnrenderedEvent.createBuilder(contentProviderBundle).setScope("com_upsight_push_scope");
+            if (extras.containsKey(SessionManager.SESSION_MESSAGE_ID)) {
+                Builder clickEvent = UpsightCommClickEvent.createBuilder(Integer.valueOf(extras.getInt(SessionManager.SESSION_MESSAGE_ID)));
                 if (extras.containsKey(SessionManager.SESSION_CAMPAIGN_ID)) {
-                    unrenderedEvent.setCampaignId(Integer.valueOf(extras.getInt(SessionManager.SESSION_CAMPAIGN_ID)));
+                    clickEvent.setMsgCampaignId(Integer.valueOf(extras.getInt(SessionManager.SESSION_CAMPAIGN_ID)));
                 }
-                unrenderedEvent.record(upsight);
-            } catch (JSONException e) {
-                upsight.getLogger().e(LOG_TAG, e, "Could not construct \"content_provider\" bundle in \"upsight.content.unrendered\"", new Object[0]);
+                clickEvent.record(upsight);
             }
-        }
-        if (!extras.getBoolean(PARAM_KEY_IS_DISPATCH_FROM_FOREGROUND, false)) {
-            ApplicationStatus status = (ApplicationStatus) upsight.getDataStore().fetchObservable(ApplicationStatus.class).toBlocking().first();
-            if (!(status == null || State.BACKGROUND.equals(status.getState()))) {
-                return;
+            if (extras.containsKey(PARAM_KEY_PUSH_CONTENT_ID)) {
+                JSONObject contentProviderBundle = new JSONObject();
+                try {
+                    contentProviderBundle.put(CONTENT_UNRENDERED_CONTENT_PROVIDER_KEY_NAME, DefaultContentMediator.CONTENT_PROVIDER);
+                    JSONObject parameters = new JSONObject();
+                    parameters.put(CONTENT_UNRENDERED_CONTENT_PROVIDER_PARAMETERS_KEY_CONTENT_ID, extras.getInt(PARAM_KEY_PUSH_CONTENT_ID));
+                    contentProviderBundle.put(CONTENT_UNRENDERED_CONTENT_PROVIDER_KEY_PARAMETERS, parameters);
+                    UpsightContentUnrenderedEvent.Builder unrenderedEvent = UpsightContentUnrenderedEvent.createBuilder(contentProviderBundle).setScope("com_upsight_push_scope");
+                    if (extras.containsKey(SessionManager.SESSION_CAMPAIGN_ID)) {
+                        unrenderedEvent.setCampaignId(Integer.valueOf(extras.getInt(SessionManager.SESSION_CAMPAIGN_ID)));
+                    }
+                    unrenderedEvent.record(upsight);
+                } catch (JSONException e) {
+                    upsight.getLogger().e(LOG_TAG, e, "Could not construct \"content_provider\" bundle in \"upsight.content.unrendered\"", new Object[0]);
+                }
             }
+            if (!extras.getBoolean(PARAM_KEY_IS_DISPATCH_FROM_FOREGROUND, false)) {
+                ApplicationStatus status = (ApplicationStatus) upsight.getDataStore().fetchObservable(ApplicationStatus.class).toBlocking().first();
+                if (!(status == null || State.BACKGROUND.equals(status.getState()))) {
+                    return;
+                }
+            }
+            startActivity(messageIntent);
         }
-        startActivity(messageIntent);
     }
 
     protected static Intent appendMessageIntentBundle(Intent messageIntent, boolean isDispatchFromForeground, Integer campaignId, Integer messageId, Integer contentId) {

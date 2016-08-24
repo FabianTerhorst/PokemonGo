@@ -81,7 +81,8 @@ public class FileUtility {
     }
 
     public static String getSavedFile(byte[] data, int length, File destinationDir, String destinationFileName, boolean addScheme, boolean needsGlobalAccess) {
-        FileNotFoundException e;
+        IOException e;
+        FileNotFoundException e2;
         String destPath = null;
         if (data == null || length <= 0) {
             return destPath;
@@ -92,9 +93,8 @@ public class FileUtility {
             destinationFile.delete();
             try {
                 destinationFile.createNewFile();
-            } catch (IOException e2) {
-                IOException e22;
-                e22.printStackTrace();
+            } catch (IOException e3) {
+                e3.printStackTrace();
             }
         }
         if (needsGlobalAccess) {
@@ -109,26 +109,26 @@ public class FileUtility {
                 outputStream.close();
                 destPath = destinationFile.getAbsolutePath();
                 fileOutputStream = outputStream;
-            } catch (FileNotFoundException e3) {
-                e = e3;
+            } catch (FileNotFoundException e4) {
+                e2 = e4;
                 fileOutputStream = outputStream;
-                e.printStackTrace();
+                e2.printStackTrace();
                 return destPath != null ? destPath : destPath;
-            } catch (IOException e4) {
-                e22 = e4;
+            } catch (IOException e5) {
+                e3 = e5;
                 fileOutputStream = outputStream;
-                e22.printStackTrace();
+                e3.printStackTrace();
                 if (destPath != null) {
                 }
             }
-        } catch (FileNotFoundException e5) {
-            e = e5;
-            e.printStackTrace();
+        } catch (FileNotFoundException e6) {
+            e2 = e6;
+            e2.printStackTrace();
             if (destPath != null) {
             }
-        } catch (IOException e6) {
-            e22 = e6;
-            e22.printStackTrace();
+        } catch (IOException e7) {
+            e3 = e7;
+            e3.printStackTrace();
             if (destPath != null) {
             }
         }

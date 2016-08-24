@@ -2,5 +2,6 @@
 <resources>
     <raw name="configurator_config">res/raw/configurator_config.json</raw>
     <raw name="dispatcher_config">res/raw/dispatcher_config.json</raw>
+    <raw name="push_config">res/raw/push_config.json</raw>
     <raw name="uxm_schema">res/raw/uxm_schema.json</raw>
 </resources>

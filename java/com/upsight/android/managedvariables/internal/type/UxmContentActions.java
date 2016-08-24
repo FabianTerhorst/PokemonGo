@@ -283,10 +283,13 @@ public final class UxmContentActions {
 
         public void execute(UxmContent content) {
             ActionContext actionContext = getActionContext();
-            try {
-                UpsightUxmEnumerateEvent.createBuilder(new JSONArray(((UpsightManagedVariablesComponent) actionContext.mUpsight.getUpsightExtension(UpsightManagedVariablesExtension.EXTENSION_NAME).getComponent()).uxmSchema().mSchemaJsonString)).record(actionContext.mUpsight);
-            } catch (JSONException e) {
-                actionContext.mUpsight.getLogger().e(Upsight.LOG_TAG, e, "Failed to send UXM enumerate event", new Object[0]);
+            UpsightManagedVariablesExtension extension = (UpsightManagedVariablesExtension) actionContext.mUpsight.getUpsightExtension(UpsightManagedVariablesExtension.EXTENSION_NAME);
+            if (extension != null) {
+                try {
+                    UpsightUxmEnumerateEvent.createBuilder(new JSONArray(((UpsightManagedVariablesComponent) extension.getComponent()).uxmSchema().mSchemaJsonString)).record(actionContext.mUpsight);
+                } catch (JSONException e) {
+                    actionContext.mUpsight.getLogger().e(Upsight.LOG_TAG, e, "Failed to send UXM enumerate event", new Object[0]);
+                }
             }
             content.signalActionCompleted(actionContext.mBus);
         }

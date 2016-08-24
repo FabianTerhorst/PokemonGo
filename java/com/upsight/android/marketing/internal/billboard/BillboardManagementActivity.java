@@ -67,24 +67,27 @@ public class BillboardManagementActivity extends Activity {
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ((UpsightMarketingComponent) ((UpsightMarketingExtension) Upsight.createContext(this).getUpsightExtension(UpsightMarketingExtension.EXTENSION_NAME)).getComponent()).inject(this);
-        setContentView(R.layout.upsight_activity_billboard_management);
-        String id = getIntent().getStringExtra(INTENT_EXTRA_MARKETING_CONTENT_ID);
-        this.mUpsight.getLogger().d(LOG_TAG, "onCreate activity=" + this + " marketingContentId=" + id, new Object[STYLE_DIALOG]);
-        if (TextUtils.isEmpty(id)) {
-            finish();
-            return;
+        UpsightMarketingExtension extension = (UpsightMarketingExtension) Upsight.createContext(this).getUpsightExtension(UpsightMarketingExtension.EXTENSION_NAME);
+        if (extension != null) {
+            ((UpsightMarketingComponent) extension.getComponent()).inject(this);
+            setContentView(R.layout.upsight_activity_billboard_management);
+            String id = getIntent().getStringExtra(INTENT_EXTRA_MARKETING_CONTENT_ID);
+            this.mUpsight.getLogger().d(LOG_TAG, "onCreate activity=" + this + " marketingContentId=" + id, new Object[STYLE_DIALOG]);
+            if (TextUtils.isEmpty(id)) {
+                finish();
+                return;
+            }
+            MarketingContent content = (MarketingContent) this.mContentStore.get(id);
+            if (content != null) {
+                this.mContent = content;
+                this.mBillboard = content.getBoundBillboard();
+                this.mShouldAttachOnResume = savedInstanceState == null;
+            } else {
+                finish();
+            }
+            this.mDataStoreSubscription = this.mUpsight.getDataStore().subscribe(this);
+            this.mUpsight.getCoreComponent().bus().register(this);
         }
-        MarketingContent content = (MarketingContent) this.mContentStore.get(id);
-        if (content != null) {
-            this.mContent = content;
-            this.mBillboard = content.getBoundBillboard();
-            this.mShouldAttachOnResume = savedInstanceState == null;
-        } else {
-            finish();
-        }
-        this.mDataStoreSubscription = this.mUpsight.getDataStore().subscribe(this);
-        this.mUpsight.getCoreComponent().bus().register(this);
     }
 
     protected void onResume() {

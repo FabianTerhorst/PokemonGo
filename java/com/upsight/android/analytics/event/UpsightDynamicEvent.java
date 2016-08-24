@@ -42,7 +42,10 @@ public final class UpsightDynamicEvent extends UpsightAnalyticsEvent<JsonElement
 
         public final UpsightDynamicEvent record(UpsightContext upsight) {
             UpsightDynamicEvent result = build();
-            ((UpsightAnalyticsExtension) upsight.getUpsightExtension(UpsightAnalyticsExtension.EXTENSION_NAME)).getApi().record(result);
+            UpsightAnalyticsExtension extension = (UpsightAnalyticsExtension) upsight.getUpsightExtension(UpsightAnalyticsExtension.EXTENSION_NAME);
+            if (extension != null) {
+                extension.getApi().record(result);
+            }
             return result;
         }
 

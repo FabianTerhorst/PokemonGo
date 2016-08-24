@@ -1,5 +1,7 @@
 package com.upsight.android.analytics.internal.dispatcher;
 
+import com.squareup.otto.Bus;
+import com.squareup.otto.Subscribe;
 import com.upsight.android.UpsightException;
 import com.upsight.android.analytics.configuration.UpsightConfiguration;
 import com.upsight.android.analytics.dispatcher.AnalyticsEventDeliveryStatus;
@@ -7,6 +9,7 @@ import com.upsight.android.analytics.dispatcher.EndpointResponse;
 import com.upsight.android.analytics.internal.AnalyticsContext;
 import com.upsight.android.analytics.internal.DataStoreRecord;
 import com.upsight.android.analytics.internal.DataStoreRecord.Action;
+import com.upsight.android.analytics.internal.DispatcherService.DestroyEvent;
 import com.upsight.android.analytics.internal.dispatcher.routing.Router;
 import com.upsight.android.analytics.internal.dispatcher.routing.RouterBuilder;
 import com.upsight.android.analytics.internal.dispatcher.routing.RoutingListener;
@@ -29,6 +32,7 @@ public class Dispatcher implements RoutingListener {
     public static final String CONFIGURATION_SUBTYPE = "upsight.configuration.dispatcher";
     static final int DISPATCHER_CONFIGURATION_MAX_SESSIONS = 2;
     private static final String LOG_TAG = "Dispatcher";
+    private Bus mBus;
     private ConfigParser mConfigParser;
     private AnalyticsContext mContext;
     private Config mCurrentConfig;
@@ -44,27 +48,15 @@ public class Dispatcher implements RoutingListener {
     private Queue<DataStoreRecord> mUnroutedRecords;
     private UpsightDataStore mUpsightDataStore;
 
-    Dispatcher(AnalyticsContext context, SessionManager sessionManager, UpsightDataStore dataStore, ConfigParser configParser, RouterBuilder routerBuilder, SchemaSelectorBuilder schemaSelectorBuilder, UpsightLogger logger) {
+    Dispatcher(AnalyticsContext context, SessionManager sessionManager, UpsightDataStore dataStore, ConfigParser configParser, RouterBuilder routerBuilder, SchemaSelectorBuilder schemaSelectorBuilder, Bus bus, UpsightLogger logger) {
         this.mContext = context;
         this.mSessionManager = sessionManager;
         this.mUpsightDataStore = dataStore;
         this.mConfigParser = configParser;
         this.mRouterBuilder = routerBuilder;
         this.mSchemaSelectorBuilder = schemaSelectorBuilder;
+        this.mBus = bus;
         this.mLogger = logger;
-    }
-
-    public void launch() {
-        if (!this.mIsLaunched) {
-            this.mIsLaunched = true;
-            this.mCurrentRouter = null;
-            this.mExpiredRouters = new HashSet();
-            this.mUnroutedRecords = new ConcurrentLinkedQueue();
-            this.mPendingRecords = Collections.synchronizedSet(new HashSet());
-            this.mCurrentConfig = null;
-            this.mDataStoreSubscription = this.mUpsightDataStore.subscribe(this);
-            fetchCurrentConfig();
-        }
     }
 
     private void fetchCreatedRecords() {
@@ -236,7 +228,27 @@ public class Dispatcher implements RoutingListener {
         return pendingRecords == null || !pendingRecords.isEmpty();
     }
 
+    @Subscribe
+    public void handle(DestroyEvent event) {
+        terminate();
+    }
+
+    public void launch() {
+        if (!this.mIsLaunched) {
+            this.mIsLaunched = true;
+            this.mCurrentRouter = null;
+            this.mExpiredRouters = new HashSet();
+            this.mUnroutedRecords = new ConcurrentLinkedQueue();
+            this.mPendingRecords = Collections.synchronizedSet(new HashSet());
+            this.mCurrentConfig = null;
+            this.mDataStoreSubscription = this.mUpsightDataStore.subscribe(this);
+            this.mBus.register(this);
+            fetchCurrentConfig();
+        }
+    }
+
     public void terminate() {
+        this.mBus.unregister(this);
         if (this.mCurrentRouter != null) {
             this.mCurrentRouter.finishRouting();
             this.mCurrentRouter = null;

@@ -41,13 +41,6 @@ public class VastAdAdapter extends NetworkWrapperFuseInternal implements VASTPla
     }
 
     public void loadAd(@NonNull Activity activity, @NonNull HashMap<String, String> parameters) {
-        int closeButtonDelay;
-        boolean postroll;
-        String svs;
-        boolean shouldValidateSchema;
-        String endCardHtml;
-        int downloadTimeout;
-        String vastScript;
         this.isRewarded = Boolean.parseBoolean((String) parameters.get(NetworkWrapper.IS_REWARDED));
         String callToAction = (String) parameters.get("cta");
         if (callToAction == null || callToAction.length() == 0) {
@@ -58,7 +51,14 @@ public class VastAdAdapter extends NetworkWrapperFuseInternal implements VASTPla
             onAdFailedToLoad(AdapterLoadError.INVALID_PARAMETERS);
             return;
         }
+        int closeButtonDelay;
         String pr;
+        boolean postroll;
+        String svs;
+        boolean shouldValidateSchema;
+        String endCardHtml;
+        int downloadTimeout;
+        String vastScript;
         try {
             closeButtonDelay = Integer.parseInt((String) parameters.get(NetworkWrapper.CLOSE_BUTTON_DELAY));
         } catch (NumberFormatException e) {

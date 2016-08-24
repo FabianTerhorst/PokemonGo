@@ -11,7 +11,6 @@ import android.view.Display;
 import android.view.WindowManager;
 import com.nianticlabs.nia.contextservice.ContextService;
 import com.nianticlabs.nia.contextservice.ServiceStatus;
-import com.nianticlabs.pokemongoplus.ble.BluetoothGattSupport;
 import com.upsight.android.googlepushservices.UpsightPushNotificationBuilderFactory.Default;
 import com.upsight.mediation.mraid.properties.MRAIDResizeProperties;
 import spacemadness.com.lunarconsole.R;
@@ -202,10 +201,10 @@ public class NianticSensorManager extends ContextService implements SensorEventL
         switch (this.display.getRotation()) {
             case R.styleable.LoadingImageView_imageAspectRatio /*1*/:
                 xAxis = 2;
-                yAxis = BluetoothGattSupport.GATT_INTERNAL_ERROR;
+                yAxis = 129;
                 break;
             case R.styleable.LoadingImageView_circleCrop /*2*/:
-                xAxis = BluetoothGattSupport.GATT_INTERNAL_ERROR;
+                xAxis = 129;
                 yAxis = 130;
                 break;
             case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_CENTER /*3*/:

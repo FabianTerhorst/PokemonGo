@@ -32,7 +32,7 @@ public class UpsightPushManager implements IUpsightExtensionManager {
                     Log.i(UpsightPushManager.TAG, "unregistering for push notifications");
                     UpsightGooglePushServices.unregister(UpsightPushManager.this.mUpsight, new OnUnregisterListener() {
                         public void onSuccess() {
-                            Log.e(UpsightPushManager.TAG, "unregistration succeeded");
+                            Log.i(UpsightPushManager.TAG, "unregistration succeeded");
                         }
 
                         public void onFailure(UpsightException e) {
@@ -51,7 +51,7 @@ public class UpsightPushManager implements IUpsightExtensionManager {
                     Log.i(UpsightPushManager.TAG, "registering for push notifications");
                     UpsightGooglePushServices.register(UpsightPushManager.this.mUpsight, new OnRegisterListener() {
                         public void onSuccess(String arg0) {
-                            Log.e(UpsightPushManager.TAG, "registration succeeded");
+                            Log.i(UpsightPushManager.TAG, "registration succeeded");
                         }
 
                         public void onFailure(UpsightException ex) {

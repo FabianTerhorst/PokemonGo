@@ -110,14 +110,17 @@ public final class PushIntentService extends IntentService {
     }
 
     protected void onHandleIntent(Intent intent) {
-        ((UpsightGooglePushServicesComponent) ((UpsightGooglePushServicesExtension) Upsight.createContext(this).getUpsightExtension(UpsightGooglePushServicesExtension.EXTENSION_NAME)).getComponent()).inject(this);
-        if ("gcm".equals(this.mGcm.getMessageType(intent))) {
-            Bundle extras = intent.getExtras();
-            if (!(extras.isEmpty() || TextUtils.isEmpty(extras.getString(PushParams.message_id.name())))) {
-                interpretPushEvent(extras);
+        UpsightGooglePushServicesExtension extension = (UpsightGooglePushServicesExtension) Upsight.createContext(this).getUpsightExtension(UpsightGooglePushServicesExtension.EXTENSION_NAME);
+        if (extension != null) {
+            ((UpsightGooglePushServicesComponent) extension.getComponent()).inject(this);
+            if ("gcm".equals(this.mGcm.getMessageType(intent))) {
+                Bundle extras = intent.getExtras();
+                if (!(extras.isEmpty() || TextUtils.isEmpty(extras.getString(PushParams.message_id.name())))) {
+                    interpretPushEvent(extras);
+                }
             }
+            PushBroadcastReceiver.completeWakefulIntent(intent);
         }
-        PushBroadcastReceiver.completeWakefulIntent(intent);
     }
 
     PushIds parsePushIds(Uri uri, Bundle extras, UpsightLogger logger) {

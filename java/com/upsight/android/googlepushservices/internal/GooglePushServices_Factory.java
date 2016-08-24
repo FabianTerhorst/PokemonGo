@@ -6,21 +6,26 @@ import javax.inject.Provider;
 
 public final class GooglePushServices_Factory implements Factory<GooglePushServices> {
     static final /* synthetic */ boolean $assertionsDisabled = (!GooglePushServices_Factory.class.desiredAssertionStatus());
+    private final Provider<PushConfigManager> pushConfigManagerProvider;
     private final Provider<UpsightContext> upsightProvider;
 
-    public GooglePushServices_Factory(Provider<UpsightContext> upsightProvider) {
+    public GooglePushServices_Factory(Provider<UpsightContext> upsightProvider, Provider<PushConfigManager> pushConfigManagerProvider) {
         if ($assertionsDisabled || upsightProvider != null) {
             this.upsightProvider = upsightProvider;
-            return;
+            if ($assertionsDisabled || pushConfigManagerProvider != null) {
+                this.pushConfigManagerProvider = pushConfigManagerProvider;
+                return;
+            }
+            throw new AssertionError();
         }
         throw new AssertionError();
     }
 
     public GooglePushServices get() {
-        return new GooglePushServices((UpsightContext) this.upsightProvider.get());
+        return new GooglePushServices((UpsightContext) this.upsightProvider.get(), (PushConfigManager) this.pushConfigManagerProvider.get());
     }
 
-    public static Factory<GooglePushServices> create(Provider<UpsightContext> upsightProvider) {
-        return new GooglePushServices_Factory(upsightProvider);
+    public static Factory<GooglePushServices> create(Provider<UpsightContext> upsightProvider, Provider<PushConfigManager> pushConfigManagerProvider) {
+        return new GooglePushServices_Factory(upsightProvider, pushConfigManagerProvider);
     }
 }

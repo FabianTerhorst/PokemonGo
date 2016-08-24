@@ -3,11 +3,13 @@ package com.upsight.android.managedvariables.internal.type;
 import android.text.TextUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
+import com.squareup.otto.Bus;
 import com.upsight.android.Upsight;
 import com.upsight.android.UpsightAnalyticsExtension;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.UpsightCoreComponent;
 import com.upsight.android.analytics.UpsightAnalyticsComponent;
+import com.upsight.android.analytics.internal.session.Clock;
 import com.upsight.android.logger.UpsightLogger;
 import com.upsight.android.managedvariables.experience.UpsightUserExperience;
 import com.upsight.android.managedvariables.internal.type.UxmContentActions.UxmContentActionContext;
@@ -96,6 +98,16 @@ public class UxmModule {
     @Provides
     UxmContentFactory provideUxmContentFactory(UpsightContext upsight, @Named("main") Scheduler scheduler, UpsightUserExperience userExperience) {
         UpsightCoreComponent coreComponent = upsight.getCoreComponent();
-        return new UxmContentFactory(new UxmContentActionContext(upsight, coreComponent.bus(), coreComponent.gson(), ((UpsightAnalyticsComponent) ((UpsightAnalyticsExtension) upsight.getUpsightExtension(UpsightAnalyticsExtension.EXTENSION_NAME)).getComponent()).clock(), scheduler.createWorker(), upsight.getLogger()), userExperience);
+        UpsightAnalyticsExtension analyticsExtension = (UpsightAnalyticsExtension) upsight.getUpsightExtension(UpsightAnalyticsExtension.EXTENSION_NAME);
+        UpsightLogger logger = upsight.getLogger();
+        Bus bus = null;
+        Gson gson = null;
+        Clock clock = null;
+        if (!(coreComponent == null || analyticsExtension == null)) {
+            bus = coreComponent.bus();
+            gson = coreComponent.gson();
+            clock = ((UpsightAnalyticsComponent) analyticsExtension.getComponent()).clock();
+        }
+        return new UxmContentFactory(new UxmContentActionContext(upsight, bus, gson, clock, scheduler.createWorker(), logger), userExperience);
     }
 }

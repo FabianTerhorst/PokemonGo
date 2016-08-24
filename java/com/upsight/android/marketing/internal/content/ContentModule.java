@@ -1,9 +1,11 @@
 package com.upsight.android.marketing.internal.content;
 
+import com.squareup.otto.Bus;
 import com.upsight.android.UpsightAnalyticsExtension;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.UpsightCoreComponent;
 import com.upsight.android.analytics.UpsightAnalyticsComponent;
+import com.upsight.android.analytics.internal.session.Clock;
 import com.upsight.android.marketing.UpsightMarketingContentStore;
 import com.upsight.android.marketing.internal.content.MarketingContentActions.MarketingContentActionContext;
 import com.upsight.android.marketing.internal.vast.VastContentMediator;
@@ -25,7 +27,15 @@ public final class ContentModule {
     @Singleton
     @Provides
     MarketingContentStoreImpl provideMarketingContentStoreImpl(UpsightContext upsight) {
-        return new MarketingContentStoreImpl(upsight.getCoreComponent().bus(), ((UpsightAnalyticsComponent) ((UpsightAnalyticsExtension) upsight.getUpsightExtension(UpsightAnalyticsExtension.EXTENSION_NAME)).getComponent()).clock(), upsight.getLogger());
+        UpsightCoreComponent coreComponent = upsight.getCoreComponent();
+        UpsightAnalyticsExtension analyticsExtension = (UpsightAnalyticsExtension) upsight.getUpsightExtension(UpsightAnalyticsExtension.EXTENSION_NAME);
+        Bus bus = null;
+        Clock clock = null;
+        if (!(coreComponent == null || analyticsExtension == null)) {
+            bus = coreComponent.bus();
+            clock = ((UpsightAnalyticsComponent) analyticsExtension.getComponent()).clock();
+        }
+        return new MarketingContentStoreImpl(bus, clock, upsight.getLogger());
     }
 
     @Singleton

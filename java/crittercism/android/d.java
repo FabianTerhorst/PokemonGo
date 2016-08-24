@@ -3,7 +3,6 @@ package crittercism.android;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import com.nianticlabs.pokemongoplus.ble.BluetoothGattSupport;
 import com.upsight.mediation.mraid.properties.MRAIDResizeProperties;
 import spacemadness.com.lunarconsole.R;
 
@@ -53,7 +52,7 @@ public final class d {
                 case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_CENTER /*3*/:
                 case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_BOTTOM_CENTER /*5*/:
                 case MRAIDResizeProperties.CUSTOM_CLOSE_POSITION_BOTTOM_RIGHT /*6*/:
-                case BluetoothGattSupport.GATT_INSUF_AUTHENTICATION /*8*/:
+                case 8:
                 case 9:
                 case 10:
                 case 12:

@@ -9,6 +9,7 @@ import com.upsight.android.persistence.UpsightDataStore;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.Nullable;
 import javax.inject.Named;
 
 public class UpsightContext extends ContextWrapper {
@@ -86,10 +87,12 @@ public class UpsightContext extends ContextWrapper {
         return this.mLogger;
     }
 
+    @Nullable
     public UpsightCoreComponent getCoreComponent() {
         return this.mCoreComponent;
     }
 
+    @Nullable
     public UpsightExtension<?, ?> getUpsightExtension(String extensionName) {
         return (UpsightExtension) this.mExtensionsMap.get(extensionName);
     }

@@ -14,6 +14,6 @@ public final class DispatchModule {
     @Singleton
     @Provides
     public Dispatcher provideDispatcher(UpsightContext upsight, SessionManager sessionManager, AnalyticsContext context, ConfigParser configParser, RouterBuilder routerBuilder, SchemaSelectorBuilder schemaSelectorBuilder) {
-        return new Dispatcher(context, sessionManager, upsight.getCoreComponent().backgroundDataStore(), configParser, routerBuilder, schemaSelectorBuilder, upsight.getLogger());
+        return new Dispatcher(context, sessionManager, upsight.getCoreComponent().backgroundDataStore(), configParser, routerBuilder, schemaSelectorBuilder, upsight.getCoreComponent().bus(), upsight.getLogger());
     }
 }

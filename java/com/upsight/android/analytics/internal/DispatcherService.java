@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
+import com.squareup.otto.Bus;
 import com.upsight.android.Upsight;
 import com.upsight.android.UpsightAnalyticsExtension;
 import com.upsight.android.UpsightContext;
@@ -25,6 +26,7 @@ public class DispatcherService extends Service {
     private static final String LOG_TAG = DispatcherService.class.getSimpleName();
     private static final long STATUS_CHECK_INTERVAL = 25000;
     private static final int STOP_AFTER_DEAD_INTERVALS = 4;
+    private Bus mBus;
     @Inject
     ConfigurationManager mConfigurationManager;
     private UpsightSubscription mDataStoreSubscription;
@@ -50,26 +52,33 @@ public class DispatcherService extends Service {
         }
     };
 
+    public static final class DestroyEvent {
+    }
+
     public void onCreate() {
         super.onCreate();
         UpsightContext upsight = Upsight.createContext(this);
-        ((UpsightAnalyticsComponent) ((UpsightAnalyticsExtension) upsight.getUpsightExtension(UpsightAnalyticsExtension.EXTENSION_NAME)).getComponent()).inject(this);
-        this.mLogger = upsight.getLogger();
-        this.mLogger.d(LOG_TAG, "onCreate()", new Object[0]);
-        this.mHandler = new Handler();
-        this.mDataStoreSubscription = upsight.getDataStore().subscribe(this);
-        this.mDispatcher.launch();
-        this.mConfigurationManager.launch();
-        upsight.getDataStore().fetch(ApplicationStatus.class, new UpsightDataStoreListener<Set<ApplicationStatus>>() {
-            public void onSuccess(Set<ApplicationStatus> result) {
-                for (ApplicationStatus appStatus : result) {
-                    DispatcherService.this.handle(appStatus);
+        UpsightAnalyticsExtension extension = (UpsightAnalyticsExtension) upsight.getUpsightExtension(UpsightAnalyticsExtension.EXTENSION_NAME);
+        if (extension != null) {
+            ((UpsightAnalyticsComponent) extension.getComponent()).inject(this);
+            this.mBus = upsight.getCoreComponent().bus();
+            this.mLogger = upsight.getLogger();
+            this.mLogger.d(LOG_TAG, "onCreate()", new Object[0]);
+            this.mHandler = new Handler();
+            this.mDataStoreSubscription = upsight.getDataStore().subscribe(this);
+            this.mDispatcher.launch();
+            this.mConfigurationManager.launch();
+            upsight.getDataStore().fetch(ApplicationStatus.class, new UpsightDataStoreListener<Set<ApplicationStatus>>() {
+                public void onSuccess(Set<ApplicationStatus> result) {
+                    for (ApplicationStatus appStatus : result) {
+                        DispatcherService.this.handle(appStatus);
+                    }
                 }
-            }
 
-            public void onFailure(UpsightException exception) {
-            }
-        });
+                public void onFailure(UpsightException exception) {
+                }
+            });
+        }
     }
 
     @Updated
@@ -79,10 +88,11 @@ public class DispatcherService extends Service {
     }
 
     public void onDestroy() {
+        if (this.mBus != null) {
+            this.mBus.post(new DestroyEvent());
+        }
         this.mHandler.removeCallbacks(this.mSelfStopTask);
         this.mDataStoreSubscription.unsubscribe();
-        this.mConfigurationManager.terminate();
-        this.mDispatcher.terminate();
         this.mLogger.d(LOG_TAG, "onDestroy()", new Object[0]);
         super.onDestroy();
     }

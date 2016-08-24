@@ -1,11 +1,14 @@
 package com.upsight.android.analytics.internal.configuration;
 
+import com.squareup.otto.Bus;
+import com.squareup.otto.Subscribe;
 import com.upsight.android.UpsightContext;
 import com.upsight.android.UpsightException;
 import com.upsight.android.analytics.R;
 import com.upsight.android.analytics.configuration.UpsightConfiguration;
 import com.upsight.android.analytics.dispatcher.EndpointResponse;
 import com.upsight.android.analytics.event.config.UpsightConfigExpiredEvent;
+import com.upsight.android.analytics.internal.DispatcherService.DestroyEvent;
 import com.upsight.android.logger.UpsightLogger;
 import com.upsight.android.persistence.UpsightDataStore;
 import com.upsight.android.persistence.UpsightDataStoreListener;
@@ -25,6 +28,7 @@ public final class ConfigurationManager {
     public static final String CONFIGURATION_RESPONSE_SUBTYPE = "upsight.configuration";
     public static final String CONFIGURATION_SUBTYPE = "upsight.configuration.configurationManager";
     private static final String LOG_TAG = "Configurator";
+    private final Bus mBus;
     private final ManagerConfigParser mConfigParser;
     private Config mCurrentConfig;
     private final UpsightDataStore mDataStore;
@@ -68,24 +72,14 @@ public final class ConfigurationManager {
         }
     }
 
-    ConfigurationManager(UpsightContext upsight, UpsightDataStore dataStore, ConfigurationResponseParser responseParser, ManagerConfigParser managerConfigParser, Scheduler scheduler, UpsightLogger logger) {
+    ConfigurationManager(UpsightContext upsight, UpsightDataStore dataStore, ConfigurationResponseParser responseParser, ManagerConfigParser managerConfigParser, Scheduler scheduler, Bus bus, UpsightLogger logger) {
         this.mUpsight = upsight;
         this.mDataStore = dataStore;
         this.mResponseParser = responseParser;
         this.mConfigParser = managerConfigParser;
+        this.mBus = bus;
         this.mLogger = logger;
         this.mWorker = scheduler.createWorker();
-    }
-
-    public synchronized void launch() {
-        if (!this.mIsLaunched) {
-            this.mIsLaunched = true;
-            this.mIsOutOfSync = true;
-            this.mCurrentConfig = null;
-            this.mDataStoreSubscription = this.mDataStore.subscribe(this);
-            this.mWorkerSubscription = null;
-            fetchCurrentConfig();
-        }
     }
 
     private void fetchCurrentConfig() {
@@ -186,7 +180,25 @@ public final class ConfigurationManager {
         }
     }
 
+    @Subscribe
+    public void handle(DestroyEvent event) {
+        terminate();
+    }
+
+    public synchronized void launch() {
+        if (!this.mIsLaunched) {
+            this.mIsLaunched = true;
+            this.mIsOutOfSync = true;
+            this.mCurrentConfig = null;
+            this.mDataStoreSubscription = this.mDataStore.subscribe(this);
+            this.mWorkerSubscription = null;
+            this.mBus.register(this);
+            fetchCurrentConfig();
+        }
+    }
+
     public synchronized void terminate() {
+        this.mBus.unregister(this);
         if (this.mDataStoreSubscription != null) {
             this.mDataStoreSubscription.unsubscribe();
             this.mDataStoreSubscription = null;

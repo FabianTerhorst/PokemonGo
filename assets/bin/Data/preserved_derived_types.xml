@@ -45,6 +45,7 @@
 <type fullname="Niantic.Holoholo.Audio.Tools.MusicTestSceneRunner" preserve="all"/>
 <type fullname="Niantic.Holoholo.Avatar.AvatarCustomizationOption" preserve="all"/>
 <type fullname="Niantic.Holoholo.Avatar.AvatarCustomizationSet" preserve="all"/>
+<type fullname="Niantic.Holoholo.Avatar.AvatarModel" preserve="all"/>
 <type fullname="Niantic.Holoholo.Avatar.AvatarService" preserve="all"/>
 <type fullname="Niantic.Holoholo.Avatar.Blink" preserve="all"/>
 <type fullname="Scanlines" preserve="all"/>
@@ -65,6 +66,7 @@
 <type fullname="EnhancedUI.ListItemBase" preserve="all"/>
 <type fullname="LeanTween" preserve="all"/>
 <type fullname="LunarConsole.LunarConsole" preserve="all"/>
+<type fullname="WebViewObject" preserve="all"/>
 <type fullname="UpsightManager" preserve="all"/>
 <type fullname="Niantic.Holoholo.ForDebug.AssetBrowser.AssetBrowserState" preserve="all"/>
 <type fullname="BootSequenceGuiController" preserve="all"/>
@@ -418,7 +420,7 @@
 <type fullname="AutoHide" preserve="all"/>
 <type fullname="Auto_Translate" preserve="all"/>
 <type fullname="DynamicGridSize" preserve="all"/>
-<type fullname="Niantic.Holoholo.UI.DynoScrollRect`2" preserve="all"/>
+<type fullname="Niantic.Holoholo.UI.DynoScrollRect`3" preserve="all"/>
 <type fullname="InitialAnimState" preserve="all"/>
 <type fullname="LoadingScreenRandomPokemon" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.PokemonTypeBackground" preserve="all"/>
@@ -519,9 +521,13 @@
 <type fullname="Niantic.Holoholo.UI.Conversations.ConversationService" preserve="all"/>
 <type fullname="Niantic.Holoholo.Widget.DrawerRect" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.FadeGraphicIn" preserve="all"/>
+<type fullname="Niantic.Holoholo.UI.GuiController" preserve="all"/>
+<type fullname="Niantic.Holoholo.UI.GuiLayerService" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.ActivityLogEntryView" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.ActivityLogGuiController" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.ActivityLogService" preserve="all"/>
+<type fullname="Niantic.Holoholo.Captcha.CaptchaGuiController" preserve="all"/>
+<type fullname="Niantic.Holoholo.Captcha.CaptchaService" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.DebugMenu.DebugGuiController" preserve="all"/>
 <type fullname="DebugLunar" preserve="all"/>
 <type fullname="Niantic.Holoholo.Map.Debug.GpsMenuGuiController" preserve="all"/>
@@ -549,7 +555,7 @@
 <type fullname="Niantic.Holoholo.UI.Pokedex.PokedexInfoDynoScrollRect" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.Pokedex.PokedexInfoGuiController" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.Pokedex.PokedexInfoGuiService" preserve="all"/>
-<type fullname="PokedexInfoPanel" preserve="all"/>
+<type fullname="Niantic.Holoholo.UI.Pokedex.PokedexInfoPanel" preserve="all"/>
 <type fullname="Niantic.Holoholo.Inventory.PokedexListAdapter" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.Pokedex.PokedexListGuiController" preserve="all"/>
 <type fullname="Niantic.Holoholo.Inventory.PokedexListItemView" preserve="all"/>
@@ -562,6 +568,7 @@
 <type fullname="Niantic.Holoholo.UI.Pokemon.PokemonInfoPanel" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.Pokemon.PokemonInfoPanelUpgradeSection" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.Pokemon.PokemonInfoViewTouch" preserve="all"/>
+<type fullname="Niantic.Holoholo.UI.Pokemon.PokemonToucher" preserve="all"/>
 <type fullname="Niantic.Holoholo.Inventory.EggListAdapter" preserve="all"/>
 <type fullname="Niantic.Holoholo.Inventory.EggListItemView" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.EggListPage" preserve="all"/>
@@ -586,8 +593,6 @@
 <type fullname="Niantic.Holoholo.UI.XpAwardGuiController" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.XpAwardService" preserve="all"/>
 <type fullname="Niantic.Holoholo.ImageDownloadService" preserve="all"/>
-<type fullname="Niantic.Holoholo.UI.GuiController" preserve="all"/>
-<type fullname="Niantic.Holoholo.UI.GuiLayerService" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.AnimateBlur" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.GlobalErrorController" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.ModalButtonContainer" preserve="all"/>
@@ -600,8 +605,8 @@
 <type fullname="Niantic.Holoholo.UI.ToastGuiController" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.ToastService" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.UserPromptsService" preserve="all"/>
+<type fullname="Niantic.Holoholo.UI.FullscreenPoiInspectionGuiController" preserve="all"/>
 <type fullname="Niantic.Holoholo.PoiDetailsService" preserve="all"/>
-<type fullname="Niantic.Holoholo.UI.PoiInspectionGuiController" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.PoiInspectionService" preserve="all"/>
 <type fullname="Niantic.Holoholo.UI.QuickStartHelper" preserve="all"/>
 <type fullname="Niantic.Holoholo.Widget.RecyclerView" preserve="all"/>

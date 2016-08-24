@@ -16,6 +16,7 @@ public final class DaggerGooglePushServicesComponent implements GooglePushServic
     private Provider<GooglePushServices> googlePushServicesProvider;
     private Provider<GoogleCloudMessaging> provideGoogleCloudMessagingProvider;
     private Provider<UpsightGooglePushServicesApi> provideGooglePushServicesApiProvider;
+    private Provider<PushConfigManager> providePushConfigManagerProvider;
     private Provider<SessionManager> provideSessionManagerProvider;
     private Provider<UpsightContext> provideUpsightContextProvider;
     private MembersInjector<PushClickIntentService> pushClickIntentServiceMembersInjector;
@@ -70,9 +71,10 @@ public final class DaggerGooglePushServicesComponent implements GooglePushServic
 
     private void initialize(Builder builder) {
         this.provideUpsightContextProvider = DoubleCheck.provider(PushModule_ProvideUpsightContextFactory.create(builder.pushModule));
-        this.googlePushServicesProvider = DoubleCheck.provider(GooglePushServices_Factory.create(this.provideUpsightContextProvider));
+        this.providePushConfigManagerProvider = DoubleCheck.provider(PushModule_ProvidePushConfigManagerFactory.create(builder.pushModule, this.provideUpsightContextProvider));
+        this.googlePushServicesProvider = DoubleCheck.provider(GooglePushServices_Factory.create(this.provideUpsightContextProvider, this.providePushConfigManagerProvider));
         this.provideGooglePushServicesApiProvider = DoubleCheck.provider(PushModule_ProvideGooglePushServicesApiFactory.create(builder.pushModule, this.googlePushServicesProvider));
-        this.upsightGooglePushServicesExtensionMembersInjector = UpsightGooglePushServicesExtension_MembersInjector.create(this.provideGooglePushServicesApiProvider);
+        this.upsightGooglePushServicesExtensionMembersInjector = UpsightGooglePushServicesExtension_MembersInjector.create(this.provideGooglePushServicesApiProvider, this.providePushConfigManagerProvider);
         this.provideGoogleCloudMessagingProvider = DoubleCheck.provider(GoogleCloudMessagingModule_ProvideGoogleCloudMessagingFactory.create(builder.googleCloudMessagingModule, this.provideUpsightContextProvider));
         this.pushIntentServiceMembersInjector = PushIntentService_MembersInjector.create(this.provideGoogleCloudMessagingProvider, this.provideUpsightContextProvider);
         this.provideSessionManagerProvider = DoubleCheck.provider(PushModule_ProvideSessionManagerFactory.create(builder.pushModule, this.provideUpsightContextProvider));
